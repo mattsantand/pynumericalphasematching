@@ -459,6 +459,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
             self.propagation_type = "backpropagation"
             self.process = self.process[2:]
 
+    #TODO: redo the set_wavelength functions
     def set_red(self, **kwargs):
         """
         Function to set the red wavelength.
@@ -552,8 +553,8 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
                                                                                   self.blue_wavelength[0], \
                 ":", self.blue_wavelength[-1]
 
-    def calculate_local_neff(self, z):
-        local_parameter = self.waveguide.f_profile(z)
+    def calculate_local_neff(self, posidx):
+        local_parameter = self.waveguide.profile[posidx]
         try:
             n_red = self.n_red(local_parameter)
         except:
@@ -589,7 +590,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self):
+    def calculate_phasematching(self, verbose = False):
         """
         This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and scanning the other two.
 
@@ -631,10 +632,11 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         dz = self.waveguide.z[1] - self.waveguide.z[0]
         dz = np.diff(self.waveguide.z).mean()  # TODO: this is RISKYYYYYYYY
         for idx, z in enumerate(self.waveguide.z):
-            if idx % 20 == 0:
-                print z
+            if verbose:
+                if idx % 20 == 0:
+                    print "z = ", z * 1e3, " mm"
             # 1) retrieve the current parameter (width, thickness, ...)
-            n_red, n_green, n_blue = self.calculate_local_neff(z)
+            n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
             DK = self.__calculate_delta_k(self._WL_RED, self._WL_GREEN, self._WL_BLUE, n_red, n_green, n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
