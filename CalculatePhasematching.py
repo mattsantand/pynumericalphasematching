@@ -976,11 +976,11 @@ def example_1D_phasematching():
     nte = lambda w: TE(w, 0.08)
     ntm = lambda w: TM(w, 0.08)
 
-    poling_period_um = calculate_poling_period(1.55, 1.55, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)[-1]
-    print "Poling period: ", poling_period_um
+    poling_period = calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)[-1]
+    print "Poling period: ", poling_period
 
     thiswaveguide = Waveguide.Waveguide(z=z,
-                                        poling_period=poling_period_um * 1e-6,
+                                        poling_period=poling_period,
                                         nominal_parameter=7.0,
                                         nominal_parameter_name=r"Wg width [$\mu$m]")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
@@ -1019,7 +1019,7 @@ def example_2D_phasematching():
     nte = lambda w: TE(w, 0.08)
     ntm = lambda w: TM(w, 0.08)
 
-    lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55, 0, 0.55, nte(7.0), ntm(7.0), nte(7.0), 1)
+    lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
     print "Poling period: ", poling_period_um
 
     thiswaveguide = Waveguide.Waveguide(length=length,
@@ -1077,7 +1077,7 @@ def phasematching_2D():
     nte = lambda w: TE(w, 0.08)
     ntm = lambda w: TM(w, 0.08)
 
-    lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55, 0, 0.55, nte(7.0), ntm(7.0), nte(7.0), 1)
+    lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
     print "Poling period: ", poling_period_um
 
     thiswaveguide = Waveguide.Waveguide(length=length,
@@ -1157,7 +1157,7 @@ def example2_2D_phasematching():
     nte = lambda w: TE(w, 0.08)
     ntm = lambda w: TM(w, 0.08)
 
-    lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55, 0, 0.55, nte(7.0), ntm(7.0), nte(7.0), 1)
+    lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
     print "Poling period: ", poling_period_um
 
     thiswaveguide = Waveguide.Waveguide(length=length,
@@ -1228,7 +1228,7 @@ def different_windowing_functions():
     nte = lambda w: TE(w, 0.08)
     ntm = lambda w: TM(w, 0.08)
 
-    _, _, _, poling_period_um = calculate_poling_period(1.55, 1.55, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)
+    _, _, _, poling_period_um = calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)
     print "Poling period: ", poling_period_um
     wl_red = np.linspace(1.540, 1.560, 1000) * 1e-6
     thiswaveguide = Waveguide.Waveguide(length=length,
