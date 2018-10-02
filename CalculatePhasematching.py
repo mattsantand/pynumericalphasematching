@@ -13,7 +13,7 @@ import pprint
 from scipy.integrate import simps
 from Pump import Pump
 from utilities import calculate_poling_period
-from Noise import NoiseProfile, NoiseFromSpectrum, CorrelatedNoise
+from Noise import NoiseProfile
 
 
 class PhasematchingDeltaBeta(object):
@@ -86,8 +86,8 @@ class Phasematching1D(object):
     The convention for labelling wavelength is abs(lambda_red) >= abs(lambda_green) >= abs(lambda_blue), i.e. according
     to their "energy".
 
-    Public Attributes
-    ======================
+    Public Attributes:
+
     :param waveguide: waveguide object
     :param phi: phasematching spectrum (complex valued function)
     :param n_red: refractive index for "red" wavelength
@@ -105,8 +105,8 @@ class Phasematching1D(object):
 
     def __init__(self, waveguide, n_red, n_green, n_blue, process, order=1):
         """
-        Variables
-        ======================
+        Variables:
+
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
         :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
