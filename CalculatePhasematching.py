@@ -471,7 +471,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         :return:
         """
         self.n_points_red = kwargs.get("n_points", 100)
-
+        print "test"
         if "start" in kwargs.keys() and "end" in kwargs.keys():
             initial_wl = kwargs.get("start")
             final_wl = kwargs.get("end")
