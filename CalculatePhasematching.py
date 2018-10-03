@@ -24,7 +24,7 @@ class PhasematchingDeltaBeta(object):
 
     def calculate_phasematching(self, noise=None, normalized=False, old_version=True):
         self.noise = noise
-        print "Calculating the phasematching..."
+        print("Calculating the phasematching...")
         self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta0), dtype=complex)
         self.__cumulative_exp = np.ones(shape=len(self.deltabeta0), dtype=complex)
         dz = np.diff(self.z)[0]
@@ -37,7 +37,7 @@ class PhasematchingDeltaBeta(object):
                     this_deltabeta = self.deltabeta0 + self.noise.noise[i]
                 self.__cumulative_delta_beta += this_deltabeta
                 self.__cumulative_exp += np.exp(1j * self.__cumulative_delta_beta * dz)
-            print "Calculation terminated"
+            print("Calculation terminated")
             self.phi = self.__cumulative_exp * dz
             if normalized:
                 self.phi /= self.z[-1]
@@ -214,8 +214,8 @@ class Phasematching1D(object):
         self.red_wavelength = lam_red
         self.green_wavelength = lam_green
         self.blue_wavelength = lam_blue
-        print "Safety check on central wavelengths: ", self.lamb0, self.lamg0, self.lamr0, self.lamb0 ** -1 - (
-                self.lamr0 ** -1 + self.lamg0 ** -1)
+        print("Safety check on central wavelengths: ", self.lamb0, self.lamg0, self.lamr0, self.lamb0 ** -1 - (
+                self.lamr0 ** -1 + self.lamg0 ** -1))
 
         self.__wavelength_set = True
 
@@ -316,13 +316,13 @@ class Phasematching1D(object):
 
         :return:
         """
-        print "Calculating phasematching"
+        print("Calculating phasematching")
         if not self._nonlinear_profile_set:
             self.set_nonlinearity_profile()
         if self.waveguide.poling_structure_set:
-            print "Poling period is not set. Calculating from structure."
+            print("Poling period is not set. Calculating from structure.")
         else:
-            print "Poling period is set. Calculating with constant poling structure."
+            print("Poling period is set. Calculating with constant poling structure.")
 
         # edited at 28/09/2017 because the previous for loop was wrong!
         tmp_dk = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
@@ -334,7 +334,7 @@ class Phasematching1D(object):
         for idx, z in enumerate(self.waveguide.z):
             if verbose:
                 if idx % 20 == 0:
-                    print "z = ", z * 1e3, " mm"
+                    print("z = ", z * 1e3, " mm")
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
@@ -351,7 +351,7 @@ class Phasematching1D(object):
             else:
                 self.__cumulative_exponential += self.nonlinear_profile(z) * np.exp(-1j * dz * self.__cumulative_DK)
 
-        print "Calculation terminated"
+        print("Calculation terminated")
         self.phi = self.__cumulative_exponential * self.waveguide.dz
         if normalized:
             self.phi /= self.waveguide.length
@@ -486,9 +486,9 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
         self.__red_is_set = True
         if self.__red_is_set:
-            print "Red wavelength has been set: ", self.red_wavelength[0], ":", self.red_wavelength[1] - \
+            print("Red wavelength has been set: ", self.red_wavelength[0], ":", self.red_wavelength[1] - \
                                                                                 self.red_wavelength[0], \
-                ":", self.red_wavelength[-1]
+                ":", self.red_wavelength[-1])
 
     def set_green(self, **kwargs):
         """
@@ -516,9 +516,9 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
             self.green_wavelength = np.linspace(initial_wl, final_wl, self.n_points_green)
         self.__green_is_set = True
         if self.__green_is_set:
-            print "Green wavelength has been set: ", self.green_wavelength[0], ":", self.green_wavelength[1] - \
+            print("Green wavelength has been set: ", self.green_wavelength[0], ":", self.green_wavelength[1] - \
                                                                                     self.green_wavelength[0], \
-                ":", self.green_wavelength[-1]
+                ":", self.green_wavelength[-1])
 
     def set_blue(self, **kwargs):
         """
@@ -543,14 +543,13 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
             self.blue_delta_wl = kwargs.get("delta_lambda")
             initial_wl = self.blue_cwl - self.blue_delta_wl / 2.
             final_wl = self.blue_cwl + self.blue_delta_wl / 2.
-            print initial_wl, final_wl, self.blue_delta_wl
             self.blue_wavelength = np.linspace(initial_wl, final_wl, self.n_points_blue)
 
         self.__blue_is_set = True
         if self.__blue_is_set:
-            print "Blue wavelength has been set: ", self.blue_wavelength[0], ":", self.blue_wavelength[1] - \
+            print("Blue wavelength has been set: ", self.blue_wavelength[0], ":", self.blue_wavelength[1] - \
                                                                                   self.blue_wavelength[0], \
-                ":", self.blue_wavelength[-1]
+                ":", self.blue_wavelength[-1])
 
     def calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
@@ -573,7 +572,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         Computes the delta k.
         The wavelengths are provided in meter.
         """
-        # print self.waveguide.poling_period
+        # print(self.waveguide.poling_period)
         if self.propagation_type == "copropagation":
             dd = 2 * pi * (n_blue(abs(wl_blue) * 1e6) / wl_blue -
                            n_green(abs(wl_green) * 1e6) / wl_green -
@@ -595,15 +594,15 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
         :return:
         """
-        print "Calculating phasematching"
+        print("Calculating phasematching")
         if self.waveguide.poling_structure_set:
-            print "Poling period is not set. Calculating from structure."
+            print("Poling period is not set. Calculating from structure.")
         else:
-            print "Poling period is set. Calculating with constant poling structure."
+            print("Poling period is set. Calculating with constant poling structure.")
 
         # edited at 28/09/2017 because the previous for loop was wrong!
         if self.process == "pdc":
-            print "Calculating for PDC"
+            print("Calculating for PDC")
             # calculate pdc phasematching. Assumes given the lambda_signal and lambda_idler
             # (i.e., lambda_red and lambda_green)
             if not (self.__red_is_set and self.__green_is_set):
@@ -633,7 +632,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         for idx, z in enumerate(self.waveguide.z):
             if verbose:
                 if idx % 20 == 0:
-                    print "z = ", z * 1e3, " mm"
+                    print("z = ", z * 1e3, " mm")
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
@@ -648,7 +647,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
             else:
                 self.__cumulative_exponential += np.exp(-1j * dz * self.__cumulative_DK)
 
-        print "Calculation terminated"
+        print("Calculation terminated")
         self.phi = 1 / self.waveguide.length * self.__cumulative_exponential * dz
         return self.phi
 
@@ -724,7 +723,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
                 return wl, self.phasematching_cut
 
         elif self.process == "sfg":
-            # print "process = sfg"
+            # print("process = sfg")
             if fix_wl == "red":
                 # The user said that he has fixed the red wavelength. Therefore, calculate the interpolation of
                 # the phasematching as a function of the red wavelength. Assume as independent variable the blue.
@@ -749,7 +748,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
                     wl = (self.blue_wl ** -1 - self.red_wavelength - 1) ** -1
             elif fix_wl == "green":
                 # I want to keep fixed the pump!
-                print "You asked me to do a difficult thingy!!"
+                print("You asked me to do a difficult thingy!!")
                 # here, you need to provide the (CW) pump wl of the process (sfg)...
                 green_wl = value_wl
                 # ... and also the wavelength you are scanning (default the lowest)
@@ -903,7 +902,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         im = ax.pcolormesh(x, y, self.JSI)
 
         if kwargs.get("plot_pump", False):
-            print "Plot Pump"
+            print("Plot Pump")
             X, Y = np.meshgrid(x, y)
             Z = abs(self.pump) ** 2
             CS = ax.contour(X, Y, Z / Z.max(), 4, colors="w", ls=":", lw=0.5)
@@ -924,8 +923,8 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         self.singular_values /= np.sqrt((self.singular_values ** 2).sum())
         self.K = 1 / (self.singular_values ** 4).sum()
         if verbose:
-            print "Check normalization: sum of s^2 = ", (abs(self.singular_values) ** 2).sum()
-            print "K = ", self.K
+            print("Check normalization: sum of s^2 = ", (abs(self.singular_values) ** 2).sum())
+            print("K = ", self.K)
         return self.K
 
     def extract_max_phasematching_curve(self, **kwargs):
@@ -978,7 +977,7 @@ def example_1D_phasematching():
     ntm = lambda w: TM(w, 0.08)
 
     poling_period = calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)[-1]
-    print "Poling period: ", poling_period
+    print("Poling period: ", poling_period)
 
     thiswaveguide = Waveguide.Waveguide(z=z,
                                         poling_period=poling_period,
@@ -1021,7 +1020,7 @@ def example_2D_phasematching():
     ntm = lambda w: TM(w, 0.08)
 
     lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
-    print "Poling period: ", poling_period_um
+    print("Poling period: ", poling_period_um)
 
     thiswaveguide = Waveguide.Waveguide(length=length,
                                         dz=dz,
@@ -1057,14 +1056,14 @@ def example_2D_phasematching():
     pump.signal_wavelength = SIG
     pump.idler_wavelength = ID
     pump.pump_center = pump_center
-    print pump.pump_center
+    print(pump.pump_center)
     pump.pump_width = pump_width
     result = pump.pump()
     result /= abs(result).max()
 
     thisprocess.calculate_JSA(pump=pump)
     thisprocess.plot_JSI()
-    print "K: ", thisprocess.calculate_schmidt_number(verbose=True)
+    print("K: ", thisprocess.calculate_schmidt_number(verbose=True))
     plt.show()
 
 
@@ -1079,7 +1078,7 @@ def phasematching_2D():
     ntm = lambda w: TM(w, 0.08)
 
     lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
-    print "Poling period: ", poling_period_um
+    print("Poling period: ", poling_period_um)
 
     thiswaveguide = Waveguide.Waveguide(length=length,
                                         dz=dz,
@@ -1159,7 +1158,7 @@ def example2_2D_phasematching():
     ntm = lambda w: TM(w, 0.08)
 
     lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
-    print "Poling period: ", poling_period_um
+    print("Poling period: ", poling_period_um)
 
     thiswaveguide = Waveguide.Waveguide(length=length,
                                         dz=dz,
@@ -1199,14 +1198,14 @@ def example2_2D_phasematching():
     pump.signal_wavelength = SIG
     pump.idler_wavelength = ID
     pump.pump_center = pump_center
-    print pump.pump_center
+    print(pump.pump_center)
     pump.pump_width = pump_width
     result = pump.pump()
     result /= abs(result).max()
 
     thisprocess.calculate_JSA(pump=pump)
     thisprocess.plot_JSI()
-    print "K: ", thisprocess.calculate_schmidt_number(verbose=True)
+    print("K: ", thisprocess.calculate_schmidt_number(verbose=True))
     plt.show()
 
 
@@ -1230,7 +1229,7 @@ def different_windowing_functions():
     ntm = lambda w: TM(w, 0.08)
 
     _, _, _, poling_period_um = calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)
-    print "Poling period: ", poling_period_um
+    print("Poling period: ", poling_period_um)
     wl_red = np.linspace(1.540, 1.560, 1000) * 1e-6
     thiswaveguide = Waveguide.Waveguide(length=length,
                                         dz=dz,
