@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import Noise
+import noise
 
 
 class Waveguide(object):
@@ -155,7 +155,7 @@ class Waveguide(object):
         """
         if nominal_parameter is None:
             nominal_parameter = self.nominal_parameter
-        thisnoise = Noise.NoiseFromSpectrum(z=self.z,
+        thisnoise = noise.NoiseFromSpectrum(z=self.z,
                                             offset=nominal_parameter,
                                             profile_spectrum=noise_profile,
                                             noise_amplitude=noise_amplitude)
