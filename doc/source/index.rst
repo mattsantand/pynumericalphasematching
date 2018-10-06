@@ -10,10 +10,10 @@ Welcome to PyNumericalPhasematching's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   Waveguide
-   Noise
-   Pump
-   CalculatePhasematching
+   waveguide
+   noise
+   pump
+   phasematching
    utilities
 
 

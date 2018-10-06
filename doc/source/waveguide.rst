@@ -1,12 +1,12 @@
 Waveguide
 *********
 
-With this module you can easily describe waveguide profiles to be fed in the :ref:`calculatephasematching` module.
+With this module you can easily describe waveguide profiles to be fed in the :mod:`pynumpm.phasematching` module.
 
 Classes
 =======
 
-.. automodule:: PyNumericalPhasematching.Waveguide
+.. automodule:: pynumpm.waveguide
    :members:
 
 Example of usage
