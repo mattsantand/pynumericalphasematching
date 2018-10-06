@@ -11,9 +11,9 @@ import scipy.interpolate as interp
 import copy
 import pprint
 from scipy.integrate import simps
-from pump import Pump
-from utilities import calculate_poling_period
-from noise import NoiseProfile
+from pynumpm.pump import Pump
+from pynumpm.utilities import calculate_poling_period
+from pynumpm.noise import NoiseProfile
 
 
 class PhasematchingDeltaBeta(object):
@@ -967,7 +967,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
 def example_1D_phasematching():
     from sellmeier_from_database import LNwg
-    import waveguide
+    from pynumpm import waveguide
     length = 10e-3  # length in m
     dz = 50e-6  # discretization in m
     z = np.arange(0, length + dz, dz)
@@ -1011,7 +1011,7 @@ def example_1D_phasematching():
 
 def example_2D_phasematching():
     from sellmeier_from_database import LNwg
-    import waveguide
+    from pynumpm import waveguide
     length = 20e-3  # length in m
     dz = 100e-6  # discretization in m
 
@@ -1069,7 +1069,7 @@ def example_2D_phasematching():
 
 def phasematching_2D():
     from sellmeier_from_database import LNwg
-    import waveguide
+    from pynumpm import waveguide
     length = 20e-3  # length in m
     dz = 100e-6  # discretization in m
 
@@ -1149,7 +1149,7 @@ def phasematching_2D():
 
 def example2_2D_phasematching():
     from sellmeier_from_database import LNwg
-    import waveguide
+    from pynumpm import waveguide
     length = 20e-3  # length in m
     dz = 100e-6  # discretization in m
 
@@ -1220,7 +1220,7 @@ def deltabeta_pm():
 
 def different_windowing_functions():
     from sellmeier_from_database import LNwg
-    import waveguide
+    from pynumpm import waveguide
     length = 20e-3  # length in m
     dz = 50e-6  # discretization in m
 

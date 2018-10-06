@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import noise
+from pynumpm import noise
 
 
 class Waveguide(object):
