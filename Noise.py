@@ -5,7 +5,7 @@ Created on 26.09.2017 08:30
 .. module: 
 .. moduleauthor: Matteo Santandrea <matteo.santandrea@upb.de>
 """
-
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -60,7 +60,8 @@ class NoiseProfile(object):
         return newnoise
 
     def calculate_noise_properties(self):
-        print("Calculating noise properties")
+        logger = logging.getLogger(__name__)
+        logger.info("Calculating noise properties")
         self.f = np.fft.fftshift(np.fft.fftfreq(len(self.z), np.diff(self.z)[0]))
         self.noise_spectrum = np.fft.fft(self.profile)
         self.power_spectrum = self.noise_spectrum * np.conj(self.noise_spectrum)
@@ -125,7 +126,8 @@ class NoiseFromSpectrum(NoiseProfile):
         return self.__profile
 
     def generate_noise(self):
-        print "Generating {s} spectrum.".format(s=self.profile_spectrum)
+        logger = logging.getLogger(__name__)
+        logger.info("Generating {s} spectrum.".format(s=self.profile_spectrum))
         length = self.z[-1] - self.z[0]
         npoints = len(self.z)
         if npoints % 2 == 0:
@@ -176,12 +178,13 @@ class CorrelatedNoise(NoiseProfile):
         return self.__profile
 
     def generate_noise(self):
+        logger = logging.getLogger(__name__)
         sigma = self.noise_amplitude
         if self.correlation_length == 0:
             r = 0
         else:
             r = np.exp(-self.dz / self.correlation_length)
-        print "Correlation factor: ", r
+        logger.info("Correlation factor: %f", r)
         zz = self.z - self.z[-1] / 2.
         self.ideal_correlation_function = sigma ** 2 * np.exp(- abs(zz) / self.correlation_length)
         y = np.zeros(self.z.shape)
