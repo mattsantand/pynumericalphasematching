@@ -9,7 +9,7 @@ class Waveguide(object):
     """
     Waveguide class.
 
-    It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :ref:`noise`
+    It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :mod:`noise`
     module), it can load user-defined profiles (they must be consistent with the user specified mesh).
     Moreover, the user can specify a poling structure (functionality unused in the CalculatePhasematching at the
     moment).

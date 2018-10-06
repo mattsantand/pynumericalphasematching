@@ -611,7 +611,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
             self._WL_RED, self._WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
             self._WL_BLUE = 1. / (1. / abs(self._WL_RED) + 1. / abs(self._WL_GREEN))
-            print self._WL_RED.mean(), self._WL_GREEN.mean(), self._WL_BLUE.mean()
+            # print self._WL_RED.mean(), self._WL_GREEN.mean(), self._WL_BLUE.mean()
             self.__cumulative_DK = np.zeros(shape=(len(self.green_wavelength), len(self.red_wavelength)),
                                             dtype=complex)
 
