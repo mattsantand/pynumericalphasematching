@@ -29,6 +29,7 @@ class PhasematchingDeltaBeta(object):
         self.__cumulative_exp = np.ones(shape=len(self.deltabeta0), dtype=complex)
         dz = np.diff(self.z)[0]
 
+
         if old_version:
             for i in range(len(self.z)):
                 if self.noise is None:
