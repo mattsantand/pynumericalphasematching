@@ -6,5 +6,5 @@ Noise
 Contents of the module
 ======================
 
-.. automodule:: PyNumericalPhasematching.Noise
+.. automodule:: pynumpm.noise
    :members:

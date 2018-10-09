@@ -2,14 +2,14 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import Noise
+from pynumpm import noise
 
 
 class Waveguide(object):
     """
     Waveguide class.
 
-    It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :ref:`noise`
+    It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :mod:`noise`
     module), it can load user-defined profiles (they must be consistent with the user specified mesh).
     Moreover, the user can specify a poling structure (functionality unused in the CalculatePhasematching at the
     moment).
@@ -155,7 +155,7 @@ class Waveguide(object):
         """
         if nominal_parameter is None:
             nominal_parameter = self.nominal_parameter
-        thisnoise = Noise.NoiseFromSpectrum(z=self.z,
+        thisnoise = noise.NoiseFromSpectrum(z=self.z,
                                             offset=nominal_parameter,
                                             profile_spectrum=noise_profile,
                                             noise_amplitude=noise_amplitude)

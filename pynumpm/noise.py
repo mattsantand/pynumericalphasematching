@@ -113,9 +113,9 @@ class NoiseFromSpectrum(NoiseProfile):
         else:
             raise ValueError("profile_spectrum has to be 'awgn', '1/f' or '1/f2'")
 
-        print "I am going to calculate the profile"
+        # print "I am going to calculate the profile"
         self.__profile = self.generate_noise()
-        print "Profile calculated"
+        # print "Profile calculated"
 
     @property
     def profile_spectrum(self):
