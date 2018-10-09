@@ -6,5 +6,5 @@ Calculate Phasematching
 Contents of the module
 ======================
 
-.. automodule:: PyNumericalPhasematching.CalculatePhasematching
+.. automodule:: pynumpm.phasematching
    :members:

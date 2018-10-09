@@ -112,9 +112,9 @@ class NoiseFromSpectrum(NoiseProfile):
         else:
             raise ValueError("profile_spectrum has to be 'awgn', '1/f' or '1/f2'")
 
-        print "I am going to calculate the profile"
+        # print "I am going to calculate the profile"
         self.__profile = self.generate_noise()
-        print "Profile calculated"
+        # print "Profile calculated"
 
     @property
     def profile_spectrum(self):
@@ -125,7 +125,7 @@ class NoiseFromSpectrum(NoiseProfile):
         return self.__profile
 
     def generate_noise(self):
-        print "Generating {s} spectrum.".format(s=self.profile_spectrum)
+        # print "Generating {s} spectrum.".format(s=self.profile_spectrum)
         length = self.z[-1] - self.z[0]
         npoints = len(self.z)
         if npoints % 2 == 0:
@@ -181,7 +181,7 @@ class CorrelatedNoise(NoiseProfile):
             r = 0
         else:
             r = np.exp(-self.dz / self.correlation_length)
-        print "Correlation factor: ", r
+        # print "Correlation factor: ", r
         zz = self.z - self.z[-1] / 2.
         self.ideal_correlation_function = sigma ** 2 * np.exp(- abs(zz) / self.correlation_length)
         y = np.zeros(self.z.shape)

@@ -104,9 +104,9 @@ class Pump(object):
         elif self.type.upper() == 'FILTERED':
             self.pump_filter_width *= sqrt(2)
             _filter = zeros(shape(self.pump_wavelength), float)
-            print shape(self.pump_wavelength)
+            # print shape(self.pump_wavelength)
             for i in range(len(self.signal_wavelength)):
-                print i
+                # print i
                 for j in range(len(self.idler_wavelength)):
                     if self.pump_wavelength[j, i] < self.pump_center - \
                             0.5 * self.pump_filter_width:
@@ -122,10 +122,13 @@ class Pump(object):
                              exp(1j * (2 * pi * self.sol / self.pump_wavelength) ** 2 *
                                  self.pump_chirp) * _filter
         elif self.type.upper() == 'CUSTOM':
-            from custom_pump import custom_pump
-            _pump_function = custom_pump(self.pump_wavelength,
-                                         self.pump_center,
-                                         self.pump_width)
+            _pump_function = None
+            # from custom_pump import custom_pump
+            # _pump_function = custom_pump(self.pump_wavelength,
+            #                              self.pump_center,
+            #                              self.pump_width)
+        else:
+            _pump_function = None
         return _pump_function
 
 

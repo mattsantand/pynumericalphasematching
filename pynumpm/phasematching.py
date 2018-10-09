@@ -11,9 +11,9 @@ import scipy.interpolate as interp
 import copy
 import pprint
 from scipy.integrate import simps
-from Pump import Pump
-from utilities import calculate_poling_period
-from Noise import NoiseProfile
+from pynumpm.pump import Pump
+from pynumpm.utilities import calculate_poling_period
+from pynumpm.noise import NoiseProfile
 
 
 class PhasematchingDeltaBeta(object):
@@ -612,7 +612,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
             self._WL_RED, self._WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
             self._WL_BLUE = 1. / (1. / abs(self._WL_RED) + 1. / abs(self._WL_GREEN))
-            print self._WL_RED.mean(), self._WL_GREEN.mean(), self._WL_BLUE.mean()
+            # print self._WL_RED.mean(), self._WL_GREEN.mean(), self._WL_BLUE.mean()
             self.__cumulative_DK = np.zeros(shape=(len(self.green_wavelength), len(self.red_wavelength)),
                                             dtype=complex)
 
@@ -968,7 +968,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
 def example_1D_phasematching():
     from sellmeier_from_database import LNwg
-    import Waveguide
+    from pynumpm import waveguide
     length = 10e-3  # length in m
     dz = 50e-6  # discretization in m
     z = np.arange(0, length + dz, dz)
@@ -980,7 +980,7 @@ def example_1D_phasematching():
     poling_period = calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)[-1]
     print("Poling period: ", poling_period)
 
-    thiswaveguide = Waveguide.Waveguide(z=z,
+    thiswaveguide = waveguide.Waveguide(z=z,
                                         poling_period=poling_period,
                                         nominal_parameter=7.0,
                                         nominal_parameter_name=r"Wg width [$\mu$m]")
@@ -1012,7 +1012,7 @@ def example_1D_phasematching():
 
 def example_2D_phasematching():
     from sellmeier_from_database import LNwg
-    import Waveguide
+    from pynumpm import waveguide
     length = 20e-3  # length in m
     dz = 100e-6  # discretization in m
 
@@ -1023,7 +1023,7 @@ def example_2D_phasematching():
     lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
     print("Poling period: ", poling_period_um)
 
-    thiswaveguide = Waveguide.Waveguide(length=length,
+    thiswaveguide = waveguide.Waveguide(length=length,
                                         dz=dz,
                                         poling=poling_period_um)
     thisnoise = NoiseProfile(z=thiswaveguide.z, offset=7.)
@@ -1070,7 +1070,7 @@ def example_2D_phasematching():
 
 def phasematching_2D():
     from sellmeier_from_database import LNwg
-    import Waveguide
+    from pynumpm import waveguide
     length = 20e-3  # length in m
     dz = 100e-6  # discretization in m
 
@@ -1081,7 +1081,7 @@ def phasematching_2D():
     lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
     print("Poling period: ", poling_period_um)
 
-    thiswaveguide = Waveguide.Waveguide(length=length,
+    thiswaveguide = waveguide.Waveguide(length=length,
                                         dz=dz,
                                         poling=poling_period_um)
     thisnoise = StandardNoise(z=thiswaveguide.z, offset=7.)
@@ -1106,13 +1106,13 @@ def phasematching_2D():
     thisprocess.calculate_phasematching()
     thisprocess.plot_phasematching()
 
-    waveguide1 = Waveguide.Waveguide(length=length,
+    waveguide1 = waveguide.Waveguide(length=length,
                                      dz=dz,
                                      poling=poling_period_um)
     waveguide1.evaluate_profile(parameter="width",
                                 profile="uniform",
                                 nominal_parameter=6.6)
-    waveguide2 = Waveguide.Waveguide(length=length,
+    waveguide2 = waveguide.Waveguide(length=length,
                                      dz=dz,
                                      poling=poling_period_um)
     waveguide2.evaluate_profile(parameter="width",
@@ -1150,7 +1150,7 @@ def phasematching_2D():
 
 def example2_2D_phasematching():
     from sellmeier_from_database import LNwg
-    import Waveguide
+    from pynumpm import waveguide
     length = 20e-3  # length in m
     dz = 100e-6  # discretization in m
 
@@ -1161,7 +1161,7 @@ def example2_2D_phasematching():
     lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
     print("Poling period: ", poling_period_um)
 
-    thiswaveguide = Waveguide.Waveguide(length=length,
+    thiswaveguide = waveguide.Waveguide(length=length,
                                         dz=dz,
                                         poling=poling_period_um)
     thisnoise = StandardNoise(z=thiswaveguide.z, offset=7.)
@@ -1221,7 +1221,7 @@ def deltabeta_pm():
 
 def different_windowing_functions():
     from sellmeier_from_database import LNwg
-    import Waveguide
+    from pynumpm import waveguide
     length = 20e-3  # length in m
     dz = 50e-6  # discretization in m
 
@@ -1232,7 +1232,7 @@ def different_windowing_functions():
     _, _, _, poling_period_um = calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)
     print("Poling period: ", poling_period_um)
     wl_red = np.linspace(1.540, 1.560, 1000) * 1e-6
-    thiswaveguide = Waveguide.Waveguide(length=length,
+    thiswaveguide = waveguide.Waveguide(length=length,
                                         dz=dz,
                                         poling=poling_period_um)
     thiswaveguide.evaluate_profile()
