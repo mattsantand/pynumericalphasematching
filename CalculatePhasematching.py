@@ -4,6 +4,7 @@ Module to calculate the phasematching of a given waveguide, as specified by the 
 It can calculate different types of phasematching:
 
 """
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import pi
@@ -23,8 +24,10 @@ class PhasematchingDeltaBeta(object):
         self.noise = None
 
     def calculate_phasematching(self, noise=None, normalized=False, old_version=True):
+        logger = logging.getLogger(__name__)
+
         self.noise = noise
-        print("Calculating the phasematching...")
+        logger.info("Calculating the phasematching.")
         self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta0), dtype=complex)
         self.__cumulative_exp = np.ones(shape=len(self.deltabeta0), dtype=complex)
         dz = np.diff(self.z)[0]
@@ -38,7 +41,7 @@ class PhasematchingDeltaBeta(object):
                     this_deltabeta = self.deltabeta0 + self.noise.noise[i]
                 self.__cumulative_delta_beta += this_deltabeta
                 self.__cumulative_exp += np.exp(1j * self.__cumulative_delta_beta * dz)
-            print("Calculation terminated")
+            logger.info("Calculation terminated.")
             self.phi = self.__cumulative_exp * dz
             if normalized:
                 self.phi /= self.z[-1]
@@ -60,6 +63,8 @@ class PhasematchingDeltaBeta(object):
         return self.phi
 
     def plot_phasematching(self, normalized=False, fig=None, ax=None):
+        logger = logging.getLogger(__name__)
+
         if ax is None:
             if fig is None:
                 plt.figure()
@@ -67,7 +72,7 @@ class PhasematchingDeltaBeta(object):
                 plt.figure(fig.number)
         else:
             if fig is not None:
-                print("I will use the axis value you defined, not the figure.")
+                logger.info("I will use the axis value you defined, not the figure.")
             else:
                 plt.sca(ax)
 
@@ -317,13 +322,14 @@ class Phasematching1D(object):
 
         :return:
         """
-        print("Calculating phasematching")
+        logger = logging.getLogger(__name__)
+        logger.info("Calculating phasematching")
         if not self._nonlinear_profile_set:
             self.set_nonlinearity_profile()
         if self.waveguide.poling_structure_set:
-            print("Poling period is not set. Calculating from structure.")
+            logger.info("Poling period is not set. Calculating from structure.")
         else:
-            print("Poling period is set. Calculating with constant poling structure.")
+            logger.info("Poling period is set. Calculating with constant poling structure.")
 
         # edited at 28/09/2017 because the previous for loop was wrong!
         tmp_dk = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
@@ -335,7 +341,7 @@ class Phasematching1D(object):
         for idx, z in enumerate(self.waveguide.z):
             if verbose:
                 if idx % 20 == 0:
-                    print("z = ", z * 1e3, " mm")
+                    logger.info("z = ", z * 1e3, " mm")
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
@@ -352,7 +358,7 @@ class Phasematching1D(object):
             else:
                 self.__cumulative_exponential += self.nonlinear_profile(z) * np.exp(-1j * dz * self.__cumulative_DK)
 
-        print("Calculation terminated")
+        logger.info("Calculation terminated")
         self.phi = self.__cumulative_exponential * self.waveguide.dz
         if normalized:
             self.phi /= self.waveguide.length
@@ -471,6 +477,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         :param kwargs:
         :return:
         """
+        logger = logging.getLogger(__name__)
         self.n_points_red = kwargs.get("n_points", 100)
         if "start" in kwargs.keys() and "end" in kwargs.keys():
             initial_wl = kwargs.get("start")
@@ -487,9 +494,9 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
         self.__red_is_set = True
         if self.__red_is_set:
-            print("Red wavelength has been set: ", self.red_wavelength[0], ":", self.red_wavelength[1] - \
-                                                                                self.red_wavelength[0], \
-                ":", self.red_wavelength[-1])
+            logger.info("Red wavelength has been set: %f:%f:%f",
+                        self.red_wavelength[0], self.red_wavelength[1] - self.red_wavelength[0], self.red_wavelength[-1]
+                        )
 
     def set_green(self, **kwargs):
         """
@@ -501,6 +508,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         :param kwargs:
         :return:
         """
+        logger = logging.getLogger(__name__)
         self.n_points_green = kwargs.get("n_points", 100)
 
         if "start" in kwargs.keys() and "end" in kwargs.keys():
@@ -517,9 +525,9 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
             self.green_wavelength = np.linspace(initial_wl, final_wl, self.n_points_green)
         self.__green_is_set = True
         if self.__green_is_set:
-            print("Green wavelength has been set: ", self.green_wavelength[0], ":", self.green_wavelength[1] - \
-                                                                                    self.green_wavelength[0], \
-                ":", self.green_wavelength[-1])
+            logger.info("Green wavelength has been set: %f:%f%:%f",
+                        self.green_wavelength[0], ":", self.green_wavelength[1] - self.green_wavelength[0],
+                        self.green_wavelength[-1])
 
     def set_blue(self, **kwargs):
         """
@@ -531,6 +539,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         :param kwargs:
         :return:
         """
+        logger = logging.getLogger(__name__)
         self.n_points_blue = kwargs.get("n_points", 100)
 
         if "start" in kwargs.keys() and "end" in kwargs.keys():
@@ -548,9 +557,9 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
         self.__blue_is_set = True
         if self.__blue_is_set:
-            print("Blue wavelength has been set: ", self.blue_wavelength[0], ":", self.blue_wavelength[1] - \
-                                                                                  self.blue_wavelength[0], \
-                ":", self.blue_wavelength[-1])
+            logger.info("Blue wavelength has been set: %f:%f:%f",
+                        self.blue_wavelength[0], self.blue_wavelength[1] - self.blue_wavelength[0],
+                        self.blue_wavelength[-1])
 
     def calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
@@ -595,15 +604,16 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
         :return:
         """
-        print("Calculating phasematching")
+        logger = logging.getLogger(__name__)
+        logger.info("Calculating phasematching")
         if self.waveguide.poling_structure_set:
-            print("Poling period is not set. Calculating from structure.")
+            logger.info("Poling period is not set. Calculating from structure.")
         else:
-            print("Poling period is set. Calculating with constant poling structure.")
+            logger.info("Poling period is set. Calculating with constant poling structure.")
 
         # edited at 28/09/2017 because the previous for loop was wrong!
         if self.process == "pdc":
-            print("Calculating for PDC")
+            logger.info("Calculating for PDC")
             # calculate pdc phasematching. Assumes given the lambda_signal and lambda_idler
             # (i.e., lambda_red and lambda_green)
             if not (self.__red_is_set and self.__green_is_set):
@@ -612,7 +622,8 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
             self._WL_RED, self._WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
             self._WL_BLUE = 1. / (1. / abs(self._WL_RED) + 1. / abs(self._WL_GREEN))
-            print self._WL_RED.mean(), self._WL_GREEN.mean(), self._WL_BLUE.mean()
+            # TODO: maybe format the following message?
+            logger.info(self._WL_RED.mean(), self._WL_GREEN.mean(), self._WL_BLUE.mean())
             self.__cumulative_DK = np.zeros(shape=(len(self.green_wavelength), len(self.red_wavelength)),
                                             dtype=complex)
 
@@ -633,7 +644,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         for idx, z in enumerate(self.waveguide.z):
             if verbose:
                 if idx % 20 == 0:
-                    print("z = ", z * 1e3, " mm")
+                    logger.info("z = ", z * 1e3, " mm")
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
@@ -648,7 +659,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
             else:
                 self.__cumulative_exponential += np.exp(-1j * dz * self.__cumulative_DK)
 
-        print("Calculation terminated")
+        logger.info("Calculation terminated")
         self.phi = 1 / self.waveguide.length * self.__cumulative_exponential * dz
         return self.phi
 
@@ -846,7 +857,6 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
                    [self.blue_wavelength, self.__blue_is_set]]
 
         active_axes = [i[0] for i in list_wl if i[1]]
-        # print active_axes
         return active_axes
 
     def calculate_JSA(self, pump):
@@ -967,7 +977,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
 
 def example_1D_phasematching():
-    from sellmeier_from_database import LNwg
+    from sellmeier_from_database import LNwg  # This is a very well hidden dependency!
     import Waveguide
     length = 10e-3  # length in m
     dz = 50e-6  # discretization in m

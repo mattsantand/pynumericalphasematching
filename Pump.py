@@ -1,3 +1,5 @@
+import logging
+
 from numpy import exp, pi, sqrt, shape, zeros, log
 from scipy.misc import factorial
 from scipy.special import hermite
@@ -83,6 +85,7 @@ class Pump(object):
         _pump_function -- matrix containing the pump function in
                           signal and idler frequecy plane
         """
+        logger = logging.getLogger(__name__)
         # self.pump_width /= 2 * sqrt(log(2))
         # self.pump_width = self.pump_width /( 2 * sqrt(log(2)))
         self.correct_pump_width = self.pump_width / (2 * sqrt(log(2)))
@@ -104,9 +107,9 @@ class Pump(object):
         elif self.type.upper() == 'FILTERED':
             self.pump_filter_width *= sqrt(2)
             _filter = zeros(shape(self.pump_wavelength), float)
-            print shape(self.pump_wavelength)
+            logger.debug("Pump wavelength: %f", shape(self.pump_wavelength))
             for i in range(len(self.signal_wavelength)):
-                print i
+                logger.debug("Loop index: %d", i)
                 for j in range(len(self.idler_wavelength)):
                     if self.pump_wavelength[j, i] < self.pump_center - \
                             0.5 * self.pump_filter_width:
