@@ -979,6 +979,11 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 def example_1D_phasematching():
     from sellmeier_from_database import LNwg  # This is a very well hidden dependency!
     from pynumpm import waveguide
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                        datefmt='%m-%d %H:%M')
+
     length = 10e-3  # length in m
     dz = 50e-6  # discretization in m
     z = np.arange(0, length + dz, dz)
