@@ -18,6 +18,9 @@ from pynumpm.noise import NoiseProfile
 
 
 class PhasematchingDeltaBeta(object):
+    """
+    This class is used to simulate phasematching of systems starting considering only the wavevector mismatch (DeltaBeta).
+    """
     def __init__(self, z, deltabeta0_wl):
         self.z = z
         self.deltabeta0 = deltabeta0_wl
@@ -31,7 +34,6 @@ class PhasematchingDeltaBeta(object):
         self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta0), dtype=complex)
         self.__cumulative_exp = np.ones(shape=len(self.deltabeta0), dtype=complex)
         dz = np.diff(self.z)[0]
-
 
         if old_version:
             for i in range(len(self.z)):
@@ -316,7 +318,7 @@ class Phasematching1D(object):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, normalized=True, verbose = False):
+    def calculate_phasematching(self, normalized=True, verbose=False):
         """
         This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and scanning the other two.
 
@@ -466,7 +468,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
             self.propagation_type = "backpropagation"
             self.process = self.process[2:]
 
-    #TODO: redo the set_wavelength functions
+    # TODO: redo the set_wavelength functions
     def set_red(self, **kwargs):
         """
         Function to set the red wavelength.
@@ -598,7 +600,7 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, verbose = False):
+    def calculate_phasematching(self, verbose=False):
         """
         This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and scanning the other two.
 

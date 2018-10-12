@@ -193,15 +193,3 @@ class Waveguide(object):
         ax.set_ylabel(self.nominal_parameter_name)
         ax.set_title("Waveguide profile")
         return fig, ax
-
-
-def example():
-    z = np.linspace(0, 0.020, 10000)
-    thiswaveguide = Waveguide(z=z, nominal_parameter=7., nominal_parameter_name="Width")
-    thiswaveguide.create_noisy_waveguide()
-    thiswaveguide.plot()
-    plt.show()
-
-
-if __name__ == '__main__':
-    example()

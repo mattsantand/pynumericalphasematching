@@ -137,7 +137,7 @@ class NoiseFromSpectrum(NoiseProfile):
             extended = False
         df = 1. / length
         frequency_coefficients = np.zeros(shape=npoints, dtype=complex)
-        half_size = (npoints - 1) / 2
+        half_size = int((npoints - 1) / 2)
 
         if self.profile_spectrum == "awgn":
             exponent = 0
@@ -330,15 +330,6 @@ class CorrelatedNoise(NoiseProfile):
 #         return l1, l2, l3
 
 
-def example_Noise():
-    z = np.linspace(0, 20, 10000)
-    thisnoise = NoiseFromSpectrum(z=z, noise_amplitude=0.2, offset=0.4, profile_spectrum="awgn")
-    thisnoise.plot_noise_properties()
-    othernoise = CorrelatedNoise(z=z, noise_amplitude=0.2, correlation_length=0.2)
-    othernoise.plot_noise_properties()
-    concatenate_noise = NoiseProfile.concatenate(thisnoise, othernoise)
-    concatenate_noise.plot_noise_properties()
-    plt.show()
 
 
 if __name__ == "__main__":
