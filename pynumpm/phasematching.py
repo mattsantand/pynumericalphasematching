@@ -2,6 +2,9 @@
 Module to calculate the phasematching of a given waveguide, as specified by the Waveguide class.
 
 It can calculate different types of phasematching:
+    * :class: `.PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
+    * :class: `.Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+    * :class: `.Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
 
 """
 import logging
@@ -30,6 +33,9 @@ class PhasematchingDeltaBeta(object):
         self.__waveguide = waveguide
         self.__deltabeta = None
         self.__phi = 0
+        self.__cumulative_delta_beta = None
+        self.__cumulative_exp = None
+        self.__cumulative_sinc = None
 
     @property
     def waveguide(self):
@@ -39,6 +45,12 @@ class PhasematchingDeltaBeta(object):
     def deltabeta(self):
         return self.__deltabeta
 
+    @deltabeta.setter
+    def deltabeta(self, value):
+        self.__deltabeta = value
+        logger = logging.getLogger(__name__)
+        logger.debug("Delta beta vector set")
+
     @property
     def phi(self):
         return self.__phi
@@ -46,12 +58,6 @@ class PhasematchingDeltaBeta(object):
     @phi.setter
     def phi(self, value):
         self.__phi = value
-
-    @deltabeta.setter
-    def deltabeta(self, value):
-        self.__deltabeta = value
-        logger = logging.getLogger(__name__)
-        logger.debug("Delta beta vector set")
 
     def calculate_phasematching(self, deltabeta, normalized=False):
         """
@@ -68,7 +74,6 @@ class PhasematchingDeltaBeta(object):
         logger.info("Calculating the phasematching.")
         self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
         self.__cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
-        dz = np.diff(self.waveguide.z)[0]
         self.__cumulative_sinc = np.zeros(shape=len(self.deltabeta), dtype=complex)
 
         for i in range(len(self.waveguide.z) - 1):
