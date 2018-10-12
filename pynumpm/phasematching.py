@@ -2,9 +2,9 @@
 Module to calculate the phasematching of a given waveguide, as specified by the Waveguide class.
 
 It can calculate different types of phasematching:
-    * :class: `.PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
-    * :class: `.Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
-    * :class: `.Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+    * :class: `PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
+    * :class: `Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+    * :class: `Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
 
 """
 import logging
