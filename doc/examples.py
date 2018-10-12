@@ -9,6 +9,7 @@ Examples to use the PyNumericalPhasematching package.
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def example_waveguide():
     """
     This function illustrates the use of the Waveguide module and the Waveguide class.
@@ -48,6 +49,24 @@ def example_noise():
     plt.show()
 
 
+def example_phasematching_deltabeta():
+    from pynumpm import waveguide, phasematching
+
+    z = np.linspace(0, 0.02, 1000)
+    thiswaveguide = waveguide.Waveguide(z=z, nominal_parameter=0, nominal_parameter_name=r"\Delta\beta")
+    thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
+                                         noise_amplitude=500.0)
+    thiswaveguide.plot()
+
+    deltabeta = np.linspace(-5000, 5000, 1000)
+    thisprocess = phasematching.PhasematchingDeltaBeta(waveguide = thiswaveguide)
+    thisprocess.calculate_phasematching(deltabeta=deltabeta,
+                                        normalized=True)
+    thisprocess.plot()
+
+
 if __name__ == '__main__':
-    example_waveguide()
-    example_noise()
+    # example_waveguide()
+    # example_noise()
+    example_phasematching_deltabeta()
+    plt.show()

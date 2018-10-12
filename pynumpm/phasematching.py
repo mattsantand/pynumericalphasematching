@@ -21,50 +21,69 @@ class PhasematchingDeltaBeta(object):
     """
     This class is used to simulate phasematching of systems starting considering only the wavevector mismatch (DeltaBeta).
     """
-    def __init__(self, z, deltabeta0_wl):
-        self.z = z
-        self.deltabeta0 = deltabeta0_wl
-        self.noise = None
 
-    def calculate_phasematching(self, noise=None, normalized=False, old_version=True):
+    def __init__(self, waveguide):
+        """
+        Initialize the class by providing a waveguide object.
+        :param waveguide: Waveguide object, as provided by the class waveguide.
+        """
+        self.__waveguide = waveguide
+        self.__deltabeta = None
+        self.__phi = 0
+
+    @property
+    def waveguide(self):
+        return self.__waveguide
+
+    @property
+    def deltabeta(self):
+        return self.__deltabeta
+
+    @property
+    def phi(self):
+        return self.__phi
+
+    @phi.setter
+    def phi(self, value):
+        self.__phi = value
+
+    @deltabeta.setter
+    def deltabeta(self, value):
+        self.__deltabeta = value
         logger = logging.getLogger(__name__)
+        logger.debug("Delta beta vector set")
 
-        self.noise = noise
+    def calculate_phasematching(self, deltabeta, normalized=False):
+        """
+        Function that calculates the phasematching, given the vector of deltabeta (wavevector mismatch)
+
+        :param deltabeta: Vector describing the deltabeta space to be scanned.
+        :type deltabeta: numpy.ndarray
+        :param normalized: Sets the normalization of the phasematching. If the normalization is on (True), the phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]). Default: False.
+        :type normalized: bool
+        :return: the function returns the complex-valued phasematching spectrum.
+        """
+        logger = logging.getLogger(__name__)
+        self.deltabeta = deltabeta
         logger.info("Calculating the phasematching.")
-        self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta0), dtype=complex)
-        self.__cumulative_exp = np.ones(shape=len(self.deltabeta0), dtype=complex)
-        dz = np.diff(self.z)[0]
+        self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
+        self.__cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
+        dz = np.diff(self.waveguide.z)[0]
+        self.__cumulative_sinc = np.zeros(shape=len(self.deltabeta), dtype=complex)
 
-        if old_version:
-            for i in range(len(self.z)):
-                if self.noise is None:
-                    this_deltabeta = self.deltabeta0
-                else:
-                    this_deltabeta = self.deltabeta0 + self.noise.noise[i]
-                self.__cumulative_delta_beta += this_deltabeta
-                self.__cumulative_exp += np.exp(1j * self.__cumulative_delta_beta * dz)
-            logger.info("Calculation terminated.")
-            self.phi = self.__cumulative_exp * dz
-            if normalized:
-                self.phi /= self.z[-1]
-        else:
-            self.__cumulative_sinc = np.zeros(shape=len(self.deltabeta0), dtype=complex)
-            for i in range(len(self.z) - 1):
-                dz = self.z[i + 1] - self.z[i]
-                if self.noise is None:
-                    this_deltabeta = self.deltabeta0
-                else:
-                    this_deltabeta = self.deltabeta0 + self.noise.noise[i]
-                x = this_deltabeta * dz / 2
-                self.__cumulative_sinc += dz * np.sinc(x / np.pi) * np.exp(1j * x) * np.exp(
-                    1j * self.__cumulative_delta_beta)
-                self.__cumulative_delta_beta += this_deltabeta * dz
-            self.phi = self.__cumulative_sinc
-            if normalized:
-                self.phi /= self.z[-1]
+        for i in range(len(self.waveguide.z) - 1):
+            dz = self.waveguide.z[i + 1] - self.waveguide.z[i]
+            this_deltabeta = self.deltabeta + self.waveguide.profile[i]
+            x = this_deltabeta * dz / 2
+            self.__cumulative_sinc += dz * np.sinc(x / np.pi) * np.exp(1j * x) * np.exp(
+                1j * self.__cumulative_delta_beta)
+            self.__cumulative_delta_beta += this_deltabeta * dz
+        self.__phi = self.__cumulative_sinc
+        if normalized:
+            self.__phi /= self.waveguide.z[-1]
         return self.phi
 
-    def plot_phasematching(self, normalized=False, fig=None, ax=None):
+    def plot(self, normalized=False, fig=None, ax=None):
         logger = logging.getLogger(__name__)
 
         if ax is None:
@@ -81,10 +100,15 @@ class PhasematchingDeltaBeta(object):
         y = abs(self.phi) ** 2
         if normalized:
             y = abs(self.phi) ** 2 / y.max()
-        plt.plot(self.deltabeta0, y)
+        plt.plot(self.deltabeta, y)
 
     def calculate_integral(self):
-        return simps(abs(self.phi) ** 2, self.deltabeta0)
+        """
+        Function to calculate the integral of the phasematching curve. It uses the function `simps` from the scipy module.
+
+        :return: Phasematching integral
+        """
+        return simps(abs(self.phi) ** 2, self.deltabeta)
 
 
 class Phasematching1D(object):
