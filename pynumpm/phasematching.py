@@ -2,9 +2,9 @@
 Module to calculate the phasematching of a given waveguide, as specified by the Waveguide class.
 
 It can calculate different types of phasematching:
-    * :class: `PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
-    * :class: `Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
-    * :class: `Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+    * :class:`PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
+    * :class:`Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+    * :class:`Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
 
 """
 import logging
@@ -15,20 +15,18 @@ import scipy.interpolate as interp
 import copy
 import pprint
 from scipy.integrate import simps
-from pynumpm.pump import Pump
-from pynumpm.utilities import calculate_poling_period
-from pynumpm.noise import NoiseProfile
 
 
 class PhasematchingDeltaBeta(object):
     """
-    This class is used to simulate phasematching of systems starting considering only the wavevector mismatch (DeltaBeta).
+    This class is used to simulate phasematching of systems considering only the wavevector mismatch (DeltaBeta).
     """
 
     def __init__(self, waveguide):
         """
-        Initialize the class by providing a waveguide object.
+
         :param waveguide: Waveguide object, as provided by the class waveguide.
+        :type waveguide: :class:`~pynumpm.waveguide.waveguide`
         """
         self.__waveguide = waveguide
         self.__deltabeta = None
@@ -39,10 +37,16 @@ class PhasematchingDeltaBeta(object):
 
     @property
     def waveguide(self):
+        """
+        Waveguide object, as defined by the user during initialization.
+        """
         return self.__waveguide
 
     @property
     def deltabeta(self):
+        """
+        Array of the $\Delta\beta$ values, as defined by the user.
+        """
         return self.__deltabeta
 
     @deltabeta.setter
@@ -53,6 +57,9 @@ class PhasematchingDeltaBeta(object):
 
     @property
     def phi(self):
+        """
+        Phasematching spectrum (complex valued numpy.ndarray)
+        """
         return self.__phi
 
     @phi.setter
@@ -123,9 +130,8 @@ class Phasematching1D(object):
     The convention for labelling wavelength is abs(lambda_red) >= abs(lambda_green) >= abs(lambda_blue), i.e. according
     to their "energy".
 
-    Public Attributes:
-
     :param waveguide: waveguide object
+    :type waveguide: :class:`pynumpm.waveguide.waveguide`
     :param phi: phasematching spectrum (complex valued function)
     :param n_red: refractive index for "red" wavelength
     :param n_green: refractive index for "green" wavelength
@@ -450,6 +456,11 @@ class Phasematching1D(object):
 
 
 class Phasematching2D(object):
+    """
+    Phasematching2d class
+
+    """
+
     def __init__(self, waveguide, n_red, n_green, n_blue, **kwargs):
         """
         Initialize the process to be studied.
