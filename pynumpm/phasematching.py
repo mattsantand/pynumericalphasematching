@@ -526,8 +526,8 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         self.__red_is_set = True
         if self.__red_is_set:
             logger.info("Red wavelength has been set: %f:%f:%f",
-                        self.red_wavelength[0], self.red_wavelength[1] - self.red_wavelength[0], self.red_wavelength[-1]
-                        )
+                        self.red_wavelength[0] * 1e9, self.red_wavelength[1] * 1e9 - self.red_wavelength[0] * 1e9,
+                        self.red_wavelength[-1] * 1e9)
 
     def set_green(self, **kwargs):
         """
@@ -557,8 +557,8 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         self.__green_is_set = True
         if self.__green_is_set:
             logger.info("Green wavelength has been set: %f:%f%:%f",
-                        self.green_wavelength[0], ":", self.green_wavelength[1] - self.green_wavelength[0],
-                        self.green_wavelength[-1])
+                        self.green_wavelength[0] * 1e9, self.green_wavelength[1] * 1e9 - self.green_wavelength[0] * 1e9,
+                        self.green_wavelength[-1] * 1e9)
 
     def set_blue(self, **kwargs):
         """
@@ -589,8 +589,8 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         self.__blue_is_set = True
         if self.__blue_is_set:
             logger.info("Blue wavelength has been set: %f:%f:%f",
-                        self.blue_wavelength[0], self.blue_wavelength[1] - self.blue_wavelength[0],
-                        self.blue_wavelength[-1])
+                        self.blue_wavelength[0] * 1e9, self.blue_wavelength[1] * 1e9 - self.blue_wavelength[0] * 1e9,
+                        self.blue_wavelength[-1] * 1e9)
 
     def calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
@@ -898,6 +898,8 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         :param pump:
         :return:
         """
+        logger = logging.getLogger(__name__)
+        logger.info("Calculating JSA")
         if self.process == "pdc":
             d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
             d_wl2 = abs(self.green_wavelength[1] - self.green_wavelength[0])
@@ -961,12 +963,13 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
 
         :return:
         """
+        logger = logging.getLogger(__name__)
         U, self.singular_values, V = np.linalg.svd(self.JSA)
         self.singular_values /= np.sqrt((self.singular_values ** 2).sum())
         self.K = 1 / (self.singular_values ** 4).sum()
-        if verbose:
-            print("Check normalization: sum of s^2 = ", (abs(self.singular_values) ** 2).sum())
-            print("K = ", self.K)
+
+        logger.debug("Check normalization: sum of s^2 = ", (abs(self.singular_values) ** 2).sum())
+        logger.info("K = ", self.K)
         return self.K
 
     def extract_max_phasematching_curve(self, **kwargs):
@@ -1005,113 +1008,6 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         elif self.process == "sfg":
             pump = 1. / (1. / IDL - 1. / SIG)
             return SIG, pump, IDL
-
-
-def example_1D_phasematching():
-    from sellmeier_from_database import LNwg  # This is a very well hidden dependency!
-    from pynumpm import waveguide
-
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                        datefmt='%m-%d %H:%M')
-
-    length = 10e-3  # length in m
-    dz = 50e-6  # discretization in m
-    z = np.arange(0, length + dz, dz)
-
-    TE, TM, __WIDTH_LIM, __THICKNESS_LIM = LNwg()
-    nte = lambda w: TE(w, 0.08)
-    ntm = lambda w: TM(w, 0.08)
-
-    poling_period = calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(7.0), ntm(7.0), ntm(7.0), 1)[-1]
-    print("Poling period: ", poling_period)
-
-    thiswaveguide = waveguide.Waveguide(z=z,
-                                        poling_period=poling_period,
-                                        nominal_parameter=7.0,
-                                        nominal_parameter_name=r"Wg width [$\mu$m]")
-    thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
-                                         noise_amplitude=0.3)
-    # thiswaveguide.add_standard_noise(variable_parameter="width",
-    #                                  nominal_parameter=7.0,
-    #                                  noise_type="1/f",
-    #                                  noise_parameter=0.3)
-    # thiswaveguide.add_standard_noise(variable_parameter="width",
-    #                                  nominal_parameter=7.0,
-    #                                  noise_type="1/f",
-    #                                  noise_parameter=0.3)
-    thisprocess = Phasematching1D(waveguide=thiswaveguide,
-                                  n_red=ntm,
-                                  n_green=ntm,
-                                  n_blue=ntm,
-                                  process="shg")
-    wl_red = np.linspace(1.540, 1.560, 1000) * 1e-6
-    thisprocess.set_wavelengths(wl_red, wl_red, 0, constlam="shg")
-    thisprocess.set_nonlinearity_profile(profile_type="constant",
-                                         first_order_coefficient=False)
-    phi = thisprocess.calculate_phasematching()
-    plt.plot(wl_red * 1e9, abs(phi) ** 2)
-    thisprocess.plot()
-    # thisprocess.plot(plot_intensity=False, ls=":", lw=4)
-    plt.show()
-
-
-def example_2D_phasematching():
-    from sellmeier_from_database import LNwg
-    from pynumpm import waveguide
-    length = 20e-3  # length in m
-    dz = 100e-6  # discretization in m
-
-    TE, TM, __WIDTH_LIM, __THICKNESS_LIM = LNwg()
-    nte = lambda w: TE(w, 0.08)
-    ntm = lambda w: TM(w, 0.08)
-
-    lamr, lamg, lamb, poling_period_um = calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(7.0), ntm(7.0), nte(7.0), 1)
-    print("Poling period: ", poling_period_um)
-
-    thiswaveguide = waveguide.Waveguide(length=length,
-                                        dz=dz,
-                                        poling=poling_period_um)
-    thisnoise = NoiseProfile(z=thiswaveguide.z, offset=7.)
-    thisnoise.generate_noise(noise_type="logistic", sigma=0.42, k=30 / length)
-    thisnoise.plot_noise_properties()
-    thiswaveguide.evaluate_profile(parameter="width",
-                                   profile="custom",
-                                   nominal_parameter=7.0,
-                                   data=thisnoise.noise + 7.0,
-                                   method="none")
-    thisprocess = Phasematching2D(waveguide=thiswaveguide,
-                                  n_red=nte,
-                                  n_green=ntm,
-                                  n_blue=nte,
-                                  process="sfg")
-    thisprocess.set_red(central_wavelength=1.55e-6,
-                        delta_lambda=20e-9,
-                        n_points=500)
-    thisprocess.set_blue(central_wavelength=0.55e-6,
-                         delta_lambda=1e-9,
-                         n_points=500)
-    thisprocess.calculate_phasematching()
-    thisprocess.plot_phasematching()
-
-    pump = Pump(process="SFG")
-    signal_wl = thisprocess.red_wavelength
-    idler_wl = thisprocess.blue_wavelength
-    SIG, ID = np.meshgrid(signal_wl, idler_wl)
-    pump_center = lamg * 1e-6
-    pump_width = 2E-9
-    pump.signal_wavelength = SIG
-    pump.idler_wavelength = ID
-    pump.pump_center = pump_center
-    print(pump.pump_center)
-    pump.pump_width = pump_width
-    result = pump.pump()
-    result /= abs(result).max()
-
-    thisprocess.calculate_JSA(pump=pump)
-    thisprocess.plot_JSI()
-    print("K: ", thisprocess.calculate_schmidt_number(verbose=True))
-    plt.show()
 
 
 def phasematching_2D():
