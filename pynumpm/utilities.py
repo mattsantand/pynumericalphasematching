@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.interpolate import UnivariateSpline
+from scipy.signal import savgol_filter
 
 
 def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, order=1, **kwargs):
@@ -45,3 +47,33 @@ def deltabeta(lam1, lam2, free_param, nr, ng, nb, poling=np.infty):
     else:
         raise ValueError("Wrong label for free parameter")
     return wlr, wlg, wlb, 2 * np.pi * (nb(wlb) / wlb - ng(wlg) / wlg - nr(wlr) / wlr - 1 / poling)
+
+
+def bandwidth(wl, phi, **kwargs):
+    """
+    Calculates the bandwidth of a given phasematching phi on axis wl from a fitting with savgol_filter
+
+    :param wl: Wavelengths
+    :type wl: Array
+    :param phi: Phasematching intensity
+    :type phi: Array
+    :return: FWHM bandwidth of the phasematching intensity
+
+    Additional parameters
+
+    :param window_size: Savgol_filter parameter
+    :type window_size: int
+    :param polynomial_order: Savgol_filter parameter
+    :type polynomial_order: int
+    """
+
+    window_size = kwargs.get("window_size", 71)
+    polynomial_order = kwargs.get("polynomial_order", 9)
+
+    smoothed = savgol_filter(phi, window_size, polynomial_order)
+
+    spline = UnivariateSpline(wl * 1e9, np.abs(smoothed) ** 2 - np.max(np.abs(smoothed) ** 2) / 2, s=0)
+    r1, r2 = spline.roots()
+    bw = r2 - r1
+
+    return bw
