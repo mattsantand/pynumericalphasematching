@@ -173,6 +173,7 @@ class Waveguide(object):
         if poling_structure.shape != self.profile.shape:
             raise ValueError("The poling_structure must have the same shape as the waveguide profile!")
         self.__poling_structure = poling_structure
+        self.__poling_period = +np.infty
 
     def plot(self, ax=None):
         """

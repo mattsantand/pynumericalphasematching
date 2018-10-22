@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Module to calculate the phasematching of a given waveguide, as specified by the Waveguide class.
 
@@ -19,14 +20,14 @@ from scipy.integrate import simps
 
 class PhasematchingDeltaBeta(object):
     """
-    This class is used to simulate phasematching of systems considering only the wavevector mismatch (DeltaBeta).
+    This class is used to simulate phasematching of systems considering only the wavevector mismatch (:math:`\Delta\\beta).
     """
 
     def __init__(self, waveguide):
         """
 
         :param waveguide: Waveguide object, as provided by the class waveguide.
-        :type waveguide: :class:`~pynumpm.waveguide.waveguide`
+        :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
         """
         self.__waveguide = waveguide
         self.__deltabeta = None
@@ -45,7 +46,7 @@ class PhasematchingDeltaBeta(object):
     @property
     def deltabeta(self):
         """
-        Array of the $\Delta\beta$ values, as defined by the user.
+        Array of the :math:`\Delta\\beta` values, as defined by the user.
         """
         return self.__deltabeta
 
@@ -59,6 +60,7 @@ class PhasematchingDeltaBeta(object):
     def phi(self):
         """
         Phasematching spectrum (complex valued numpy.ndarray)
+
         """
         return self.__phi
 
@@ -186,9 +188,9 @@ class Phasematching1D(object):
         The respective wavelength has to be a float, the scanned wavelength has to be a vector and the dependent wavelength
         has to be set to 0. If *constlam* is "shg", then you need just to set the **lam_red** OR **lam_blue** variable.
 
-        :param lam_red: Vector containing the red wavelengths. Either 0, or array of floats. Wavelengths in meter.
-        :param lam_green: Vector containing the green wavelengths. Either 0, or array of floats. Wavelengths in meter.
-        :param lam_blue: Vector containing the blue wavelengths. Either 0, or array of floats. Wavelengths in meter.
+        :param lam_red: Vector containing the red wavelengths. Either 0, float or array of floats. Wavelengths in meter.
+        :param lam_green: Vector containing the green wavelengths. Either 0, float  or array of floats. Wavelengths in meter.
+        :param lam_blue: Vector containing the blue wavelengths. Either 0, float  or array of floats. Wavelengths in meter.
         :param constlam: String containing the constant wavelength to scan. Either "b", "g", "r" or "shg".
         :return:
         """
@@ -358,9 +360,14 @@ class Phasematching1D(object):
         This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and scanning the other two.
 
         :return:
+
         """
+        if not self.__wavelength_set:
+            raise IOError("The wavelengths have not been set!")
+
         logger = logging.getLogger(__name__)
         logger.info("Calculating phasematching")
+
         if not self._nonlinear_profile_set:
             self.set_nonlinearity_profile()
         if self.waveguide.poling_structure_set:
@@ -472,21 +479,22 @@ class Phasematching2D(object):
             (i.e., n(w) if the width changes along the waveguide)
         :param n_blue: function to compute the Sellmeier depending on the parameter that varies in the waveguide
             (i.e., n(w) if the width changes along the waveguide)
-        :param kwargs: Additional parameters are:
 
-            * :param process: [**PDC**/SFG]: process to be studied. If process is PDC, then you must specify the red
-and green wavelengths; if process is SFG, you must specify red and blue wavelengths.
-            * :param order: [**1**]: order of the phasematching process
-              :type order: int
+        Additional parameters are:
 
-        Other parameters related to this objects are:
+        * :param process: [**PDC**/SFG]: process to be studied. If process is PDC, then you must specify the red
+        and green wavelengths; if process is SFG, you must specify red and blue wavelengths.
+        * :param order: [**1**]: order of the phasematching process
+          :type order: int
 
-            * :param __red_is_set: Parameter that is set to True if the red wl has been initialized
-              :type __red_is_set: bool
-            * :param __green_is_set: Parameter that is set to True if the green wl has been initialized
-              :type __green_is_set: bool
-            * :param __blue_is_set: Parameter that is set to True if the blue wl has been initialized
-              :type __blue_is_set: bool
+    Other parameters related to this objects are:
+
+        * :param __red_is_set: Parameter that is set to True if the red wl has been initialized
+          :type __red_is_set: bool
+        * :param __green_is_set: Parameter that is set to True if the green wl has been initialized
+          :type __green_is_set: bool
+        * :param __blue_is_set: Parameter that is set to True if the blue wl has been initialized
+          :type __blue_is_set: bool
 
         """
         self.waveguide = waveguide
@@ -729,14 +737,13 @@ and green wavelengths; if process is SFG, you must specify red and blue waveleng
         to be kept fixed (**fix_wl**) and evaluating the interpolation at the value provided (**value**). In this way, it is possible to cut
         along wavelength not present in the original grid.
 
-        :param kwargs:
+        * :param fix_wl: [**red*/green/blue] Wavelength to be kept fixed while slicing
+          :type fix_wl: str
+        * :param value: [**red_cwl**] Value of the wavelength to be kept fixed
+          :type value: float
+        * :param show: If True, plots the slice
+          :type show: bool
 
-            * :param fix_wl: [**red*/green/blue] Wavelength to be kept fixed while slicing
-              :type fix_wl: str
-            * :param value: [**red_cwl**] Value of the wavelength to be kept fixed
-              :type value: float
-            * :param show: If True, plots the slice
-              :type show: bool
         """
         fix_wl = kwargs.get("fix_wl", "red").lower()
         scan_wl = kwargs.get("scan_wl", "green").lower()
