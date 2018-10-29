@@ -132,6 +132,7 @@ def example_1D_phasematching():
     thisprocess.set_nonlinearity_profile(profile_type="constant",
                                          first_order_coefficient=False)
     phi = thisprocess.calculate_phasematching()
+    print phi.shape
     thisprocess.plot()
 
 
@@ -198,6 +199,6 @@ if __name__ == '__main__':
     # example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
-    # example_1D_phasematching()
+    example_1D_phasematching()
     # example_2D_phasematching()
     plt.show()

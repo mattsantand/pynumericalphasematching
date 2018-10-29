@@ -196,7 +196,7 @@ class Phasematching1D(object):
         :param constlam: String containing the constant wavelength to scan. Either "b", "g", "r" or "shg".
         :return:
         """
-
+        logger = logging.getLogger(__name__)
         if self.process.lower() == "shg" and constlam.lower() != "shg":
             raise ValueError(
                 "You set the process to be 'shg', but the constlam is {0}. What should I do?".format(constlam))
@@ -261,9 +261,11 @@ class Phasematching1D(object):
         self.red_wavelength = lam_red
         self.green_wavelength = lam_green
         self.blue_wavelength = lam_blue
+        logger.debug("Shapes wavelength: {0}, {1}, {2}".format(self.red_wavelength.shape,
+                                                               self.green_wavelength.shape,
+                                                               self.blue_wavelength.shape, ))
         print("Safety check on central wavelengths: ", self.lamb0, self.lamg0, self.lamr0, self.lamb0 ** -1 - (
                 self.lamr0 ** -1 + self.lamg0 ** -1))
-
         self.__wavelength_set = True
 
     def set_nonlinearity_profile(self, profile_type="constant", **kwargs):
@@ -347,11 +349,13 @@ class Phasematching1D(object):
         Computes the delta k.
         The wavelengths are provided in meter.
         """
+        logger = logging.getLogger(__name__)
         if self.propagation_type == "copropagation":
             dd = 2 * pi * (n_blue(abs(wl_blue) * 1e6) / wl_blue -
                            n_green(abs(wl_green) * 1e6) / wl_green -
                            n_red(abs(wl_red) * 1e6) / wl_red -
                            float(self.order) / self.waveguide.poling_period)
+            logger.debug("DK shape in __calculate_delta_k: " + str(dd.shape))
             return dd
         elif self.propagation_type == "backpropagation":
 
@@ -383,16 +387,21 @@ class Phasematching1D(object):
             logger.info("Poling period is set. Calculating with constant poling structure.")
 
         # edited at 28/09/2017 because the previous for loop was wrong!
+        logger.debug("Shape red: " + str(self.red_wavelength.shape))
+        logger.debug("Shape green: " + str(self.green_wavelength.shape))
+        logger.debug("Shape blue: " + str(self.blue_wavelength.shape))
         tmp_dk = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
                                           *self.calculate_local_neff(0))
         self.__cumulative_DK = np.zeros(shape=tmp_dk.shape)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_DK.shape, dtype=complex)
+        logger.debug("Shape cum_dk:" + str(self.__cumulative_DK.shape))
+        logger.debug("Shape cum_exp:" + str(self.__cumulative_exponential.shape))
         self.dk_profile = np.zeros(shape=self.waveguide.z.shape)
         dz = self.waveguide.z[1] - self.waveguide.z[0]
         for idx, z in enumerate(self.waveguide.z):
             if verbose:
                 if idx % 20 == 0:
-                    logger.info("z = ", z * 1e3, " mm")
+                    logger.info("z = " + str(z * 1e3) + " mm")
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
