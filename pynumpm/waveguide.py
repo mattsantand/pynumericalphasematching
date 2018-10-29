@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 from pynumpm import noise
@@ -15,25 +13,6 @@ class Waveguide(object):
     moment).
 
     """
-
-    # Attributes:
-    #     * z: numpy array of the space discretization [in meter]. Linear spacing is required.
-    #     * dz: spatial discretization [in meter].
-    #     * length: waveguide length [in meter].
-    #     * profile: numpy array containing the waveguide profile. Has the same dimension of _z_.
-    #     * poling_period: poling period of the structure [in meter].
-    #     * poling_period_um: poling period of the structure [in micron].
-    #     * poling_structure: vector containing the orientation of the chi(2), if the poling orientation is specified.
-    #     * poling_structure_set: boolean that tracks if the poling structure has been set.
-    #     * nominal_parameter: the nominal fabrication parameter of the waveguide.
-    #     * nominal_parameter_name: the name of the fabrication parameter under investigation.
-    #
-    # Methods:
-    #     * create_uniform_waveguide: function to create a uniform waveguide profile
-    #     * load_waveguide_profile: function to load a user-defined waveguide profile.
-    #     * create_noisy_waveguide: function to create a noisy waveguide.
-    #     * load_poling_structure: function to load a poling structure.
-    #     * plot: function to plot the waveguide profile.
 
     def __init__(self, z=None, poling_period=None, nominal_parameter=1., nominal_parameter_name=""):
         """
@@ -125,7 +104,7 @@ class Waveguide(object):
         """
         y = nominal_parameter * np.ones(shape=self.z.shape)
         self.nominal_parameter = nominal_parameter
-        #return y
+        # return y
 
     def load_waveguide_profile(self, waveguide_profile):
         """

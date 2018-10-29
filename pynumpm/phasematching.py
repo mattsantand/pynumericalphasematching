@@ -18,6 +18,8 @@ import pprint
 from scipy.integrate import simps
 
 
+# TODO: replace rectangular integration with the sinc (the currect integration)
+
 class PhasematchingDeltaBeta(object):
     """
     This class is used to simulate phasematching of systems considering only the wavevector mismatch (:math:`\Delta\\beta).
@@ -277,8 +279,13 @@ class Phasematching1D(object):
         :param kwargs:
         :return:
         """
+        logger = logging.getLogger(__name__)
+        logger.info("Setting the nonlinear profile.")
+        logger.debug("Profile type: {pt}".format(pt=profile_type))
         if profile_type == "constant":
-            if kwargs.get("first_order_coefficient", True):
+            first_order_coeff = kwargs.get("first_order_coefficient", True)
+            logger.debug("First order coefficient: {foc}".format(foc=first_order_coeff))
+            if first_order_coeff:
                 # g = lambda z: 2 / pi * np.ones(z.shape)
                 g = lambda z: 2 / pi
             else:
@@ -369,7 +376,7 @@ class Phasematching1D(object):
         logger.info("Calculating phasematching")
 
         if not self._nonlinear_profile_set:
-            self.set_nonlinearity_profile()
+            self.set_nonlinearity_profile(profile_type="constant", first_order_coefficient=False)
         if self.waveguide.poling_structure_set:
             logger.info("Poling period is not set. Calculating from structure.")
         else:
