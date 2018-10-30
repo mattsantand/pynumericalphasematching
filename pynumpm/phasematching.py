@@ -470,7 +470,10 @@ class Phasematching1D(object):
             plt.gca().twinx().plot(wl * 1e9, np.unwrap(np.angle(self.phi)), ls=":", color="k", label="Phase", **kwargs)
             plt.gca().set_ylabel("Phase [rad]")
 
-        ax.set_xlabel("Wavelength [nm]")
+        xlabel = kwargs.get("xlabel", "Wavelength [nm]")
+        ylabel = kwargs.get("ylabel", "Intensity [a.u.]")
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         ax.set_title("Phasematching")
         fig = plt.gcf()
         d = {"fig": fig,
