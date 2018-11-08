@@ -261,9 +261,9 @@ class Phasematching1D(object):
         self.red_wavelength = lam_red
         self.green_wavelength = lam_green
         self.blue_wavelength = lam_blue
-        logger.debug("Shapes wavelength: {0}, {1}, {2}".format(self.red_wavelength.shape,
-                                                               self.green_wavelength.shape,
-                                                               self.blue_wavelength.shape, ))
+        # logger.debug("Shapes wavelength: {0}, {1}, {2}".format(self.red_wavelength.shape,
+        #                                                        self.green_wavelength.shape,
+        #                                                        self.blue_wavelength.shape, ))
         print("Safety check on central wavelengths: ", self.lamb0, self.lamg0, self.lamr0, self.lamb0 ** -1 - (
                 self.lamr0 ** -1 + self.lamg0 ** -1))
         self.__wavelength_set = True
@@ -387,9 +387,9 @@ class Phasematching1D(object):
             logger.info("Poling period is set. Calculating with constant poling structure.")
 
         # edited at 28/09/2017 because the previous for loop was wrong!
-        logger.debug("Shape red: " + str(self.red_wavelength.shape))
-        logger.debug("Shape green: " + str(self.green_wavelength.shape))
-        logger.debug("Shape blue: " + str(self.blue_wavelength.shape))
+        # logger.debug("Shape red: " + str(self.red_wavelength.shape))
+        # logger.debug("Shape green: " + str(self.green_wavelength.shape))
+        # logger.debug("Shape blue: " + str(self.blue_wavelength.shape))
         tmp_dk = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
                                           *self.calculate_local_neff(0))
         self.__cumulative_DK = np.zeros(shape=tmp_dk.shape)
@@ -927,7 +927,7 @@ class Phasematching2D(object):
         active_axes = [i[0] for i in list_wl if i[1]]
         return active_axes
 
-    def calculate_JSA(self, pump):
+    def calculate_JSA(self, thispump):
         """
         Function to calculate the JSA.
         Requires as an input a pump Object (from the class Pump written by Benni)
@@ -940,11 +940,20 @@ class Phasematching2D(object):
         if self.process == "pdc":
             d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
             d_wl2 = abs(self.green_wavelength[1] - self.green_wavelength[0])
+            wl1 = self.red_wavelength
+            wl2 = self.green_wavelength
         elif self.process == "sfg":
             d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
             d_wl2 = abs(self.blue_wavelength[1] - self.blue_wavelength[0])
+            wl1 = self.red_wavelength
+            wl2 = self.blue_wavelength
 
-        self.pump = pump.pump()
+        WL1, WL2 = np.meshgrid(wl1, wl2)
+        if thispump.signal_wavelength is None:
+            thispump.signal_wavelength = WL1
+        if thispump.idler_wavelength is None:
+            thispump.idler_wavelength = WL2
+        self.pump = thispump.pump()
         self.JSA = self.pump * self.phi
         self.JSA /= np.sqrt((abs(self.JSA) ** 2).sum() * d_wl1 * d_wl2)
         self.JSI = abs(self.JSA) ** 2
