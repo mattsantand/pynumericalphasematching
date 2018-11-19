@@ -183,8 +183,10 @@ class Phasematching1D(object):
         else:
             self.propagation_type = "copropagation"
         self._nonlinear_profile_set = False
+        self.noise_length_product = None
+        self.scanning_wavelength = None
 
-    def set_wavelengths(self, lam_red, lam_green, lam_blue, constlam="shg"):
+    def set_wavelengths(self, lam_red=None, lam_green=None, lam_blue=None, constlam="shg"):
         """
         Function to set the wavelength wectors. Set the constant wavelength with a string with the parameter *constlam*.
         The respective wavelength has to be a float, the scanned wavelength has to be a vector and the dependent wavelength
@@ -200,15 +202,24 @@ class Phasematching1D(object):
         if self.process.lower() == "shg" and constlam.lower() != "shg":
             raise ValueError(
                 "You set the process to be 'shg', but the constlam is {0}. What should I do?".format(constlam))
+        ll = [lam_red, lam_green, lam_blue]
+        for idx, wl in enumerate(ll):
+            if wl is not None:
+                if isinstance(wl, type(np.array([0]))):
+                    self.scanning_wavelength = wl
+                else:
+                    if wl == 0:
+                        ll[idx] = None
+        lam_red, lam_green, lam_blue = ll
 
         self.constlam = constlam
         if self.constlam == "b":
             self.lamb0 = lam_blue
-            if lam_green == 0:
+            if lam_green is None:
                 self.lamr0 = lam_red.mean()
                 self.lamg0 = (abs(self.lamb0) ** -1 - abs(self.lamr0) ** -1) ** -1
                 lam_green = (abs(lam_blue) ** -1 - abs(lam_red) ** -1) ** -1
-            elif lam_red == 0:
+            elif lam_red is None:
                 self.lamg0 = lam_green.mean()
                 self.lamr0 = (abs(self.lamb0) ** -1 - abs(self.lamg0) ** -1) ** -1
                 lam_red = (abs(lam_blue) ** -1 - abs(lam_green) ** -1) ** -1
@@ -217,11 +228,11 @@ class Phasematching1D(object):
 
         elif self.constlam == "g":
             self.lamg0 = lam_green
-            if lam_blue == 0:
+            if lam_blue is None:
                 self.lamr0 = lam_red.mean()
                 self.lamb0 = (abs(self.lamg0) ** -1 + abs(self.lamr0) ** -1) ** -1
                 lam_blue = (abs(lam_green) ** -1 + abs(lam_red) ** -1) ** -1
-            elif lam_red == 0:
+            elif lam_red is None:
                 self.lamb0 = lam_blue.mean()
                 self.lamr0 = (abs(self.lamb0) ** -1 - abs(self.lamr0) ** -1) ** -1
                 lam_red = (abs(lam_blue) ** -1 - abs(lam_green) ** -1) ** -1
@@ -230,12 +241,12 @@ class Phasematching1D(object):
         elif self.constlam == "r":
             # The constant wavelength is the red one.
             self.lamr0 = lam_red
-            if lam_blue == 0:
+            if lam_blue is None:
                 # The user has specified the green --> I have to calculate the blue
                 self.lamg0 = lam_green.mean()
                 self.lamb0 = (abs(self.lamg0) ** -1 + abs(self.lamr0) ** -1) ** -1
                 lam_blue = (abs(lam_green) ** -1 + abs(lam_red) ** -1) ** -1
-            elif lam_green == 0:
+            elif lam_green is None:
                 # The user has specified the blue --> I need to calculate the green
                 self.lamb0 = lam_blue.mean()
                 self.lamg0 = (abs(self.lamb0) ** -1 - abs(self.lamr0) ** -1) ** -1
@@ -243,12 +254,12 @@ class Phasematching1D(object):
             else:
                 raise ValueError("Conflict in constlam=='r'")
         elif self.constlam == "shg":
-            if lam_blue == 0:
+            if lam_blue is None:
                 self.lamr0 = lam_red.mean()
                 self.lamg0 = self.lamr0
                 self.lamb0 = self.lamr0 / 2.
                 lam_blue = lam_red / 2.
-            elif lam_red == 0:
+            elif lam_red is None:
                 self.lamb0 = lam_blue.mean()
                 self.lamr0 = self.lamb0 * 2
                 self.lamg0 = self.lamr0
@@ -424,6 +435,9 @@ class Phasematching1D(object):
             self.phi /= self.waveguide.length
         self.noise_length_product = abs(self.dk_profile).max() * self.waveguide.z[-1]
         return self.phi
+
+    def calculate_integral(self):
+        return simps(abs(self.phi) ** 2, self.scanning_wavelength)
 
     def plot_phasematching_error(self, ax=None):
         # self.calculate_phasematching_error()
