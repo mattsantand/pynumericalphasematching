@@ -150,7 +150,7 @@ class PhasematchingDeltaBeta(object):
 
 class Phasematching1D(object):
     """
-    Class to calculate the 1D-phasematching, i.e. having one fixed wavelength and scanning another one (the thir is
+    Class to calculate the 1D-phasematching, i.e. having one fixed wavelength and scanning another one (the third is
     fixed due to energy conservation.
     The convention for labelling wavelength is abs(lambda_red) >= abs(lambda_green) >= abs(lambda_blue), i.e. according
     to their "energy".
