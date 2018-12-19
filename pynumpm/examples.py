@@ -63,12 +63,12 @@ def example_waveguide():
     noisy_waveguide.create_noisy_waveguide(noise_profile="awgn",
                                            noise_amplitude=0.1)
     noisy_waveguide.plot()
-
-    noisy_waveguide = WG.Waveguide(z=z, nominal_parameter=7., nominal_parameter_name="Width")
+    noisy_waveguide = WG.Waveguide(z=z, nominal_parameter=7., nominal_parameter_name=r"Width [$\mu$m]")
     noisy_waveguide.create_noisy_waveguide(noise_profile="1/f",
                                            noise_amplitude=0.1,
                                            nominal_parameter=3.0)
     noisy_waveguide.plot()
+    noisy_waveguide.plot_waveguide_properties(set_multiplier_x=1e3)
     plt.show()
 
 
@@ -195,9 +195,9 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
-    # example_waveguide()
+    example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
-    example_1D_phasematching()
+    # example_1D_phasematching()
     # example_2D_phasematching()
     plt.show()
