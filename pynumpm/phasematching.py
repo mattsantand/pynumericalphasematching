@@ -37,6 +37,7 @@ class PhasematchingDeltaBeta(object):
         self.__cumulative_delta_beta = None
         self.__cumulative_exp = None
         self.__cumulative_sinc = None
+        self.__noise_length_product = None
 
     @property
     def waveguide(self):
@@ -70,6 +71,10 @@ class PhasematchingDeltaBeta(object):
     def phi(self, value):
         self.__phi = value
 
+    @property
+    def noise_length_product(self):
+        return self.__noise_length_product
+
     def calculate_phasematching(self, deltabeta, normalized=False):
         """
         Function that calculates the phasematching, given the vector of deltabeta (wavevector mismatch)
@@ -97,26 +102,42 @@ class PhasematchingDeltaBeta(object):
         self.__phi = self.__cumulative_sinc
         if normalized:
             self.__phi /= self.waveguide.z[-1]
+        self.__noise_length_product = abs(self.waveguide.profile).max() * self.waveguide.length
         return self.phi
 
-    def plot(self, normalized=False, fig=None, ax=None):
-        logger = logging.getLogger(__name__)
+    def plot(self, ax=None, normalized=False, verbose=False):
+        """
+        Function to plot the phasematching intensity.
 
+        :param ax: Optional argument. Handle of the axis of the plot. Default: None
+        :param normalized: Optional argument. If True, normalizes the plotted phasematchig to have the maximum to 1. Default: False
+        :type normalized: bool
+        :param verbose: Optional. If True, writes the main information in the plot. Default: False
+        :type verbose: bool
+        :return:
+        """
         if ax is None:
-            if fig is None:
-                plt.figure()
-            else:
-                plt.figure(fig.number)
-        else:
-            if fig is not None:
-                logger.info("I will use the axis value you defined, not the figure.")
-            else:
-                plt.sca(ax)
-
+            fig = plt.figure()
+            plt.subplot(111)
+            ax = plt.gca()
+        if self.phi is None:
+            raise IOError(
+                "I'd really like to plot something nice, but you have not calculated the phasematching yet, to this would only be a white canvas.")
         y = abs(self.phi) ** 2
         if normalized:
             y = abs(self.phi) ** 2 / y.max()
-        plt.plot(self.deltabeta, y)
+        ax.plot(self.deltabeta, y)
+        if verbose:
+            integral = self.calculate_integral()
+            noise_length_product = self.noise_length_product
+            text = "Integral: {integ:.3}\n".format(integ=integral) + \
+                   r"$\sigma L$ = {sigmaL:.3}".format(sigmaL=noise_length_product)
+            x0, x1 = plt.xlim()
+            y0, y1 = plt.ylim()
+            x = .7 * (x1 - x0) + x0
+            y = .7 * y1
+            print(x, y, text)
+            plt.text(x, y, text)
 
     def calculate_integral(self):
         """
