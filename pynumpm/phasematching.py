@@ -171,7 +171,7 @@ class Phasematching1D(object):
 
     """
 
-    def __init__(self, waveguide, n_red, n_green, n_blue, process, order=1):
+    def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
         """
         Variables:
 
@@ -192,15 +192,13 @@ class Phasematching1D(object):
         self.__constlam = None
         # ====================================================
         self.order = order
-        self.process = process
-        if self.process is None:
-            raise ValueError("Please, initialize process")
-        self.red_wavelength = None
-        self.green_wavelength = None
-        self.blue_wavelength = None
-        if self.process[:2] == "bw":
+        # TODO: check if and how the poling order interferes when the poling structure is set
+        self.process = None
+        self.__red_wavelength = None
+        self.__green_wavelength = None
+        self.__blue_wavelength = None
+        if backpropagation:
             self.propagation_type = "backpropagation"
-            self.process = self.process[2:]
         else:
             self.propagation_type = "copropagation"
         self._nonlinear_profile_set = False
@@ -209,6 +207,9 @@ class Phasematching1D(object):
         self.__cumulative_delta_beta = None
         self.__cumulative_exponential = None
         self.__delta_beta0_profile = None
+        self.__lamr0 = None
+        self.__lamg0 = None
+        self.__lamb0 = None
 
     @property
     def waveguide(self):
@@ -231,6 +232,30 @@ class Phasematching1D(object):
         return self.__n_red
 
     @property
+    def red_wavelength(self):
+        return self.__red_wavelength
+
+    @red_wavelength.setter
+    def red_wavelength(self, value):
+        self.__red_wavelength = value
+
+    @property
+    def green_wavelength(self):
+        return self.__green_wavelength
+
+    @green_wavelength.setter
+    def green_wavelength(self, value):
+        self.__green_wavelength = value
+
+    @property
+    def blue_wavelength(self):
+        return self.__blue_wavelength
+
+    @blue_wavelength.setter
+    def blue_wavelength(self, value):
+        self.__blue_wavelength = value
+
+    @property
     def constlam(self):
         return self.__constlam
 
@@ -238,95 +263,57 @@ class Phasematching1D(object):
     def noise_length_product(self):
         return self.__noise_length_product
 
-    def set_wavelengths(self, lam_red=None, lam_green=None, lam_blue=None, constlam="shg"):
-        """
-        Function to set the wavelength wectors. Set the constant wavelength with a string with the parameter *constlam*.
-        The respective wavelength has to be a float, the scanned wavelength has to be a vector and the dependent wavelength
-        has to be set to 0. If *constlam* is "shg", then you need just to set the **lam_red** OR **lam_blue** variable.
-
-        :param lam_red: Vector containing the red wavelengths. Either 0, float or array of floats. Wavelengths in meter.
-        :param lam_green: Vector containing the green wavelengths. Either 0, float  or array of floats. Wavelengths in meter.
-        :param lam_blue: Vector containing the blue wavelengths. Either 0, float  or array of floats. Wavelengths in meter.
-        :param constlam: String containing the constant wavelength to scan. Either "b", "g", "r" or "shg".
-        :return:
-        """
+    def set_wavelengths(self):
         logger = logging.getLogger(__name__)
-        if self.process.lower() == "shg" and constlam.lower() != "shg":
-            raise ValueError(
-                "You set the process to be 'shg', but the constlam is {0}. What should I do?".format(constlam))
-        ll = [lam_red, lam_green, lam_blue]
-        for idx, wl in enumerate(ll):
-            if wl is not None:
-                if isinstance(wl, type(np.array([0]))):
-                    self.scanning_wavelength = wl
-                else:
-                    if wl == 0:
-                        ll[idx] = None
-        lam_red, lam_green, lam_blue = ll
-
-        self.__constlam = constlam
-        if self.constlam == "b":
-            self.lamb0 = lam_blue
-            if lam_green is None:
-                self.lamr0 = lam_red.mean()
-                self.lamg0 = (abs(self.lamb0) ** -1 - abs(self.lamr0) ** -1) ** -1
-                lam_green = (abs(lam_blue) ** -1 - abs(lam_red) ** -1) ** -1
-            elif lam_red is None:
-                self.lamg0 = lam_green.mean()
-                self.lamr0 = (abs(self.lamb0) ** -1 - abs(self.lamg0) ** -1) ** -1
-                lam_red = (abs(lam_blue) ** -1 - abs(lam_green) ** -1) ** -1
+        num_of_none = (self.red_wavelength is None) + \
+                      (self.green_wavelength is None) + \
+                      (self.blue_wavelength is None)
+        if num_of_none > 2:
+            logger.info("Test", self.red_wavelength, self.green_wavelength, self.blue_wavelength, num_of_none)
+            raise ValueError("It would be cool to know in which wavelength range I should calculate the phasematching!")
+        elif num_of_none == 2:
+            # calculate SHG
+            self.process = "shg"
+            if self.red_wavelength is not None:
+                self.green_wavelength = self.red_wavelength
+                self.blue_wavelength = self.red_wavelength / 2.
+            elif self.green_wavelength is not None:
+                self.red_wavelength = self.green_wavelength
+                self.blue_wavelength = self.green_wavelength / 2.
+            elif self.blue_wavelength is not None:
+                self.red_wavelength = self.blue_wavelength / 2.
+                self.green_wavelength = self.blue_wavelength / 2.
             else:
-                raise ValueError("Conflict in constlam=='b'")
-
-        elif self.constlam == "g":
-            self.lamg0 = lam_green
-            if lam_blue is None:
-                self.lamr0 = lam_red.mean()
-                self.lamb0 = (abs(self.lamg0) ** -1 + abs(self.lamr0) ** -1) ** -1
-                lam_blue = (abs(lam_green) ** -1 + abs(lam_red) ** -1) ** -1
-            elif lam_red is None:
-                self.lamb0 = lam_blue.mean()
-                self.lamr0 = (abs(self.lamb0) ** -1 - abs(self.lamr0) ** -1) ** -1
-                lam_red = (abs(lam_blue) ** -1 - abs(lam_green) ** -1) ** -1
+                logger.info("An error occurred in set_wavelengths. When setting the SHG wavelengths, "
+                            "all the wavelengths are set but the number of none is 2."
+                            "Red wavelength: {r}\nGreen wavelength: {g}\nBlue wavelength: {b}".format(
+                    r=self.red_wavelength,
+                    g=self.green_wavelength,
+                    b=self.blue_wavelength))
+                raise ValueError("Something unexpected happened in set_wavelength. "
+                                 "Check the log please and chat with the developer.")
+        elif num_of_none == 1:
+            self.process = "sfg/dfg"
+            if self.red_wavelength is None:
+                self.red_wavelength = (self.blue_wavelength ** -1 - self.green_wavelength ** -1) ** -1
+            elif self.green_wavelength is None:
+                self.green_wavelength = (self.blue_wavelength ** -1 - self.red_wavelength ** -1) ** -1
+            elif self.blue_wavelength is None:
+                self.blue_wavelength = (self.red_wavelength ** -1 + self.green_wavelength ** -1) ** -1
             else:
-                raise ValueError("Conflict in constlam=='g'")
-        elif self.constlam == "r":
-            # The constant wavelength is the red one.
-            self.lamr0 = lam_red
-            if lam_blue is None:
-                # The user has specified the green --> I have to calculate the blue
-                self.lamg0 = lam_green.mean()
-                self.lamb0 = (abs(self.lamg0) ** -1 + abs(self.lamr0) ** -1) ** -1
-                lam_blue = (abs(lam_green) ** -1 + abs(lam_red) ** -1) ** -1
-            elif lam_green is None:
-                # The user has specified the blue --> I need to calculate the green
-                self.lamb0 = lam_blue.mean()
-                self.lamg0 = (abs(self.lamb0) ** -1 - abs(self.lamr0) ** -1) ** -1
-                lam_green = (abs(lam_blue) ** -1 - abs(lam_red) ** -1) ** -1
-            else:
-                raise ValueError("Conflict in constlam=='r'")
-        elif self.constlam == "shg":
-            if lam_blue is None:
-                self.lamr0 = lam_red.mean()
-                self.lamg0 = self.lamr0
-                self.lamb0 = self.lamr0 / 2.
-                lam_blue = lam_red / 2.
-            elif lam_red is None:
-                self.lamb0 = lam_blue.mean()
-                self.lamr0 = self.lamb0 * 2
-                self.lamg0 = self.lamr0
-                lam_red = lam_blue * 2.
-            else:
-                raise ValueError("Conflict in constlam=='shg'")
-            lam_green = lam_red
-        else:
-            raise ValueError("constlam has to have one of the following values: 'r', 'g', 'b'.")
-        self.red_wavelength = lam_red
-        self.green_wavelength = lam_green
-        self.blue_wavelength = lam_blue
-        print("Safety check on central wavelengths: ", self.lamb0, self.lamg0, self.lamr0, self.lamb0 ** -1 - (
-                self.lamr0 ** -1 + self.lamg0 ** -1))
+                logger.info("An error occurred in set_wavelengths. When setting the SFG/DFG wavelengths, "
+                            "all the wavelengths are set but the number of none is 1."
+                            "Red wavelength: {r}\nGreen wavelength: {g}\nBlue wavelength: {b}".format(
+                    r=self.red_wavelength,
+                    g=self.green_wavelength,
+                    b=self.blue_wavelength))
+                raise ValueError("Something unexpected happened in set_wavelength. "
+                                 "Check the log please and chat with the developer.")
         self.__wavelength_set = True
+        self.__lamr0 = self.red_wavelength.mean() if type(self.red_wavelength) == np.ndarray else self.red_wavelength
+        self.__lamg0 = self.green_wavelength.mean() if type(self.green_wavelength) == np.ndarray else self.green_wavelength
+        self.__lamb0 = self.blue_wavelength.mean() if type(self.blue_wavelength) == np.ndarray else self.blue_wavelength
+        return self.red_wavelength, self.green_wavelength, self.blue_wavelength
 
     def set_nonlinearity_profile(self, profile_type="constant", first_order_coeff=False, **kwargs):
         """
@@ -438,7 +425,7 @@ class Phasematching1D(object):
         :return:
         """
         if not self.__wavelength_set:
-            raise IOError("The wavelengths have not been set!")
+            self.set_wavelengths()
 
         logger = logging.getLogger(__name__)
         logger.info("Calculating phasematching")
@@ -464,7 +451,8 @@ class Phasematching1D(object):
             # 2) evaluate the current phasemismatch
             DK = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
                                           n_red, n_green, n_blue)
-            self.__delta_beta0_profile[idx] = self.__calculate_delta_k(self.lamr0, self.lamg0, self.lamb0, n_red, n_green,
+            self.__delta_beta0_profile[idx] = self.__calculate_delta_k(self.__lamr0, self.__lamg0, self.__lamb0, n_red,
+                                                                       n_green,
                                                                        n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
             self.__cumulative_delta_beta += DK
@@ -474,7 +462,8 @@ class Phasematching1D(object):
                                                  (np.exp(-1j * dz * self.__cumulative_delta_beta) -
                                                   np.exp(-1j * dz * (self.__cumulative_delta_beta - DK)))
             else:
-                self.__cumulative_exponential += self.nonlinear_profile(z) * np.exp(-1j * dz * self.__cumulative_delta_beta)
+                self.__cumulative_exponential += self.nonlinear_profile(z) * np.exp(
+                    -1j * dz * self.__cumulative_delta_beta)
 
         logger.info("Calculation terminated")
         self.__phi = self.__cumulative_exponential * self.waveguide.dz
