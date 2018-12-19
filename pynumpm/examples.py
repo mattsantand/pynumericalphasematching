@@ -169,7 +169,7 @@ def example_1D_SFG():
 def example_2D_phasematching():
     from pynumpm import waveguide, utilities, phasematching, pump
 
-    length = 20e-3  # length in m
+    length = 25e-3  # length in m
     dz = 100e-6  # discretization in m
 
     nte, ntm = custom_sellmeier()
@@ -183,19 +183,15 @@ def example_2D_phasematching():
                                         poling_period=poling_period,
                                         nominal_parameter=T0,
                                         nominal_parameter_name=r"WG temperature[$^\circ$C]")
-    # thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
-    #                                      noise_amplitude=3)
+    thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
+                                         noise_amplitude=1.0)
     thisprocess = phasematching.Phasematching2D(waveguide=thiswaveguide,
                                                 n_red=nte,
                                                 n_green=ntm,
-                                                n_blue=nte,
-                                                process="sfg")
-    thisprocess.set_red(central_wavelength=1.55e-6,
-                        delta_lambda=20e-9,
-                        n_points=100)
-    thisprocess.set_blue(central_wavelength=0.55e-6,
-                         delta_lambda=1e-9,
-                         n_points=100)
+                                                n_blue=nte)
+
+    thisprocess.red_wavelength = np.linspace(1.50e-6, 1.6e-6, 100)
+    thisprocess.blue_wavelength = np.linspace(0.549e-6, 0.551e-6, 1000)
     thisprocess.calculate_phasematching()
     thisprocess.plot_phasematching()
 
@@ -209,15 +205,19 @@ def example_2D_phasematching():
     pump.idler_wavelength = ID
     pump.pump_center = pump_center
     pump.pump_width = pump_width
-    p = pump.pump()
     res = pump.pump()
     res /= (abs(res) ** 2).max()
-    plt.figure()
-    plt.imshow(abs(res) ** 2)
-    plt.colorbar()
     thisprocess.calculate_JSA(pump=pump)
     thisprocess.plot_JSI()
+
+    thisprocess.extract_max_phasematching_curve()
     print("K: ", thisprocess.calculate_schmidt_number(verbose=True))
+    m1, m2 = thisprocess.calculate_marginals()
+    plt.figure()
+    plt.subplot(121)
+    plt.plot(m1[0], m1[1])
+    plt.subplot(122)
+    plt.plot(m2[0], m2[1])
 
 
 if __name__ == '__main__':
@@ -230,6 +230,6 @@ if __name__ == '__main__':
     # example_noise()
     # example_phasematching_deltabeta()
     # example_1D_phasematching()
-    example_1D_SFG()
-    # example_2D_phasematching()
+    # example_1D_SFG()
+    example_2D_phasematching()
     plt.show()

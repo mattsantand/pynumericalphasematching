@@ -311,7 +311,8 @@ class Phasematching1D(object):
                                  "Check the log please and chat with the developer.")
         self.__wavelength_set = True
         self.__lamr0 = self.red_wavelength.mean() if type(self.red_wavelength) == np.ndarray else self.red_wavelength
-        self.__lamg0 = self.green_wavelength.mean() if type(self.green_wavelength) == np.ndarray else self.green_wavelength
+        self.__lamg0 = self.green_wavelength.mean() if type(
+            self.green_wavelength) == np.ndarray else self.green_wavelength
         self.__lamb0 = self.blue_wavelength.mean() if type(self.blue_wavelength) == np.ndarray else self.blue_wavelength
         return self.red_wavelength, self.green_wavelength, self.blue_wavelength
 
@@ -482,7 +483,7 @@ class Phasematching1D(object):
             ax = plt.gca()
         else:
             ax = ax
-        ax.plot(self.waveguide.z, self.dk_profile)
+        ax.plot(self.waveguide.z, self.__delta_beta0_profile)
         return ax
 
     def plot(self, plot_intensity=True, xaxis="r", **kwargs):
@@ -537,7 +538,7 @@ class Phasematching2D(object):
 
     """
 
-    def __init__(self, waveguide, n_red, n_green, n_blue, **kwargs):
+    def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
         """
         Initialize the process to be studied.
 
@@ -575,110 +576,188 @@ class Phasematching2D(object):
         self.n_green = n_green
         self.n_blue = n_blue
         # ====================================================
-        self.order = kwargs.get("order", 1.)
-        self.process = kwargs.get("process", "PDC").lower()
-        self.red_wavelength = None
-        self.green_wavelength = None
-        self.blue_wavelength = None
-        self.propagation_type = kwargs.get("propagation_type", "copropagation")
-        if self.process[:2] == "bw":
+        self.order = order
+        # self.process = kwargs.get("process", "PDC").lower()
+        self.__red_wavelength = None
+        self.__green_wavelength = None
+        self.__blue_wavelength = None
+        self.__signal_wavelength = None
+        self.__idler_wavelength = None
+        if backpropagation:
             self.propagation_type = "backpropagation"
-            self.process = self.process[2:]
+        else:
+            self.propagation_type = "copropagation"
+
+    @property
+    def signal_wavelength(self):
+        return self.__signal_wavelength
+
+    @signal_wavelength.setter
+    def signal_wavelength(self, value):
+        self.__signal_wavelength = value
+
+    @property
+    def idler_wavelength(self):
+        return self.__idler_wavelength
+
+    @idler_wavelength.setter
+    def idler_wavelength(self, value):
+        self.__idler_wavelength = value
+
+    @property
+    def red_wavelength(self):
+        return self.__red_wavelength
+
+    @red_wavelength.setter
+    def red_wavelength(self, value):
+        self.__red_wavelength = value
+
+    @property
+    def green_wavelength(self):
+        return self.__green_wavelength
+
+    @green_wavelength.setter
+    def green_wavelength(self, value):
+        self.__green_wavelength = value
+
+    @property
+    def blue_wavelength(self):
+        return self.__blue_wavelength
+
+    @blue_wavelength.setter
+    def blue_wavelength(self, value):
+        self.__blue_wavelength = value
+
+    def __set_wavelengths(self):
+        logger = logging.getLogger(__name__)
+        num_of_none = (self.red_wavelength is None) + \
+                      (self.green_wavelength is None) + \
+                      (self.blue_wavelength is None)
+        if num_of_none != 1:
+            logger.info("Wavelengths set", self.red_wavelength, self.green_wavelength, self.blue_wavelength,
+                        num_of_none)
+            raise ValueError(
+                "Here you must be more precise. I need exactly 2 wavelenght ranges, so only one wavelength can be none")
+        else:
+            for i in [self.red_wavelength, self.green_wavelength, self.blue_wavelength]:
+                if i is not None:
+                    if type(i) != np.ndarray:
+                        raise ValueError("The wavelengths have to be either None or an array.")
+            if self.red_wavelength is None:
+                self.signal_wavelength = self.green_wavelength
+                self.idler_wavelength = self.blue_wavelength
+                self.__WL_GREEN, self.__WL_BLUE = np.meshgrid(self.green_wavelength, self.blue_wavelength)
+                self.__WL_RED = (self.__WL_BLUE ** -1 - self.__WL_GREEN ** -1) ** -1
+            elif self.green_wavelength is None:
+                self.signal_wavelength = self.red_wavelength
+                self.idler_wavelength = self.blue_wavelength
+                self.__WL_RED, self.__WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
+                self.__WL_GREEN = (self.__WL_BLUE ** -1 - self.__WL_RED ** -1) ** -1
+            elif self.blue_wavelength is None:
+                self.signal_wavelength = self.red_wavelength
+                self.idler_wavelength = self.green_wavelength
+                self.__WL_RED, self.__WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
+                self.__WL_BLUE = (self.__WL_RED ** -1 + self.__WL_GREEN ** -1) ** -1
+            else:
+                logging.info("An error occurred while setting the wavelengths.")
+
+            logging.debug("Wavelength matrices sizes: {0},{1},{2}".format(self.__WL_RED.shape, self.__WL_GREEN.shape,
+                                                                          self.__WL_BLUE.shape))
 
     # TODO: redo the set_wavelength functions
-    def set_red(self, **kwargs):
-        """
-        Function to set the red wavelength.
-
-        :param central_wavelength: Central wavelength, in meters
-        :param delta_lambda: Range to be scanned, in meters
-        :param n_points: Number of points to sample
-        :param kwargs:
-        :return:
-        """
-        logger = logging.getLogger(__name__)
-        self.n_points_red = kwargs.get("n_points", 100)
-        if "start" in kwargs.keys() and "end" in kwargs.keys():
-            initial_wl = kwargs.get("start")
-            final_wl = kwargs.get("end")
-            self.red_wavelength = np.linspace(initial_wl, final_wl, self.n_points_red)
-            self.red_cwl = (initial_wl + final_wl) / 2.
-            self.red_delta_wl = (final_wl - initial_wl) / 2.
-        else:
-            self.red_cwl = kwargs.get("central_wavelength")
-            self.red_delta_wl = kwargs.get("delta_lambda")
-            initial_wl = self.red_cwl - self.red_delta_wl / 2.
-            final_wl = self.red_cwl + self.red_delta_wl / 2.
-            self.red_wavelength = np.linspace(initial_wl, final_wl, self.n_points_red)
-
-        self.__red_is_set = True
-        if self.__red_is_set:
-            logger.info("Red wavelength has been set: %f:%f:%f",
-                        self.red_wavelength[0] * 1e9, self.red_wavelength[1] * 1e9 - self.red_wavelength[0] * 1e9,
-                        self.red_wavelength[-1] * 1e9)
-
-    def set_green(self, **kwargs):
-        """
-        Function to set the green wavelength.
-
-        :param central_wavelength: Central wavelength, in meters
-        :param delta_lambda: Range to be scanned, in meters
-        :param n_points: Number of points to sample
-        :param kwargs:
-        :return:
-        """
-        logger = logging.getLogger(__name__)
-        self.n_points_green = kwargs.get("n_points", 100)
-
-        if "start" in kwargs.keys() and "end" in kwargs.keys():
-            initial_wl = kwargs.get("start")
-            final_wl = kwargs.get("end")
-            self.green_wavelength = np.linspace(initial_wl, final_wl, self.n_points_green)
-            self.green_cwl = (initial_wl + final_wl) / 2.
-            self.green_delta_wl = (final_wl - initial_wl) / 2.
-        else:
-            self.green_cwl = kwargs.get("central_wavelength")
-            self.green_delta_wl = kwargs.get("delta_lambda")
-            initial_wl = self.green_cwl - self.green_delta_wl / 2.
-            final_wl = self.green_cwl + self.green_delta_wl / 2.
-            self.green_wavelength = np.linspace(initial_wl, final_wl, self.n_points_green)
-        self.__green_is_set = True
-        if self.__green_is_set:
-            logger.info("Green wavelength has been set: %f:%f%:%f",
-                        self.green_wavelength[0] * 1e9, self.green_wavelength[1] * 1e9 - self.green_wavelength[0] * 1e9,
-                        self.green_wavelength[-1] * 1e9)
-
-    def set_blue(self, **kwargs):
-        """
-        Function to set the blue wavelength.
-
-        :param central_wavelength: Central wavelength, in meters
-        :param delta_lambda: Range to be scanned, in meters
-        :param n_points: Number of points to sample
-        :param kwargs:
-        :return:
-        """
-        logger = logging.getLogger(__name__)
-        self.n_points_blue = kwargs.get("n_points", 100)
-
-        if "start" in kwargs.keys() and "end" in kwargs.keys():
-            initial_wl = kwargs.get("start")
-            final_wl = kwargs.get("end")
-            self.blue_wavelength = np.linspace(initial_wl, final_wl, self.n_points_blue)
-            self.blue_cwl = (initial_wl + final_wl) / 2.
-            self.blue_delta_wl = (final_wl - initial_wl) / 2.
-        else:
-            self.blue_cwl = kwargs.get("central_wavelength")
-            self.blue_delta_wl = kwargs.get("delta_lambda")
-            initial_wl = self.blue_cwl - self.blue_delta_wl / 2.
-            final_wl = self.blue_cwl + self.blue_delta_wl / 2.
-            self.blue_wavelength = np.linspace(initial_wl, final_wl, self.n_points_blue)
-
-        self.__blue_is_set = True
-        if self.__blue_is_set:
-            logger.info("Blue wavelength has been set: %f:%f:%f",
-                        self.blue_wavelength[0] * 1e9, self.blue_wavelength[1] * 1e9 - self.blue_wavelength[0] * 1e9,
-                        self.blue_wavelength[-1] * 1e9)
+    # def set_red(self, **kwargs):
+    #     """
+    #     Function to set the red wavelength.
+    #
+    #     :param central_wavelength: Central wavelength, in meters
+    #     :param delta_lambda: Range to be scanned, in meters
+    #     :param n_points: Number of points to sample
+    #     :param kwargs:
+    #     :return:
+    #     """
+    #     logger = logging.getLogger(__name__)
+    #     self.n_points_red = kwargs.get("n_points", 100)
+    #     if "start" in kwargs.keys() and "end" in kwargs.keys():
+    #         initial_wl = kwargs.get("start")
+    #         final_wl = kwargs.get("end")
+    #         self.red_wavelength = np.linspace(initial_wl, final_wl, self.n_points_red)
+    #         self.red_cwl = (initial_wl + final_wl) / 2.
+    #         self.red_delta_wl = (final_wl - initial_wl) / 2.
+    #     else:
+    #         self.red_cwl = kwargs.get("central_wavelength")
+    #         self.red_delta_wl = kwargs.get("delta_lambda")
+    #         initial_wl = self.red_cwl - self.red_delta_wl / 2.
+    #         final_wl = self.red_cwl + self.red_delta_wl / 2.
+    #         self.red_wavelength = np.linspace(initial_wl, final_wl, self.n_points_red)
+    #
+    #     self.__red_is_set = True
+    #     if self.__red_is_set:
+    #         logger.info("Red wavelength has been set: %f:%f:%f",
+    #                     self.red_wavelength[0] * 1e9, self.red_wavelength[1] * 1e9 - self.red_wavelength[0] * 1e9,
+    #                     self.red_wavelength[-1] * 1e9)
+    #
+    # def set_green(self, **kwargs):
+    #     """
+    #     Function to set the green wavelength.
+    #
+    #     :param central_wavelength: Central wavelength, in meters
+    #     :param delta_lambda: Range to be scanned, in meters
+    #     :param n_points: Number of points to sample
+    #     :param kwargs:
+    #     :return:
+    #     """
+    #     logger = logging.getLogger(__name__)
+    #     self.n_points_green = kwargs.get("n_points", 100)
+    #
+    #     if "start" in kwargs.keys() and "end" in kwargs.keys():
+    #         initial_wl = kwargs.get("start")
+    #         final_wl = kwargs.get("end")
+    #         self.green_wavelength = np.linspace(initial_wl, final_wl, self.n_points_green)
+    #         self.green_cwl = (initial_wl + final_wl) / 2.
+    #         self.green_delta_wl = (final_wl - initial_wl) / 2.
+    #     else:
+    #         self.green_cwl = kwargs.get("central_wavelength")
+    #         self.green_delta_wl = kwargs.get("delta_lambda")
+    #         initial_wl = self.green_cwl - self.green_delta_wl / 2.
+    #         final_wl = self.green_cwl + self.green_delta_wl / 2.
+    #         self.green_wavelength = np.linspace(initial_wl, final_wl, self.n_points_green)
+    #     self.__green_is_set = True
+    #     if self.__green_is_set:
+    #         logger.info("Green wavelength has been set: %f:%f%:%f",
+    #                     self.green_wavelength[0] * 1e9, self.green_wavelength[1] * 1e9 - self.green_wavelength[0] * 1e9,
+    #                     self.green_wavelength[-1] * 1e9)
+    #
+    # def set_blue(self, **kwargs):
+    #     """
+    #     Function to set the blue wavelength.
+    #
+    #     :param central_wavelength: Central wavelength, in meters
+    #     :param delta_lambda: Range to be scanned, in meters
+    #     :param n_points: Number of points to sample
+    #     :param kwargs:
+    #     :return:
+    #     """
+    #     logger = logging.getLogger(__name__)
+    #     self.n_points_blue = kwargs.get("n_points", 100)
+    #
+    #     if "start" in kwargs.keys() and "end" in kwargs.keys():
+    #         initial_wl = kwargs.get("start")
+    #         final_wl = kwargs.get("end")
+    #         self.blue_wavelength = np.linspace(initial_wl, final_wl, self.n_points_blue)
+    #         self.blue_cwl = (initial_wl + final_wl) / 2.
+    #         self.blue_delta_wl = (final_wl - initial_wl) / 2.
+    #     else:
+    #         self.blue_cwl = kwargs.get("central_wavelength")
+    #         self.blue_delta_wl = kwargs.get("delta_lambda")
+    #         initial_wl = self.blue_cwl - self.blue_delta_wl / 2.
+    #         final_wl = self.blue_cwl + self.blue_delta_wl / 2.
+    #         self.blue_wavelength = np.linspace(initial_wl, final_wl, self.n_points_blue)
+    #
+    #     self.__blue_is_set = True
+    #     if self.__blue_is_set:
+    #         logger.info("Blue wavelength has been set: %f:%f:%f",
+    #                     self.blue_wavelength[0] * 1e9, self.blue_wavelength[1] * 1e9 - self.blue_wavelength[0] * 1e9,
+    #                     self.blue_wavelength[-1] * 1e9)
 
     def calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
@@ -729,34 +808,9 @@ class Phasematching2D(object):
             logger.info("Poling period is not set. Calculating from structure.")
         else:
             logger.info("Poling period is set. Calculating with constant poling structure.")
-
-        # edited at 28/09/2017 because the previous for loop was wrong!
-        if self.process == "pdc":
-            logger.info("Calculating for PDC")
-            # calculate pdc phasematching. Assumes given the lambda_signal and lambda_idler
-            # (i.e., lambda_red and lambda_green)
-            if not (self.__red_is_set and self.__green_is_set):
-                raise Exception(
-                    "You must set the 'red' and 'green' (i.e., signal and idler, with wl_red <= wl_green) wavelengths before performing this calculation!")
-
-            self._WL_RED, self._WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
-            self._WL_BLUE = 1. / (1. / abs(self._WL_RED) + 1. / abs(self._WL_GREEN))
-            # TODO: maybe format the following message?
-            logger.info(self._WL_RED.mean(), self._WL_GREEN.mean(), self._WL_BLUE.mean())
-            self.__cumulative_deltabeta = np.zeros(shape=(len(self.green_wavelength), len(self.red_wavelength)),
-                                                   dtype=complex)
-
-        elif self.process == "sfg":
-            # calculate sfg phasematching
-            if not (self.__red_is_set and self.__blue_is_set):
-                raise Exception(
-                    "You must set the 'red' and 'blue' (i.e., input and output, with wl_input <= wl_output) wavelengths before performing this calculation!")
-
-            self._WL_RED, self._WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
-            self._WL_GREEN = 1. / (1. / abs(self._WL_BLUE) - 1. / abs(self._WL_RED))
-            self.__cumulative_deltabeta = np.zeros(shape=(len(self.blue_wavelength), len(self.red_wavelength)),
-                                                   dtype=complex)
-
+        self.__set_wavelengths()
+        self.__cumulative_deltabeta = np.zeros(shape=(len(self.idler_wavelength), len(self.signal_wavelength)),
+                                               dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
         dz = self.waveguide.z[1] - self.waveguide.z[0]
         dz = np.diff(self.waveguide.z).mean()  # TODO: this is RISKYYYYYYYY
@@ -767,11 +821,12 @@ class Phasematching2D(object):
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
-            DK = self.__calculate_delta_k(self._WL_RED, self._WL_GREEN, self._WL_BLUE, n_red, n_green, n_blue)
+            DK = self.__calculate_delta_k(self.__WL_RED, self.__WL_GREEN, self.__WL_BLUE, n_red, n_green, n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
             self.__cumulative_deltabeta += DK
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
+                #TODO: rewrite this as a sum over the sinc, instead with rectangular approximation
                 self.__cumulative_exponential += self.waveguide.poling_structure[idx] * \
                                                  (np.exp(-1j * dz * self.__cumulative_deltabeta) -
                                                   np.exp(-1j * dz * (self.__cumulative_deltabeta - DK)))
@@ -782,146 +837,54 @@ class Phasematching2D(object):
         self.phi = 1 / self.waveguide.length * self.__cumulative_exponential * dz
         return self.phi
 
-    def extract_shg(self, **kwargs):
+    def calculate_JSA(self, pump):
         """
-        Function to extract the SHG plot from the phasematching.
-        At the moment it works only if you are calculating the phasematching through "PDC"
+        Function to calculate the JSA.
+        Requires as an input a pump Object (from the class Pump written by Benni)
 
-        :param kwargs:
+        :param pump:
         :return:
         """
-        if self.process == "pdc":
-            if np.all(self.red_wavelength == self.green_wavelength):
-                phi = abs(self.phi) ** 2
-                self.shg = phi.diagonal()
-                return self.red_wavelength, self.shg
-            else:
-                raise ValueError("signal and idler don't match")
-        else:
-            raise NotImplementedError("Wrong process, I can compute only from ")
+        logger = logging.getLogger(__name__)
+        logger.info("Calculating JSA")
+        # if self.process == "pdc":
+        #     d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
+        #     d_wl2 = abs(self.green_wavelength[1] - self.green_wavelength[0])
+        #     wl1 = self.red_wavelength
+        #     wl2 = self.green_wavelength
+        # elif self.process == "sfg":
+        #     d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
+        #     d_wl2 = abs(self.blue_wavelength[1] - self.blue_wavelength[0])
+        #     wl1 = self.red_wavelength
+        #     wl2 = self.blue_wavelength
+        d_wl_signal = np.diff(self.signal_wavelength)[0]
+        d_wl_idler = np.diff(self.idler_wavelength)[0]
 
-    def slice_phasematching(self, **kwargs):
+        WL_SIGNAL, WL_IDLER = np.meshgrid(self.signal_wavelength, self.idler_wavelength)
+        if pump.signal_wavelength is None:
+            pump.signal_wavelength = WL_SIGNAL
+        if pump.idler_wavelength is None:
+            pump.idler_wavelength = WL_IDLER
+        self.pump = pump.pump()
+        self.JSA = self.pump * self.phi
+        self.JSA /= np.sqrt((abs(self.JSA) ** 2).sum() * d_wl_signal * d_wl_idler)
+        self.JSI = abs(self.JSA) ** 2
+        return self.JSA, self.JSI
+
+    def calculate_schmidt_number(self, verbose=False):
         """
-        Slice the phasematching. The function interpolates the phasematching in the direction of the wavelength
-        to be kept fixed (**fix_wl**) and evaluating the interpolation at the value provided (**value**). In this way, it is possible to cut
-        along wavelength not present in the original grid.
+        Function to calculate the Schidt decomposition.
 
-        * :param fix_wl: [**red*/green/blue] Wavelength to be kept fixed while slicing
-          :type fix_wl: str
-        * :param value: [**red_cwl**] Value of the wavelength to be kept fixed
-          :type value: float
-        * :param show: If True, plots the slice
-          :type show: bool
-
+        :return:
         """
-        fix_wl = kwargs.get("fix_wl", "red").lower()
-        scan_wl = kwargs.get("scan_wl", "green").lower()
-        value_wl = kwargs.get("value", self.red_cwl)
+        logger = logging.getLogger(__name__)
+        U, self.singular_values, V = np.linalg.svd(self.JSA)
+        self.singular_values /= np.sqrt((self.singular_values ** 2).sum())
+        self.K = 1 / (self.singular_values ** 4).sum()
 
-        if self.process == "pdc":
-            if fix_wl == "red":
-                phasematching = interp.interp1d(self.red_wavelength, self.phi, axis=1)
-                wl = copy.deepcopy(self.green_wavelength)
-            elif fix_wl == "green":
-                phasematching = interp.interp1d(self.green_wavelength, self.phi, axis=0)
-                wl = copy.deepcopy(self.red_wavelength)
-            else:
-                # here, you need to provide the (CW) pump wl of the process (pdc)...
-                blue_wl = value_wl
-                # ... and also the wavelength you are scanning (default the lowest)
-                scan_wl = kwargs.get("scan_wl", "red").lower()
-                # 2D interpolation of the phasematching
-                f_real = interp.interp2d(self.red_wavelength, self.green_wavelength, np.real(self.phi), kind='cubic')
-                f_imag = interp.interp2d(self.red_wavelength, self.green_wavelength, np.imag(self.phi), kind='cubic')
-
-                if scan_wl == "red":
-                    # I am scanning with the lowest wavelength
-                    wl = copy.deepcopy(self.red_wavelength)
-                    phasematching = np.zeros(shape=wl.shape, dtype=complex)
-                    for idx, curr_wl in enumerate(wl):
-                        other_wl = (blue_wl ** -1 - curr_wl ** -1) ** -1
-                        phasematching[idx] = f_real(curr_wl, other_wl)[0] + 1j * f_imag(curr_wl, other_wl)[0]
-                elif scan_wl == "green":
-                    wl = copy.deepcopy(self.green_wavelength)
-                    phasematching = np.zeros(shape=wl.shape, dtype=complex)
-                    for idx, curr_wl in enumerate(wl):
-                        other_wl = (blue_wl ** -1 - curr_wl ** -1) ** -1
-                        phasematching[idx] = f_real(other_wl, curr_wl)[0] + 1j * f_imag(other_wl, curr_wl)[0]
-                else:
-                    raise ValueError("Provide the scanning wavelength (red/green)")
-                self.phasematching_cut = np.array(phasematching)
-                return wl, self.phasematching_cut
-
-        elif self.process == "sfg":
-            # print("process = sfg")
-            if fix_wl == "red":
-                # The user said that he has fixed the red wavelength. Therefore, calculate the interpolation of
-                # the phasematching as a function of the red wavelength. Assume as independent variable the blue.
-
-                # phasematching is the interpolation of the matrix in order to get the phi = f(blue/green) parametrically
-                # wrt red, i.e. new_phi = phasematching(my_red_wavelength) --> new_phi is an array whose "axis" is the
-                # blue (or the green) wavelengths
-                phasematching = interp.interp1d(self.red_wavelength, self.phi, axis=1)
-                if scan_wl == "blue":
-                    wl = copy.deepcopy(self.blue_wavelength)
-                elif scan_wl == "green":
-                    # if the wavelength to be scanned is the pump, then its value depends on the red_wl (which is decided by the user) and by the blue
-                    wl = (self.blue_wavelength ** -1 - value_wl ** -1) ** -1
-            elif fix_wl == "blue":
-                # phasematching is the interpolation of the matrix in order to get the phi = f(red/green) parametrically
-                # wrt blue, i.e. new_phi = phasematching(my_blue_wavelength) --> new_phi is an array whose "axis" is the
-                # red (or the green) wavelengths
-                phasematching = interp.interp1d(self.blue_wavelength, self.phi, axis=0)
-                if scan_wl == "red":
-                    wl = copy.deepcopy(self.red_wavelength)
-                elif scan_wl == "green":
-                    wl = (self.blue_wl ** -1 - self.red_wavelength - 1) ** -1
-            elif fix_wl == "green":
-                # I want to keep fixed the pump!
-                print("You asked me to do a difficult thingy!!")
-                # here, you need to provide the (CW) pump wl of the process (sfg)...
-                green_wl = value_wl
-                # ... and also the wavelength you are scanning (default the lowest)
-                scan_wl = kwargs.get("scan_wl", "red").lower()
-
-                # 2D interpolation of the phasematching. I need to separate the real and imaginary part
-                # for the interpolation
-                f_real = interp.interp2d(self.red_wavelength, self.blue_wavelength, np.real(self.phi), kind='cubic')
-                f_imag = interp.interp2d(self.red_wavelength, self.blue_wavelength, np.imag(self.phi), kind='cubic')
-                if scan_wl == "red":
-                    # I am scanning with the lowest wavelength
-                    wl = copy.deepcopy(self.red_wavelength)
-                    phasematching = np.zeros(shape=self.red_wavelength.shape, dtype=complex)
-                    for idx, _red_wl in enumerate(self.red_wavelength):
-                        _blue_wl = (_red_wl ** -1 + green_wl ** -1) ** -1
-                        phasematching[idx] = f_real(_red_wl, _blue_wl)[0] + 1j * f_imag(_red_wl, _blue_wl)[0]
-                elif scan_wl == "blue":
-                    wl = copy.deepcopy(self.blue_wavelength)
-                    phasematching = np.zeros(shape=self.blue_wavelength.shape, dtype=complex)
-                    for idx, _blue_wl in enumerate(self.blue_wavelength):
-                        _red_wl = (_blue_wl ** -1 - green_wl ** -1) ** -1
-                        phasematching[idx] = f_real(_red_wl, _blue_wl)[0] + 1j * f_imag(_red_wl, _blue_wl)[0]
-                else:
-                    raise ValueError("Provide the scanning wavelength (red/blue)")
-                # self.phasematching_cut = interp.interp1d(wl, np.array(phasematching), kind='cubic')
-                # phasematching = interp.interp1d(wl, np.array(phasematching), kind='cubic')
-                # print type(self.phasematching_cut(wl))
-
-                # here, phasematching is an ARRAY of the phasematching amplitudes as a function of the red/blue wavelength.
-                self.phasematching_cut = np.array(phasematching)
-                return wl, self.phasematching_cut
-            else:
-                raise ValueError("There is no {0} wavelength.".format(fix_wl))
-        else:
-            raise ValueError("The process is wrong, I cannot calculate the slice!")
-        self.phasematching_cut = phasematching(value_wl)
-
-        if kwargs.get("plot", False):
-            plt.figure()
-            plt.plot(wl * 1e9, abs(self.phasematching_cut) ** 2)
-            plt.show()
-
-        return wl, self.phasematching_cut
+        logger.debug("Check normalization: sum of s^2 = " + str((abs(self.singular_values) ** 2).sum()))
+        logger.info("K = " + str(self.K))
+        return self.K
 
     def plot_phasematching(self, **kwargs):
         """
@@ -936,19 +899,17 @@ class Phasematching2D(object):
         if ax is None:
             fig = plt.figure()
             ax = plt.gca()
-        active_axes = self.__check_active_axes()
+
         phi = abs(self.phi)
         if plot_intensity:
             phi = phi ** 2
 
-        cmap = kwargs.get("cmap", "Greens")
+        cmap = kwargs.get("cmap", "viridis")
         vmin = kwargs.get("vmin", phi.min())
         vmax = kwargs.get("vmax", phi.max())
-        # try:
-        # TODO: check whether to flipud(phi)
-        im = ax.pcolormesh(active_axes[0] * 1e9, active_axes[1] * 1e9, phi, cmap=cmap, vmin=vmin, vmax=vmax)
-        # except:
-        #     print "Cannot set the colormap"
+
+        im = ax.pcolormesh(self.signal_wavelength * 1e9, self.idler_wavelength * 1e9, phi, cmap=cmap, vmin=vmin,
+                           vmax=vmax)
         if kwargs.get("cbar", True):
             cbar = plt.colorbar(im)
         else:
@@ -965,60 +926,6 @@ class Phasematching2D(object):
              "cbar": cbar}
         return d
 
-    def __check_active_axes(self):
-        """
-        Function to check which are the useful axes for the plot (depending on which wavelengths have been initialized)
-        :return:
-        """
-        list_wl = [[self.red_wavelength, self.__red_is_set],
-                   [self.green_wavelength, self.__green_is_set],
-                   [self.blue_wavelength, self.__blue_is_set]]
-
-        active_axes = [i[0] for i in list_wl if i[1]]
-        return active_axes
-
-    def calculate_JSA(self, thispump):
-        """
-        Function to calculate the JSA.
-        Requires as an input a pump Object (from the class Pump written by Benni)
-
-        :param pump:
-        :return:
-        """
-        logger = logging.getLogger(__name__)
-        logger.info("Calculating JSA")
-        if self.process == "pdc":
-            d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
-            d_wl2 = abs(self.green_wavelength[1] - self.green_wavelength[0])
-            wl1 = self.red_wavelength
-            wl2 = self.green_wavelength
-        elif self.process == "sfg":
-            d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
-            d_wl2 = abs(self.blue_wavelength[1] - self.blue_wavelength[0])
-            wl1 = self.red_wavelength
-            wl2 = self.blue_wavelength
-
-        WL1, WL2 = np.meshgrid(wl1, wl2)
-        if thispump.signal_wavelength is None:
-            thispump.signal_wavelength = WL1
-        if thispump.idler_wavelength is None:
-            thispump.idler_wavelength = WL2
-        self.pump = thispump.pump()
-        self.JSA = self.pump * self.phi
-        self.JSA /= np.sqrt((abs(self.JSA) ** 2).sum() * d_wl1 * d_wl2)
-        self.JSI = abs(self.JSA) ** 2
-        return self.JSA, self.JSI
-
-    def calculate_marginals(self):
-        if self.process == "pdc":
-            self.marginal_red = self.JSI.sum(axis=0) * abs(self.green_wavelength[1] - self.green_wavelength[0])
-            self.marginal_green = self.JSI.sum(axis=1) * abs(self.red_wavelength[1] - self.red_wavelength[0])
-            return (self.red_wavelength, self.marginal_red), (self.green_wavelength, self.marginal_green)
-        elif self.process == "sfg":
-            self.marginal_red = self.JSI.sum(axis=0) * abs(self.blue_wavelength[1] - self.blue_wavelength[0])
-            self.marginal_blue = self.JSI.sum(axis=1) * abs(self.red_wavelength[1] - self.red_wavelength[0])
-            return (self.red_wavelength, self.marginal_red), (self.blue_wavelength, self.blue_green)
-
     def plot_JSI(self, **kwargs):
         """
         Function to plot JSI. Pass ax handle through "ax" to plot in a specified axis environment.
@@ -1032,12 +939,9 @@ class Phasematching2D(object):
         if ax is None:
             plt.figure()
             ax = plt.gca()
-        if self.process == "pdc":
-            x = self.red_wavelength * 1e9
-            y = self.green_wavelength * 1e9
-        elif self.process == "sfg":
-            x = self.red_wavelength * 1e9
-            y = self.blue_wavelength * 1e9
+
+        x = self.signal_wavelength * 1e9
+        y = self.idler_wavelength * 1e9
 
         im = ax.pcolormesh(x, y, self.JSI)
 
@@ -1053,54 +957,53 @@ class Phasematching2D(object):
         ax.set_ylabel("Idler [nm]")
         ax.set_title(title)
 
-    def calculate_schmidt_number(self, verbose=False):
+    def slice_phasematching(self, const_wl):
         """
-        Function to calculate the Schidt decomposition.
+        Slice the phasematching. The function interpolates the phasematching in the direction of the wavelength
+        to be kept fixed (**fix_wl**) and evaluating the interpolation at the value provided (**value**). In this way, it is possible to cut
+        along wavelength not present in the original grid.
 
-        :return:
         """
         logger = logging.getLogger(__name__)
-        U, self.singular_values, V = np.linalg.svd(self.JSA)
-        self.singular_values /= np.sqrt((self.singular_values ** 2).sum())
-        self.K = 1 / (self.singular_values ** 4).sum()
+        f_real = interp.interp2d(self.signal_wavelength, self.idler_wavelength, np.real(self.phi), kind='linear')
+        f_imag = interp.interp2d(self.signal_wavelength, self.idler_wavelength, np.imag(self.phi), kind='linear')
+        logger.debug("Constant wl: "+str(const_wl))
+        if self.signal_wavelength.min() <= const_wl <= self.signal_wavelength.max():
+            wl = self.idler_wavelength
+            phi = f_real(const_wl, self.idler_wavelength) + 1j * f_imag(const_wl, self.idler_wavelength)
+        elif self.idler_wavelength.min() <= const_wl <= self.idler_wavelength.max():
+            wl = self.signal_wavelength
+            phi = f_real(self.signal_wavelength, const_wl) + 1j * f_imag(self.signal_wavelength, const_wl)
+        else:
+            raise NotImplementedError(
+                "MY dumb programmer hasn't implemented the slice along a line not parallel to the axes...")
+        return wl, phi
 
-        logger.debug("Check normalization: sum of s^2 = ", (abs(self.singular_values) ** 2).sum())
-        logger.info("K = ", self.K)
-        return self.K
+    def calculate_marginals(self):
+        marginal_signal = self.JSI.sum(axis=0) * abs(np.diff(self.idler_wavelength)[0])
+        marginal_idler = self.JSI.sum(axis=1) * abs(np.diff(self.signal_wavelength)[0])
+        return (self.signal_wavelength, marginal_signal), (self.idler_wavelength, marginal_idler)
 
-    def extract_max_phasematching_curve(self, **kwargs):
+    def extract_max_phasematching_curve(self, ax=None, **kwargs):
         """
         Extract the curve of max phasematching. Useful to estimate GVM.
 
         :return:
         """
-        signal = self.red_wavelength
+        # TODO: this function has been reimplemented. There is an offset sometimes in between the reconstructed peak
+        #  and the real curve
+
+        signal = self.signal_wavelength
         idler = []
 
         for idx, wl in enumerate(signal):
-            idl, pm_cut = self.slice_phasematching(fix_wl="red", value=wl)
+            idl, pm_cut = self.slice_phasematching(const_wl=wl)
             idler.append(idl[pm_cut.argmax()])
         IDLER = np.array(idler)
         p_idler = np.polyfit(signal, IDLER, deg=2)
         idler = np.polyval(p_idler, signal)
-        if kwargs.get("plot", False):
-            self.plot_phasematching()
-            plt.plot(signal * 1e9, idler * 1e9, "k", lw=3)
-            plt.show()
-
+        if ax is None:
+            fig, ax = plt.subplots(1, 1)
+        self.plot_phasematching(ax=ax)
+        ax.plot(signal * 1e9, idler * 1e9, "k", lw=3)
         return signal, idler
-
-    def print_properties(self):
-        pprint.pprint(vars(self))
-
-    def find_gvm(self):
-        signal, idler = self.extract_max_phasematching_curve(plot=False)
-        grad = np.diff(idler * 1e9) / np.diff(signal * 1e9)
-        IDL = idler[abs(grad).argmin()]
-        SIG = signal[abs(grad).argmin()]
-        if self.process == "pdc":
-            pump = 1. / (1. / IDL + 1. / SIG)
-            return SIG, IDL, pump
-        elif self.process == "sfg":
-            pump = 1. / (1. / IDL - 1. / SIG)
-            return SIG, pump, IDL
