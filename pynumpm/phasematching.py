@@ -183,13 +183,13 @@ class Phasematching1D(object):
         :param order: order of phasematching. Default: 1
 
         """
-        self.waveguide = waveguide
-        self.phi = None
+        self.__waveguide = waveguide
+        self.__phi = None
         self.__wavelength_set = False
-        self.n_red = n_red
-        self.n_green = n_green
-        self.n_blue = n_blue
-        self.constlam = None
+        self.__n_red = n_red
+        self.__n_green = n_green
+        self.__n_blue = n_blue
+        self.__constlam = None
         # ====================================================
         self.order = order
         self.process = process
@@ -204,8 +204,39 @@ class Phasematching1D(object):
         else:
             self.propagation_type = "copropagation"
         self._nonlinear_profile_set = False
-        self.noise_length_product = None
+        self.__noise_length_product = None
         self.scanning_wavelength = None
+        self.__cumulative_delta_beta = None
+        self.__cumulative_exponential = None
+        self.__delta_beta0_profile = None
+
+    @property
+    def waveguide(self):
+        return self.__waveguide
+
+    @property
+    def phi(self):
+        return self.__phi
+
+    @property
+    def n_red(self):
+        return self.__n_red
+
+    @property
+    def n_green(self):
+        return self.__n_green
+
+    @property
+    def n_blue(self):
+        return self.__n_red
+
+    @property
+    def constlam(self):
+        return self.__constlam
+
+    @property
+    def noise_length_product(self):
+        return self.__noise_length_product
 
     def set_wavelengths(self, lam_red=None, lam_green=None, lam_blue=None, constlam="shg"):
         """
@@ -233,7 +264,7 @@ class Phasematching1D(object):
                         ll[idx] = None
         lam_red, lam_green, lam_blue = ll
 
-        self.constlam = constlam
+        self.__constlam = constlam
         if self.constlam == "b":
             self.lamb0 = lam_blue
             if lam_green is None:
@@ -293,14 +324,11 @@ class Phasematching1D(object):
         self.red_wavelength = lam_red
         self.green_wavelength = lam_green
         self.blue_wavelength = lam_blue
-        # logger.debug("Shapes wavelength: {0}, {1}, {2}".format(self.red_wavelength.shape,
-        #                                                        self.green_wavelength.shape,
-        #                                                        self.blue_wavelength.shape, ))
         print("Safety check on central wavelengths: ", self.lamb0, self.lamg0, self.lamr0, self.lamb0 ** -1 - (
                 self.lamr0 ** -1 + self.lamg0 ** -1))
         self.__wavelength_set = True
 
-    def set_nonlinearity_profile(self, profile_type="constant", **kwargs):
+    def set_nonlinearity_profile(self, profile_type="constant", first_order_coeff=False, **kwargs):
         """
         Method to set the nonlinear profile. As a default it is set to "constant", i.e. birefringent or QPM.
         If **profile_type** is set to "constant", the you can select whether to use the first order Fourier coefficient (2/pi) using
@@ -317,16 +345,13 @@ class Phasematching1D(object):
         logger.info("Setting the nonlinear profile.")
         logger.debug("Profile type: {pt}".format(pt=profile_type))
         if profile_type == "constant":
-            first_order_coeff = kwargs.get("first_order_coefficient", True)
             logger.debug("First order coefficient: {foc}".format(foc=first_order_coeff))
             if first_order_coeff:
-                # g = lambda z: 2 / pi * np.ones(z.shape)
                 g = lambda z: 2 / pi
             else:
-                # g = lambda z: 1. * np.ones(z.shape)
                 g = lambda z: 1.
         elif profile_type == "gaussian":
-            if kwargs.get("first_order_coefficient", True):
+            if first_order_coeff:
                 coeff = 2 / np.pi
             else:
                 coeff = 1
@@ -360,7 +385,12 @@ class Phasematching1D(object):
         y = self.nonlinear_profile(self.waveguide.z)
         plt.plot(x, y)
 
-    def calculate_local_neff(self, posidx):
+    def __calculate_local_neff(self, posidx):
+        """
+        Function to calculate the local effective refractive index
+        :param posidx:
+        :return:
+        """
         local_parameter = self.waveguide.profile[posidx]
         try:
             n_red = self.n_red(local_parameter)
@@ -398,12 +428,14 @@ class Phasematching1D(object):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, normalized=True, verbose=False):
+    def calculate_phasematching(self, normalized=True):
         """
-        This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and scanning the other two.
+        This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and
+        scanning the other two.
 
+        :param normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the waveguide length, Default: True
+        :type normalized: bool
         :return:
-
         """
         if not self.__wavelength_set:
             raise IOError("The wavelengths have not been set!")
@@ -418,43 +450,37 @@ class Phasematching1D(object):
         else:
             logger.info("Poling period is set. Calculating with constant poling structure.")
 
-        # edited at 28/09/2017 because the previous for loop was wrong!
-        # logger.debug("Shape red: " + str(self.red_wavelength.shape))
-        # logger.debug("Shape green: " + str(self.green_wavelength.shape))
-        # logger.debug("Shape blue: " + str(self.blue_wavelength.shape))
         tmp_dk = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
-                                          *self.calculate_local_neff(0))
-        self.__cumulative_DK = np.zeros(shape=tmp_dk.shape)
-        self.__cumulative_exponential = np.zeros(shape=self.__cumulative_DK.shape, dtype=complex)
-        logger.debug("Shape cum_dk:" + str(self.__cumulative_DK.shape))
+                                          *self.__calculate_local_neff(0))
+        self.__cumulative_delta_beta = np.zeros(shape=tmp_dk.shape)
+        self.__cumulative_exponential = np.zeros(shape=self.__cumulative_delta_beta.shape, dtype=complex)
+        logger.debug("Shape cumulative deltabeta:" + str(self.__cumulative_delta_beta.shape))
         logger.debug("Shape cum_exp:" + str(self.__cumulative_exponential.shape))
-        self.dk_profile = np.zeros(shape=self.waveguide.z.shape)
+        self.__delta_beta0_profile = np.zeros(shape=self.waveguide.z.shape)
         dz = self.waveguide.z[1] - self.waveguide.z[0]
         for idx, z in enumerate(self.waveguide.z):
-            if verbose:
-                if idx % 20 == 0:
-                    logger.info("z = " + str(z * 1e3) + " mm")
             # 1) retrieve the current parameter (width, thickness, ...)
-            n_red, n_green, n_blue = self.calculate_local_neff(idx)
+            n_red, n_green, n_blue = self.__calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
             DK = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
                                           n_red, n_green, n_blue)
-            self.dk_profile[idx] = self.__calculate_delta_k(self.lamr0, self.lamg0, self.lamb0, n_red, n_green, n_blue)
+            self.__delta_beta0_profile[idx] = self.__calculate_delta_k(self.lamr0, self.lamg0, self.lamb0, n_red, n_green,
+                                                                       n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
-            self.__cumulative_DK += DK
+            self.__cumulative_delta_beta += DK
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
                 self.__cumulative_exponential += self.nonlinear_profile(z) * self.waveguide.poling_structure[idx] * \
-                                                 (np.exp(-1j * dz * self.__cumulative_DK) -
-                                                  np.exp(-1j * dz * (self.__cumulative_DK - DK)))
+                                                 (np.exp(-1j * dz * self.__cumulative_delta_beta) -
+                                                  np.exp(-1j * dz * (self.__cumulative_delta_beta - DK)))
             else:
-                self.__cumulative_exponential += self.nonlinear_profile(z) * np.exp(-1j * dz * self.__cumulative_DK)
+                self.__cumulative_exponential += self.nonlinear_profile(z) * np.exp(-1j * dz * self.__cumulative_delta_beta)
 
         logger.info("Calculation terminated")
-        self.phi = self.__cumulative_exponential * self.waveguide.dz
+        self.__phi = self.__cumulative_exponential * self.waveguide.dz
         if normalized:
-            self.phi /= self.waveguide.length
-        self.noise_length_product = abs(self.dk_profile).max() * self.waveguide.z[-1]
+            self.__phi /= self.waveguide.length
+        self.__noise_length_product = abs(self.__delta_beta0_profile).max() * self.waveguide.z[-1]
         return self.phi
 
     def calculate_integral(self):
@@ -728,8 +754,8 @@ class Phasematching2D(object):
             self._WL_BLUE = 1. / (1. / abs(self._WL_RED) + 1. / abs(self._WL_GREEN))
             # TODO: maybe format the following message?
             logger.info(self._WL_RED.mean(), self._WL_GREEN.mean(), self._WL_BLUE.mean())
-            self.__cumulative_DK = np.zeros(shape=(len(self.green_wavelength), len(self.red_wavelength)),
-                                            dtype=complex)
+            self.__cumulative_deltabeta = np.zeros(shape=(len(self.green_wavelength), len(self.red_wavelength)),
+                                                   dtype=complex)
 
         elif self.process == "sfg":
             # calculate sfg phasematching
@@ -739,10 +765,10 @@ class Phasematching2D(object):
 
             self._WL_RED, self._WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
             self._WL_GREEN = 1. / (1. / abs(self._WL_BLUE) - 1. / abs(self._WL_RED))
-            self.__cumulative_DK = np.zeros(shape=(len(self.blue_wavelength), len(self.red_wavelength)),
-                                            dtype=complex)
+            self.__cumulative_deltabeta = np.zeros(shape=(len(self.blue_wavelength), len(self.red_wavelength)),
+                                                   dtype=complex)
 
-        self.__cumulative_exponential = np.zeros(shape=self.__cumulative_DK.shape, dtype=complex)
+        self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
         dz = self.waveguide.z[1] - self.waveguide.z[0]
         dz = np.diff(self.waveguide.z).mean()  # TODO: this is RISKYYYYYYYY
         for idx, z in enumerate(self.waveguide.z):
@@ -754,14 +780,14 @@ class Phasematching2D(object):
             # 2) evaluate the current phasemismatch
             DK = self.__calculate_delta_k(self._WL_RED, self._WL_GREEN, self._WL_BLUE, n_red, n_green, n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
-            self.__cumulative_DK += DK
+            self.__cumulative_deltabeta += DK
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
                 self.__cumulative_exponential += self.waveguide.poling_structure[idx] * \
-                                                 (np.exp(-1j * dz * self.__cumulative_DK) -
-                                                  np.exp(-1j * dz * (self.__cumulative_DK - DK)))
+                                                 (np.exp(-1j * dz * self.__cumulative_deltabeta) -
+                                                  np.exp(-1j * dz * (self.__cumulative_deltabeta - DK)))
             else:
-                self.__cumulative_exponential += np.exp(-1j * dz * self.__cumulative_DK)
+                self.__cumulative_exponential += np.exp(-1j * dz * self.__cumulative_deltabeta)
 
         logger.info("Calculation terminated")
         self.phi = 1 / self.waveguide.length * self.__cumulative_exponential * dz

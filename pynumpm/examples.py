@@ -192,12 +192,12 @@ def example_2D_phasematching():
 if __name__ == '__main__':
     import logging
 
-    logging.basicConfig(level=logging.DEBUG,
+    logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
     # example_waveguide()
     # example_noise()
-    example_phasematching_deltabeta()
-    # example_1D_phasematching()
+    # example_phasematching_deltabeta()
+    example_1D_phasematching()
     # example_2D_phasematching()
     plt.show()
