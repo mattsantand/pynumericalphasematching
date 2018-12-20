@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pynumpm import noise, utilities
 
-__LOOKUPTABLE = {0: " [m]",
-                 2: " [cm]",
-                 3: " [mm]",
-                 6: r" [$\mu$m]",
-                 9: " [nm]"}
+LOOKUPTABLE = {0: " [m]",
+               2: " [cm]",
+               3: " [mm]",
+               6: r" [$\mu$m]",
+               9: " [nm]"}
 
 
 class Waveguide(object):
@@ -165,7 +165,7 @@ class Waveguide(object):
         self.__poling_structure = poling_structure
         self.__poling_period = +np.infty
 
-    def plot(self, ax=None, set_multiplier_x = 1):
+    def plot(self, ax=None, set_multiplier_x=1):
         """
         Function to plot the waveguide profile.
 
@@ -184,7 +184,7 @@ class Waveguide(object):
         set_multiplier_x = 10 ** exponent  # round the set_multiplier to be a power of 10.
 
         ax.plot(self.z * set_multiplier_x, self.profile)
-        ax.set_xlabel("z" + __LOOKUPTABLE[exponent])
+        ax.set_xlabel("z" + LOOKUPTABLE[exponent])
         ax.set_ylabel(self.nominal_parameter_name)
         ax.set_title("Waveguide profile")
         return fig, ax
@@ -214,7 +214,7 @@ class Waveguide(object):
         ax0 = plt.gca()
         l1, = plt.plot(self.z * set_multiplier_x, self.profile)
         plt.title("Waveguide profile")
-        plt.xlabel("z" + __LOOKUPTABLE[exponent])
+        plt.xlabel("z" + LOOKUPTABLE[exponent])
         plt.ylabel(self.nominal_parameter_name)
 
         plt.subplot(234)

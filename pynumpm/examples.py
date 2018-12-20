@@ -226,10 +226,10 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
-    # example_waveguide()
+    example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
     # example_1D_phasematching()
     # example_1D_SFG()
-    example_2D_phasematching()
+    # example_2D_phasematching()
     plt.show()
