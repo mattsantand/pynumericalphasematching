@@ -200,6 +200,8 @@ class Phasematching1D(object):
         self.__red_wavelength = None
         self.__green_wavelength = None
         self.__blue_wavelength = None
+        self.__input_wavelength = None
+        self.__output_wavelength = None
         if backpropagation:
             self.propagation_type = "backpropagation"
         else:
@@ -259,8 +261,12 @@ class Phasematching1D(object):
         self.__blue_wavelength = value
 
     @property
-    def constlam(self):
-        return self.__constlam
+    def input_wavelength(self):
+        return self.__input_wavelength
+
+    @property
+    def output_wavelength(self):
+        return self.__output_wavelength
 
     @property
     def noise_length_product(self):
@@ -296,15 +302,38 @@ class Phasematching1D(object):
                     b=self.blue_wavelength))
                 raise ValueError("Something unexpected happened in set_wavelength. "
                                  "Check the log please and chat with the developer.")
+            self.__input_wavelength = self.red_wavelength
+            self.__output_wavelength = self.blue_wavelength
         elif num_of_none == 1:
             logger.info("Calculating wavelengths for sfg/dfg")
             self.process = "sfg/dfg"
             if self.red_wavelength is None:
+                if type(self.green_wavelength) == np.ndarray:
+                    self.__input_wavelength = self.green_wavelength
+                    logger.info("The input wavelength is the green")
+                else:
+                    self.__input_wavelength = self.blue_wavelength
+                    logger.info("The input wavelength is the blue")
                 self.red_wavelength = (self.blue_wavelength ** -1 - self.green_wavelength ** -1) ** -1
+                self.__output_wavelength = self.red_wavelength
             elif self.green_wavelength is None:
+                if type(self.red_wavelength) == np.ndarray:
+                    self.__input_wavelength = self.red_wavelength
+                    logger.info("The input wavelength is the red")
+                else:
+                    self.__input_wavelength = self.blue_wavelength
+                    logger.info("The input wavelength is the blue")
                 self.green_wavelength = (self.blue_wavelength ** -1 - self.red_wavelength ** -1) ** -1
+                self.__output_wavelength = self.green_wavelength
             elif self.blue_wavelength is None:
+                if type(self.red_wavelength) == np.ndarray:
+                    self.__input_wavelength = self.red_wavelength
+                    logger.info("The input wavelength is the red")
+                else:
+                    self.__input_wavelength = self.green_wavelength
+                    logger.info("The input wavelength is the green")
                 self.blue_wavelength = (self.red_wavelength ** -1 + self.green_wavelength ** -1) ** -1
+                self.__output_wavelength = self.blue_wavelength
             else:
                 logger.error("An error occurred in __set_wavelengths. When setting the SFG/DFG wavelengths, "
                              "all the wavelengths are set but the number of none is 1."
@@ -492,7 +521,7 @@ class Phasematching1D(object):
         ax.plot(self.waveguide.z, self.__delta_beta0_profile)
         return ax
 
-    def plot(self, plot_intensity=True, xaxis="r", **kwargs):
+    def plot(self, plot_intensity=True, plot_input=True, **kwargs):
         fig = kwargs.get("fig", None)
         ax = kwargs.get("ax", None)
 
@@ -504,17 +533,10 @@ class Phasematching1D(object):
             ax = plt.gca()
         else:
             ax = plt.gca()
-        if xaxis == self.constlam:
-            raise ValueError("axis_wl has to be different than " + str(self.constlam))
+        if plot_input:
+            wl = self.input_wavelength
         else:
-            if xaxis == "r":
-                wl = self.red_wavelength
-            elif xaxis == "g":
-                wl = self.green_wavelength
-            elif xaxis == "b":
-                wl = self.blue_wavelength
-            else:
-                raise ValueError("I don't know what {0} is.".format(xaxis))
+            wl = self.output_wavelength
 
         if plot_intensity:
             plt.plot(wl * 1e9, abs(self.phi) ** 2, ls=kwargs.get("ls", "-"),
