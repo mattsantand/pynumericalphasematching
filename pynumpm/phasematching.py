@@ -450,8 +450,8 @@ class Phasematching1D(object):
         logger.debug("Shape cumulative deltabeta:" + str(self.__cumulative_delta_beta.shape))
         logger.debug("Shape cum_exp:" + str(self.__cumulative_exponential.shape))
         self.__delta_beta0_profile = np.zeros(shape=self.waveguide.z.shape)
-        dz = self.waveguide.z[1] - self.waveguide.z[0]
-        for idx, z in enumerate(self.waveguide.z):
+        dz = np.diff(self.waveguide.z)
+        for idx, z in enumerate(self.waveguide.z[:-1]):
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.__calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
@@ -464,15 +464,16 @@ class Phasematching1D(object):
             self.__cumulative_delta_beta += DK
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
-                self.__cumulative_exponential += self.nonlinear_profile(z) * self.waveguide.poling_structure[idx] * \
-                                                 (np.exp(-1j * dz * self.__cumulative_delta_beta) -
-                                                  np.exp(-1j * dz * (self.__cumulative_delta_beta - DK)))
+                self.__cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * self.waveguide.poling_structure[
+                    idx] * \
+                                                 (np.exp(-1j * dz[idx] * self.__cumulative_delta_beta) -
+                                                  np.exp(-1j * dz[idx] * (self.__cumulative_delta_beta - DK)))
             else:
-                self.__cumulative_exponential += self.nonlinear_profile(z) * np.exp(
-                    -1j * dz * self.__cumulative_delta_beta)
+                self.__cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * np.exp(
+                    -1j * dz[idx] * self.__cumulative_delta_beta)
 
         logger.info("Calculation terminated")
-        self.__phi = self.__cumulative_exponential * self.waveguide.dz
+        self.__phi = self.__cumulative_exponential  # * self.waveguide.dz
         if normalized:
             self.__phi /= self.waveguide.length
         self.__noise_length_product = abs(self.__delta_beta0_profile).max() * self.waveguide.z[-1]
@@ -481,7 +482,7 @@ class Phasematching1D(object):
     def calculate_integral(self):
         return simps(abs(self.phi) ** 2, self.scanning_wavelength)
 
-    def plot_phasematching_error(self, ax=None):
+    def plot_deltabeta_error(self, ax=None):
         # self.calculate_phasematching_error()
         if ax is None:
             plt.figure()
@@ -725,8 +726,8 @@ class Phasematching2D(object):
         self.__cumulative_deltabeta = np.zeros(shape=(len(self.idler_wavelength), len(self.signal_wavelength)),
                                                dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
-        dz = np.diff(self.waveguide.z).mean()  # TODO: this is RISKYYYYYYYY
-        for idx, z in enumerate(self.waveguide.z):
+        dz = np.diff(self.waveguide.z)
+        for idx, z in enumerate(self.waveguide.z[:-1]):
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
@@ -736,14 +737,14 @@ class Phasematching2D(object):
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
                 # TODO: rewrite this as a sum over the sinc, instead with rectangular approximation
-                self.__cumulative_exponential += self.waveguide.poling_structure[idx] * \
-                                                 (np.exp(-1j * dz * self.__cumulative_deltabeta) -
-                                                  np.exp(-1j * dz * (self.__cumulative_deltabeta - DK)))
+                self.__cumulative_exponential += self.waveguide.poling_structure[idx] * dz[idx] * \
+                                                 (np.exp(-1j * dz[idx] * self.__cumulative_deltabeta) -
+                                                  np.exp(-1j * dz[idx] * (self.__cumulative_deltabeta - DK)))
             else:
-                self.__cumulative_exponential += np.exp(-1j * dz * self.__cumulative_deltabeta)
+                self.__cumulative_exponential += dz[idx] * np.exp(-1j * dz[idx] * self.__cumulative_deltabeta)
 
         logger.info("Calculation terminated")
-        self.phi = 1 / self.waveguide.length * self.__cumulative_exponential * dz
+        self.phi = 1 / self.waveguide.length * self.__cumulative_exponential
         return self.phi
 
     def calculate_JSA(self, pump):
@@ -784,7 +785,7 @@ class Phasematching2D(object):
         logger.debug("Check normalization: sum of s^2 = " + str((abs(self.singular_values) ** 2).sum()))
         return self.K
 
-    def plot_phasematching(self, **kwargs):
+    def plot(self, **kwargs):
         """
         Function to plot phasematching. Pass ax handle through "ax" to plot in a specified axis environment.
 
@@ -902,6 +903,6 @@ class Phasematching2D(object):
         idler = np.polyval(p_idler, signal)
         if ax is None:
             fig, ax = plt.subplots(1, 1)
-        self.plot_phasematching(ax=ax)
+        self.plot(ax=ax)
         ax.plot(signal * 1e9, idler * 1e9, "k", lw=3)
         return signal, idler
