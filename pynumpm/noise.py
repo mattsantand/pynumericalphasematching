@@ -8,6 +8,7 @@ Created on 26.09.2017 08:30
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
+from pynumpm import utilities
 
 
 class NoiseProfile(object):
@@ -21,14 +22,9 @@ class NoiseProfile(object):
         self.__z = z
         self.__offset = offset
         self.__dz = np.diff(self.z)[0]
-        self.__profile = np.zeros(shape=self.z.shape)
+        self.__profile = self.__noise_amplitude * np.ones(shape=self.z.shape) + self.__offset
         self.__autocorrelation_is_calculated = False
         self.f = None
-        self.noise_spectrum = None
-        self.power_spectrum = None
-        self.autocorrelation = None
-        self.power_spectrum = None
-        self.z_autocorr = None
 
     @property
     def z(self):
@@ -59,21 +55,8 @@ class NoiseProfile(object):
         newnoise.__profile = newprofile
         return newnoise
 
-    def calculate_noise_properties(self):
-        logger = logging.getLogger(__name__)
-        logger.info("Calculating noise properties")
-        self.f = np.fft.fftshift(np.fft.fftfreq(len(self.z), np.diff(self.z)[0]))
-        self.noise_spectrum = np.fft.fft(self.profile)
-        self.power_spectrum = self.noise_spectrum * np.conj(self.noise_spectrum)
-        self.autocorrelation = np.fft.ifftshift(np.fft.ifft(self.power_spectrum))
-        self.power_spectrum = np.fft.fftshift(self.power_spectrum)
-        self.z_autocorr = np.fft.fftshift(np.fft.fftfreq(len(self.f), np.diff(self.f)[0]))
-        self.__autocorrelation_is_calculated = True
-        return self.z_autocorr, self.autocorrelation, self.f, self.power_spectrum
-
-    def plot_noise_properties(self, fig=None, ax=None, **kwargs):
-        if not self.__autocorrelation_is_calculated:
-            self.calculate_noise_properties()
+    def plot_noise_properties(self, fig=None, **kwargs):
+        z_autocorr, autocorr, f, power_spectrum = utilities.calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
         else:
@@ -86,19 +69,20 @@ class NoiseProfile(object):
         plt.ylabel("Noise")
 
         plt.subplot(234)
-        l2, = plt.semilogy(self.z_autocorr, abs(self.autocorrelation) ** 2, label="Calculated autocorrelation",
+        l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation",
                            **kwargs)
         plt.title("|R(z)|^2")
         plt.xlabel("z")
 
         plt.subplot(235)
-        l3, = plt.loglog(self.f, abs(self.power_spectrum) ** 2, **kwargs)
+        l3, = plt.loglog(f, abs(power_spectrum) ** 2, **kwargs)
         plt.title("|S(f)|^2")
         plt.xlabel("f")
         plt.subplot(236)
         plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))))
+        plt.title("Histogram of the noise.")
         plt.tight_layout()
-        return fig, ax, [l1, l2, l3]
+        return fig, [l1, l2, l3]
 
 
 class NoiseFromSpectrum(NoiseProfile):

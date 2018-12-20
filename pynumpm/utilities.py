@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 from scipy.signal import savgol_filter
+import logging
 
 
 def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, order=1, **kwargs):
@@ -77,3 +78,22 @@ def bandwidth(wl, phi, **kwargs):
     bw = r2 - r1
 
     return bw
+
+
+def calculate_profile_properties(z=None, profile=None):
+    logger = logging.getLogger(__name__)
+    logger.info("Calculating profile properties")
+    if z is None:
+        raise IOError("The z mesh is missing. Please, can you be so kind to provide me the discretization of the axis?")
+    if profile is None:
+        raise IOError("Oh dear! It looks like you have an empty profile! What do you want me to calculate about THAT? "
+                      "Please provide a non-empty profile...")
+
+    f = np.fft.fftshift(np.fft.fftfreq(len(z), np.diff(z)[0]))
+    noise_spectrum = np.fft.fft(profile)
+    power_spectrum = noise_spectrum * np.conj(noise_spectrum)
+    autocorrelation = np.fft.ifftshift(np.fft.ifft(power_spectrum))
+    power_spectrum = np.fft.fftshift(power_spectrum)
+    z_autocorr = np.fft.fftshift(np.fft.fftfreq(len(f), np.diff(f)[0]))
+    return z_autocorr, autocorrelation, f, power_spectrum
+

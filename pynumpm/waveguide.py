@@ -1,6 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pynumpm import noise
+from pynumpm import noise, utilities
+
+__LOOKUPTABLE = {0: " [m]",
+                 2: " [cm]",
+                 3: " [mm]",
+                 6: r" [$\mu$m]",
+                 9: " [nm]"}
 
 
 class Waveguide(object):
@@ -33,7 +39,7 @@ class Waveguide(object):
         self.__length = self.z[-1] - self.z[0]
         self.__poling_period = poling_period
         self.__nominal_parameter = nominal_parameter
-        self.__waveguide_profile = self.nominal_parameter * np.ones(shape=self.z.shape)
+        self.__waveguide_profile = self.load_waveguide_profile()
         self.__nominal_parameter_name = nominal_parameter_name
         self.__poling_structure = None
 
@@ -106,20 +112,25 @@ class Waveguide(object):
         self.nominal_parameter = nominal_parameter
         # return y
 
-    def load_waveguide_profile(self, waveguide_profile):
+    def load_waveguide_profile(self, waveguide_profile=None):
         """
         Function to load a user-defined waveguide profile.
 
         :param waveguide_profile: array with the waveguide profile. It *must* have the same shape as the z-mesh
         :type waveguide_profile: numpy.ndarray
         """
-        if waveguide_profile.shape != self.z.shape:
-            raise ValueError("The shape of the waveguide_profile {s1} is different from the z mesh {s2}".format(
-                s1=waveguide_profile.shape,
-                s2=self.z.shape))
+        if waveguide_profile is None:
+            self.__waveguide_profile = self.nominal_parameter * np.ones(shape=self.z.shape)
         else:
-            self.__waveguide_profile = waveguide_profile
-            self.nominal_parameter = self.profile.mean()
+            if waveguide_profile.shape != self.z.shape:
+                raise ValueError("The shape of the waveguide_profile {s1} is different from the z mesh {s2}".format(
+                    s1=waveguide_profile.shape,
+                    s2=self.z.shape))
+            else:
+                self.__waveguide_profile = waveguide_profile
+                self.nominal_parameter = self.profile.mean()
+
+        return self.__waveguide_profile
 
     def create_noisy_waveguide(self, noise_profile="1/f", noise_amplitude=0.2, nominal_parameter=None):
         """
@@ -154,11 +165,12 @@ class Waveguide(object):
         self.__poling_structure = poling_structure
         self.__poling_period = +np.infty
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, set_multiplier_x = 1):
         """
         Function to plot the waveguide profile.
 
         :param ax: handle to axis, if you want to plot in specific axes.
+        :param set_multiplier_x: set a scaling factor for the x axis. Use a power of 10. Default to 1.
         :return: fig, ax: handle to figure and axis objects
         """
         if ax is None:
@@ -168,8 +180,60 @@ class Waveguide(object):
             plt.sca(ax)
             fig = plt.gcf()
 
-        ax.plot(self.z * 1e3, self.profile)
-        ax.set_xlabel("Length [mm]")
+        exponent = int(np.log10(set_multiplier_x))
+        set_multiplier_x = 10 ** exponent  # round the set_multiplier to be a power of 10.
+
+        ax.plot(self.z * set_multiplier_x, self.profile)
+        ax.set_xlabel("z" + __LOOKUPTABLE[exponent])
         ax.set_ylabel(self.nominal_parameter_name)
         ax.set_title("Waveguide profile")
         return fig, ax
+
+    def plot_waveguide_properties(self, fig=None, set_multiplier_x=1):
+        """
+        Function to plot the waveguide properties in a figure. This function plots the waveguide profile,
+        it's spectrum and .....
+
+        :param fig: Handle of the figure where the plots should be displayed. If None, then opens a new figure. Default
+        is None.
+        :param set_multiplier_x: set a scaling factor for the x axis. Use a power of 10. Default to 1.
+        :return:
+        """
+        if fig is None:
+            fig = plt.figure()
+
+        exponent = int(np.log10(set_multiplier_x))
+        set_multiplier_x = 10 ** exponent  # round the set_multiplier to be a power of 10.
+        z_autocorr, autocorr, f, power_spectrum = utilities.calculate_profile_properties(self.z, self.profile)
+        if fig is None:
+            fig = plt.figure()
+        else:
+            fig = plt.figure(fig.number)
+
+        plt.subplot(211)
+        ax0 = plt.gca()
+        l1, = plt.plot(self.z * set_multiplier_x, self.profile)
+        plt.title("Waveguide profile")
+        plt.xlabel("z" + __LOOKUPTABLE[exponent])
+        plt.ylabel(self.nominal_parameter_name)
+
+        plt.subplot(234)
+        ax1 = plt.gca()
+        l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation")
+        plt.title("|R(z)|^2")
+        plt.xlabel("z")
+
+        plt.subplot(235)
+        ax2 = plt.gca()
+        l3, = plt.loglog(f, abs(power_spectrum) ** 2)
+        plt.title("|S(f)|^2")
+        plt.xlabel("f")
+
+        plt.subplot(236)
+        ax3 = plt.gca()
+        plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))), density=True)
+        plt.title("Distribution of " + self.nominal_parameter_name.lower().split("[")[0])
+        plt.xlabel(self.nominal_parameter_name)
+        plt.ylabel("Frequencies")
+        plt.tight_layout()
+        return fig, [ax0, ax1, ax2, ax3], [l1, l2, l3]
