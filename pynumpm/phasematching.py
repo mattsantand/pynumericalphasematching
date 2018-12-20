@@ -266,17 +266,18 @@ class Phasematching1D(object):
     def noise_length_product(self):
         return self.__noise_length_product
 
-    def set_wavelengths(self):
+    def __set_wavelengths(self):
         logger = logging.getLogger(__name__)
         num_of_none = (self.red_wavelength is None) + \
                       (self.green_wavelength is None) + \
                       (self.blue_wavelength is None)
+        logger.info("Number of wavelengths set to 'None': " + str(num_of_none))
         if num_of_none > 2:
-            logger.info("Test", self.red_wavelength, self.green_wavelength, self.blue_wavelength, num_of_none)
             raise ValueError("It would be cool to know in which wavelength range I should calculate the phasematching!")
         elif num_of_none == 2:
             # calculate SHG
             self.process = "shg"
+            logger.info("Calculating wavelengths for SHG")
             if self.red_wavelength is not None:
                 self.green_wavelength = self.red_wavelength
                 self.blue_wavelength = self.red_wavelength / 2.
@@ -287,15 +288,16 @@ class Phasematching1D(object):
                 self.red_wavelength = self.blue_wavelength / 2.
                 self.green_wavelength = self.blue_wavelength / 2.
             else:
-                logger.info("An error occurred in set_wavelengths. When setting the SHG wavelengths, "
-                            "all the wavelengths are set but the number of none is 2."
-                            "Red wavelength: {r}\nGreen wavelength: {g}\nBlue wavelength: {b}".format(
+                logger.error("An error occurred in __set_wavelengths. When setting the SHG wavelengths, "
+                             "all the wavelengths are set but the number of none is 2."
+                             "Red wavelength: {r}\nGreen wavelength: {g}\nBlue wavelength: {b}".format(
                     r=self.red_wavelength,
                     g=self.green_wavelength,
                     b=self.blue_wavelength))
                 raise ValueError("Something unexpected happened in set_wavelength. "
                                  "Check the log please and chat with the developer.")
         elif num_of_none == 1:
+            logger.info("Calculating wavelengths for sfg/dfg")
             self.process = "sfg/dfg"
             if self.red_wavelength is None:
                 self.red_wavelength = (self.blue_wavelength ** -1 - self.green_wavelength ** -1) ** -1
@@ -304,9 +306,9 @@ class Phasematching1D(object):
             elif self.blue_wavelength is None:
                 self.blue_wavelength = (self.red_wavelength ** -1 + self.green_wavelength ** -1) ** -1
             else:
-                logger.info("An error occurred in set_wavelengths. When setting the SFG/DFG wavelengths, "
-                            "all the wavelengths are set but the number of none is 1."
-                            "Red wavelength: {r}\nGreen wavelength: {g}\nBlue wavelength: {b}".format(
+                logger.error("An error occurred in __set_wavelengths. When setting the SFG/DFG wavelengths, "
+                             "all the wavelengths are set but the number of none is 1."
+                             "Red wavelength: {r}\nGreen wavelength: {g}\nBlue wavelength: {b}".format(
                     r=self.red_wavelength,
                     g=self.green_wavelength,
                     b=self.blue_wavelength))
@@ -334,9 +336,9 @@ class Phasematching1D(object):
         """
         logger = logging.getLogger(__name__)
         logger.info("Setting the nonlinear profile.")
-        logger.debug("Profile type: {pt}".format(pt=profile_type))
+        logger.info("Profile type: {pt}".format(pt=profile_type))
         if profile_type == "constant":
-            logger.debug("First order coefficient: {foc}".format(foc=first_order_coeff))
+            logger.debug("Value of first_order_coeff: {foc}".format(foc=first_order_coeff))
             if first_order_coeff:
                 g = lambda z: 2 / pi
             else:
@@ -429,7 +431,7 @@ class Phasematching1D(object):
         :return:
         """
         if not self.__wavelength_set:
-            self.set_wavelengths()
+            self.__set_wavelengths()
 
         logger = logging.getLogger(__name__)
         logger.info("Calculating phasematching")
@@ -636,9 +638,12 @@ class Phasematching2D(object):
         num_of_none = (self.red_wavelength is None) + \
                       (self.green_wavelength is None) + \
                       (self.blue_wavelength is None)
+        logger.info("Number of wavelengths set to 'None': " + str(num_of_none))
         if num_of_none != 1:
-            logger.info("Wavelengths set", self.red_wavelength, self.green_wavelength, self.blue_wavelength,
-                        num_of_none)
+            logger.info(
+                "num_of_none != 1, the user has left more than 1 wavelength ranges unknown. An error will be raised.")
+            logger.debug("Wavelengths set:", self.red_wavelength, self.green_wavelength, self.blue_wavelength,
+                         num_of_none)
             raise ValueError(
                 "Here you must be more precise. I need exactly 2 wavelenght ranges, so only one wavelength can be none")
         else:
@@ -666,101 +671,6 @@ class Phasematching2D(object):
 
             logging.debug("Wavelength matrices sizes: {0},{1},{2}".format(self.__WL_RED.shape, self.__WL_GREEN.shape,
                                                                           self.__WL_BLUE.shape))
-
-    # TODO: redo the set_wavelength functions
-    # def set_red(self, **kwargs):
-    #     """
-    #     Function to set the red wavelength.
-    #
-    #     :param central_wavelength: Central wavelength, in meters
-    #     :param delta_lambda: Range to be scanned, in meters
-    #     :param n_points: Number of points to sample
-    #     :param kwargs:
-    #     :return:
-    #     """
-    #     logger = logging.getLogger(__name__)
-    #     self.n_points_red = kwargs.get("n_points", 100)
-    #     if "start" in kwargs.keys() and "end" in kwargs.keys():
-    #         initial_wl = kwargs.get("start")
-    #         final_wl = kwargs.get("end")
-    #         self.red_wavelength = np.linspace(initial_wl, final_wl, self.n_points_red)
-    #         self.red_cwl = (initial_wl + final_wl) / 2.
-    #         self.red_delta_wl = (final_wl - initial_wl) / 2.
-    #     else:
-    #         self.red_cwl = kwargs.get("central_wavelength")
-    #         self.red_delta_wl = kwargs.get("delta_lambda")
-    #         initial_wl = self.red_cwl - self.red_delta_wl / 2.
-    #         final_wl = self.red_cwl + self.red_delta_wl / 2.
-    #         self.red_wavelength = np.linspace(initial_wl, final_wl, self.n_points_red)
-    #
-    #     self.__red_is_set = True
-    #     if self.__red_is_set:
-    #         logger.info("Red wavelength has been set: %f:%f:%f",
-    #                     self.red_wavelength[0] * 1e9, self.red_wavelength[1] * 1e9 - self.red_wavelength[0] * 1e9,
-    #                     self.red_wavelength[-1] * 1e9)
-    #
-    # def set_green(self, **kwargs):
-    #     """
-    #     Function to set the green wavelength.
-    #
-    #     :param central_wavelength: Central wavelength, in meters
-    #     :param delta_lambda: Range to be scanned, in meters
-    #     :param n_points: Number of points to sample
-    #     :param kwargs:
-    #     :return:
-    #     """
-    #     logger = logging.getLogger(__name__)
-    #     self.n_points_green = kwargs.get("n_points", 100)
-    #
-    #     if "start" in kwargs.keys() and "end" in kwargs.keys():
-    #         initial_wl = kwargs.get("start")
-    #         final_wl = kwargs.get("end")
-    #         self.green_wavelength = np.linspace(initial_wl, final_wl, self.n_points_green)
-    #         self.green_cwl = (initial_wl + final_wl) / 2.
-    #         self.green_delta_wl = (final_wl - initial_wl) / 2.
-    #     else:
-    #         self.green_cwl = kwargs.get("central_wavelength")
-    #         self.green_delta_wl = kwargs.get("delta_lambda")
-    #         initial_wl = self.green_cwl - self.green_delta_wl / 2.
-    #         final_wl = self.green_cwl + self.green_delta_wl / 2.
-    #         self.green_wavelength = np.linspace(initial_wl, final_wl, self.n_points_green)
-    #     self.__green_is_set = True
-    #     if self.__green_is_set:
-    #         logger.info("Green wavelength has been set: %f:%f%:%f",
-    #                     self.green_wavelength[0] * 1e9, self.green_wavelength[1] * 1e9 - self.green_wavelength[0] * 1e9,
-    #                     self.green_wavelength[-1] * 1e9)
-    #
-    # def set_blue(self, **kwargs):
-    #     """
-    #     Function to set the blue wavelength.
-    #
-    #     :param central_wavelength: Central wavelength, in meters
-    #     :param delta_lambda: Range to be scanned, in meters
-    #     :param n_points: Number of points to sample
-    #     :param kwargs:
-    #     :return:
-    #     """
-    #     logger = logging.getLogger(__name__)
-    #     self.n_points_blue = kwargs.get("n_points", 100)
-    #
-    #     if "start" in kwargs.keys() and "end" in kwargs.keys():
-    #         initial_wl = kwargs.get("start")
-    #         final_wl = kwargs.get("end")
-    #         self.blue_wavelength = np.linspace(initial_wl, final_wl, self.n_points_blue)
-    #         self.blue_cwl = (initial_wl + final_wl) / 2.
-    #         self.blue_delta_wl = (final_wl - initial_wl) / 2.
-    #     else:
-    #         self.blue_cwl = kwargs.get("central_wavelength")
-    #         self.blue_delta_wl = kwargs.get("delta_lambda")
-    #         initial_wl = self.blue_cwl - self.blue_delta_wl / 2.
-    #         final_wl = self.blue_cwl + self.blue_delta_wl / 2.
-    #         self.blue_wavelength = np.linspace(initial_wl, final_wl, self.n_points_blue)
-    #
-    #     self.__blue_is_set = True
-    #     if self.__blue_is_set:
-    #         logger.info("Blue wavelength has been set: %f:%f:%f",
-    #                     self.blue_wavelength[0] * 1e9, self.blue_wavelength[1] * 1e9 - self.blue_wavelength[0] * 1e9,
-    #                     self.blue_wavelength[-1] * 1e9)
 
     def calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
@@ -799,7 +709,7 @@ class Phasematching2D(object):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, verbose=False):
+    def calculate_phasematching(self):
         """
         This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and scanning the other two.
 
@@ -815,12 +725,8 @@ class Phasematching2D(object):
         self.__cumulative_deltabeta = np.zeros(shape=(len(self.idler_wavelength), len(self.signal_wavelength)),
                                                dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
-        dz = self.waveguide.z[1] - self.waveguide.z[0]
         dz = np.diff(self.waveguide.z).mean()  # TODO: this is RISKYYYYYYYY
         for idx, z in enumerate(self.waveguide.z):
-            if verbose:
-                if idx % 20 == 0:
-                    logger.info("z = ", z * 1e3, " mm")
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
@@ -850,16 +756,6 @@ class Phasematching2D(object):
         """
         logger = logging.getLogger(__name__)
         logger.info("Calculating JSA")
-        # if self.process == "pdc":
-        #     d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
-        #     d_wl2 = abs(self.green_wavelength[1] - self.green_wavelength[0])
-        #     wl1 = self.red_wavelength
-        #     wl2 = self.green_wavelength
-        # elif self.process == "sfg":
-        #     d_wl1 = abs(self.red_wavelength[1] - self.red_wavelength[0])
-        #     d_wl2 = abs(self.blue_wavelength[1] - self.blue_wavelength[0])
-        #     wl1 = self.red_wavelength
-        #     wl2 = self.blue_wavelength
         d_wl_signal = np.diff(self.signal_wavelength)[0]
         d_wl_idler = np.diff(self.idler_wavelength)[0]
 
@@ -886,7 +782,6 @@ class Phasematching2D(object):
         self.K = 1 / (self.singular_values ** 4).sum()
 
         logger.debug("Check normalization: sum of s^2 = " + str((abs(self.singular_values) ** 2).sum()))
-        logger.info("K = " + str(self.K))
         return self.K
 
     def plot_phasematching(self, **kwargs):

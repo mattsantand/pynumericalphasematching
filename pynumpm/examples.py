@@ -128,7 +128,7 @@ def example_1D_phasematching():
                                                 n_blue=ntm)
     wl_red = np.linspace(1.540, 1.560, 1000) * 1e-6
     thisprocess.red_wavelength = wl_red
-    # thisprocess.set_wavelengths(wl_red, wl_red, 0, constlam="shg")
+    # thisprocess.__set_wavelengths(wl_red, wl_red, 0, constlam="shg")
     thisprocess.set_nonlinearity_profile(profile_type="constant",
                                          first_order_coefficient=False)
     phi = thisprocess.calculate_phasematching()
