@@ -150,6 +150,10 @@ class Waveguide(object):
         """
         if nominal_parameter is None:
             nominal_parameter = self.nominal_parameter
+        else:
+            if self.nominal_parameter != nominal_parameter:
+                warnings.warn(
+                    "Attention. The nominal parameter set to create the noisy profile is different from the one set for the ideal structure. I will overwrite the ideal one.")
         thisnoise = noise.NoiseFromSpectrum(z=self.z,
                                             offset=nominal_parameter,
                                             profile_spectrum=noise_profile,

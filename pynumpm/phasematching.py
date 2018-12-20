@@ -56,8 +56,6 @@ class PhasematchingDeltaBeta(object):
     @deltabeta.setter
     def deltabeta(self, value):
         self.__deltabeta = value
-        logger = logging.getLogger(__name__)
-        logger.debug("Delta beta vector set")
 
     @property
     def phi(self):
@@ -75,7 +73,7 @@ class PhasematchingDeltaBeta(object):
     def noise_length_product(self):
         return self.__noise_length_product
 
-    def calculate_phasematching(self, deltabeta, normalized=False):
+    def calculate_phasematching(self, normalized=False):
         """
         Function that calculates the phasematching, given the vector of deltabeta (wavevector mismatch)
 
@@ -86,7 +84,8 @@ class PhasematchingDeltaBeta(object):
         :return: the function returns the complex-valued phasematching spectrum.
         """
         logger = logging.getLogger(__name__)
-        self.deltabeta = deltabeta
+        if self.deltabeta is None:
+            raise ValueError("You need to define a delta beta range.")
         logger.info("Calculating the phasematching.")
         self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
         self.__cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
@@ -127,6 +126,9 @@ class PhasematchingDeltaBeta(object):
         if normalized:
             y = abs(self.phi) ** 2 / y.max()
         ax.plot(self.deltabeta, y)
+        plt.title("Phasematching")
+        plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
+        plt.ylabel("Intensity [a.u.]")
         if verbose:
             integral = self.calculate_integral()
             noise_length_product = self.noise_length_product
@@ -137,7 +139,8 @@ class PhasematchingDeltaBeta(object):
             x = .7 * (x1 - x0) + x0
             y = .7 * y1
             print(x, y, text)
-            plt.text(x, y, text)
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            plt.text(x, y, text, bbox=props)
 
     def calculate_integral(self):
         """
@@ -826,7 +829,7 @@ class Phasematching2D(object):
             self.__cumulative_deltabeta += DK
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
-                #TODO: rewrite this as a sum over the sinc, instead with rectangular approximation
+                # TODO: rewrite this as a sum over the sinc, instead with rectangular approximation
                 self.__cumulative_exponential += self.waveguide.poling_structure[idx] * \
                                                  (np.exp(-1j * dz * self.__cumulative_deltabeta) -
                                                   np.exp(-1j * dz * (self.__cumulative_deltabeta - DK)))
@@ -967,7 +970,7 @@ class Phasematching2D(object):
         logger = logging.getLogger(__name__)
         f_real = interp.interp2d(self.signal_wavelength, self.idler_wavelength, np.real(self.phi), kind='linear')
         f_imag = interp.interp2d(self.signal_wavelength, self.idler_wavelength, np.imag(self.phi), kind='linear')
-        logger.debug("Constant wl: "+str(const_wl))
+        logger.debug("Constant wl: " + str(const_wl))
         if self.signal_wavelength.min() <= const_wl <= self.signal_wavelength.max():
             wl = self.idler_wavelength
             phi = f_real(const_wl, self.idler_wavelength) + 1j * f_imag(const_wl, self.idler_wavelength)
