@@ -8,6 +8,7 @@ Created on 26.09.2017 08:30
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
 from pynumpm import utilities
 
 
@@ -16,7 +17,7 @@ class NoiseProfile(object):
         if z is None:
             raise ValueError("z cannot be None")
         if noise_amplitude < 0:
-            raise Warning("noise_amplitude is negative. Taking the absolute value")
+            warnings.warn("noise_amplitude is negative. Taking the absolute value", UserWarning)
         self.__noise_amplitude = abs(noise_amplitude)
 
         self.__z = z
@@ -149,7 +150,7 @@ class CorrelatedNoise(NoiseProfile):
     def __init__(self, z=None, offset=0, noise_amplitude=0., correlation_length=0.):
         NoiseProfile.__init__(self, z=z, offset=offset, noise_amplitude=noise_amplitude)
         if correlation_length < 0:
-            raise Warning("correlation_length is negative. I will get the absolute value")
+            warnings.warn("correlation_length is negative. I will get the absolute value", UserWarning)
         self.__correlation_length = abs(correlation_length)
         NoiseProfile.__profile = self.generate_noise()
 

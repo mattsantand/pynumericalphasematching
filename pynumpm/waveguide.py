@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
 from pynumpm import noise, utilities
 
 LOOKUPTABLE = {0: " [m]",
@@ -20,7 +21,7 @@ class Waveguide(object):
 
     """
 
-    def __init__(self, z=None, poling_period=None, nominal_parameter=1., nominal_parameter_name=""):
+    def __init__(self, z=None, poling_period=None, nominal_parameter=1., nominal_parameter_name="parameter"):
         """
         Initialize the waveguide by providing a z-mesh and the nominal parameter of the profile. This will automatically
         generate a uniform profile with the specified nominal parameter.
@@ -41,6 +42,10 @@ class Waveguide(object):
         self.__nominal_parameter = nominal_parameter
         self.__waveguide_profile = self.load_waveguide_profile()
         self.__nominal_parameter_name = nominal_parameter_name
+        if self.__nominal_parameter_name == "parameter":
+            warnings.warn(
+                "The name of the variable parameter was left empty. It will be called 'parameter', but that's really not a great name",
+                UserWarning)
         self.__poling_structure = None
 
     @property

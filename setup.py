@@ -54,7 +54,7 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     install_requires=[
-        'numpy', 'matplotlib', 'scipy'
+        'numpy', 'matplotlib', 'scipy', 'warnings'
     ],
     packages=find_packages(),
 )
