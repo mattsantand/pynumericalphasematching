@@ -18,6 +18,7 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('..\\..'))
 # print os.path.abspath('..\\..\\pynumpm\\')
 # sys.path.append()
@@ -32,15 +33,15 @@ sys.path.insert(0, os.path.abspath('..\\..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.intersphinx']
+              'sphinx.ext.doctest',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.githubpages',
+              'sphinx.ext.intersphinx']
 
-intersphinx_mapping =  {'numpy': ('http://docs.scipy.org/doc/numpy/', None)}
+intersphinx_mapping = {'numpy': ('http://docs.scipy.org/doc/numpy/', None)}
 autodoc_member_order = "bysource"
 
 # Add any paths that contain templates here, relative to this directory.
@@ -88,7 +89,6 @@ pygments_style = 'sphinx'
 todo_include_todos = True
 autoclass_content = "both"
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -129,7 +129,6 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'PyNumericalPhasematchingdoc'
 
-
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
@@ -158,7 +157,6 @@ latex_documents = [
      u'Matteo Santandrea', 'manual'),
 ]
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
@@ -167,7 +165,6 @@ man_pages = [
     (master_doc, 'pynumericalphasematching', u'PyNumericalPhasematching Documentation',
      [author], 1)
 ]
-
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -180,5 +177,7 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
-
+# Parse of Markdown doc (for readme and changelog)
+source_parsers = {
+    '.md': 'recommonmark.parser.CommonMarkParser'
+}

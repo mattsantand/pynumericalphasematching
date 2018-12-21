@@ -13,23 +13,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import pi
 import scipy.interpolate as interp
-import copy
-import pprint
 from scipy.integrate import simps
 
 
-# TODO: replace rectangular integration with the sinc (the currect integration)
+# TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
 
 class PhasematchingDeltaBeta(object):
     """
-    This class is used to simulate phasematching of systems considering only the wavevector mismatch (:math:`\Delta\\beta).
+    This class is used to simulate phasematching of systems considering only the wavevector mismatch (:math:`\Delta\\beta`).
+    The class is characterized by the following attributes:
+
+    :param waveguide: Waveguide object
+    :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+    :param deltabeta: vector containing the values of :math:`\Delta\\beta` needed to calculate the phasematching
+    :type deltabeta: :class:`~numpy:numpy.ndarray`
+    :param phi: Vector containing the phasematching spectrum
+    :type phi: :class:`~numpy:numpy.ndarray`
+    :param noise_length_product: Value of the noise length product :math:`\sigma L`
+    :type noise_length_product: float
+
     """
 
     def __init__(self, waveguide):
         """
+        Initialization of the class requires the following parameter:
 
         :param waveguide: Waveguide object, as provided by the class waveguide.
         :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+
         """
         self.__waveguide = waveguide
         self.__deltabeta = None
@@ -41,16 +52,10 @@ class PhasematchingDeltaBeta(object):
 
     @property
     def waveguide(self):
-        """
-        Waveguide object, as defined by the user during initialization.
-        """
         return self.__waveguide
 
     @property
     def deltabeta(self):
-        """
-        Array of the :math:`\Delta\\beta` values, as defined by the user.
-        """
         return self.__deltabeta
 
     @deltabeta.setter
@@ -59,10 +64,6 @@ class PhasematchingDeltaBeta(object):
 
     @property
     def phi(self):
-        """
-        Phasematching spectrum (complex valued numpy.ndarray)
-
-        """
         return self.__phi
 
     @phi.setter
@@ -75,13 +76,16 @@ class PhasematchingDeltaBeta(object):
 
     def calculate_phasematching(self, normalized=False):
         """
-        Function that calculates the phasematching, given the vector of deltabeta (wavevector mismatch)
+        Function that calculates the phasematching.
+        Prior to the evaluation of the phasematching, it is necessary to set the :math:`\Delta\\beta` vector by
+        assigning it to the variable `deltabeta`.
 
         :param deltabeta: Vector describing the deltabeta space to be scanned.
         :type deltabeta: numpy.ndarray
         :param normalized: Sets the normalization of the phasematching. If the normalization is on (True), the phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]). Default: False.
         :type normalized: bool
         :return: the function returns the complex-valued phasematching spectrum.
+
         """
         logger = logging.getLogger(__name__)
         if self.deltabeta is None:
@@ -113,7 +117,7 @@ class PhasematchingDeltaBeta(object):
         :type normalized: bool
         :param verbose: Optional. If True, writes the main information in the plot. Default: False
         :type verbose: bool
-        :return:
+        :return: the axis handle of the plot
         """
         if ax is None:
             fig = plt.figure()
@@ -141,6 +145,7 @@ class PhasematchingDeltaBeta(object):
             print(x, y, text)
             props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
             plt.text(x, y, text, bbox=props)
+        return ax
 
     def calculate_integral(self):
         """
@@ -155,35 +160,49 @@ class Phasematching1D(object):
     """
     Class to calculate the 1D-phasematching, i.e. having one fixed wavelength and scanning another one (the third is
     fixed due to energy conservation.
-    The convention for labelling wavelength is abs(lambda_red) >= abs(lambda_green) >= abs(lambda_blue), i.e. according
-    to their "energy".
+    The convention for labelling wavelength is
+
+    .. math::
+
+        |\\lambda_{red}| \\geq |\\lambda_{green}| \\geq |\\lambda_{blue}|
+
+    i.e. according to their "energy".
+
+    Accessible attributes of the class are
 
     :param waveguide: waveguide object
-    :type waveguide: :class:`pynumpm.waveguide.waveguide`
-    :param phi: phasematching spectrum (complex valued function)
-    :param n_red: refractive index for "red" wavelength
-    :param n_green: refractive index for "green" wavelength
-    :param n_blue: refractive index for "blue" wavelength
+    :type waveguide: :class:`pynumpm.waveguide.Waveguide`
+    :param phi: One dimensional phasematching spectrum (complex valued function)
+    :type phi: :class:`~numpy:numpy.ndarray`
+    :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e. n(parameter)(wavelength). *The wavelength must be in micron (usual convention for Sellmeier's equations)*
+    :type n_red: function of function
+    :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e. n(parameter)(wavelength). *The wavelength must be in micron (usual convention for Sellmeier's equations)*
+    :type n_green: function of function
+    :param n_blue: refractive index for "blue" wavelengthIt must be a function of a function, i.e. n(parameter)(wavelength). *The wavelength must be in micron (usual convention for Sellmeier's equations)*
+    :type n_blue: function of function
     :param order: order of phasematching
-    :param constlam: wavelength to be kept fixed (can be "r","g","b" or "shg")
-    :param process: type of process: "SFG", "SHG", "bwSFG", "bwSHG".
+    :type order: int
     :param propagation_type:  copropagating or counterpropagating
+    :type propagation_type: str
     :param red_wavelength: None, Single float or vector of float, containing the "red" wavelengths, in meters.
+    :type red_wavelength: :class:`numpy:numpy.ndarray`
     :param green_wavelength: None, Single float or vector of float, containing the "green" wavelengths, in meters.
+    :type green_wavelength: :class:`numpy:numpy.ndarray`
     :param blue_wavelength: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
+    :type blue_wavelength: :class:`numpy:numpy.ndarray`
 
     """
 
     def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
         """
-        Variables:
+        Initialization of the class requires the following parameters:
 
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
         :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
-        :param process: type of process: "SFG", "SHG", "bwSFG", "bwSHG".
         :param order: order of phasematching. Default: 1
+        :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
 
         """
         self.__waveguide = waveguide
@@ -192,7 +211,6 @@ class Phasematching1D(object):
         self.__n_red = n_red
         self.__n_green = n_green
         self.__n_blue = n_blue
-        self.__constlam = None
         # ====================================================
         self.order = order
         # TODO: check if and how the poling order interferes when the poling structure is set
@@ -585,7 +603,7 @@ class Phasematching2D(object):
         * :param order: [**1**]: order of the phasematching process
           :type order: int
 
-    Other parameters related to this objects are:
+        Other parameters related to this objects are:
 
         * :param __red_is_set: Parameter that is set to True if the red wl has been initialized
           :type __red_is_set: bool
