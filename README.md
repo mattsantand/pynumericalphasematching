@@ -42,18 +42,18 @@ in the presence of a variation of the phase mismatch along the propagation axes 
 
 It consists of five modules
 
-* waveguide, helpful to describe the properties of the guiding system  
-* noise, used to describe the nose properties of the guiding system
-* phasematching, used to calculate the phasematching spectrum
-* pump, used to generate a 2D pump spectrum to compute joint spectral amplitudes (JSA)
-* utilities, with some common functions
+* `waveguide.py`, helpful to describe the properties of the guiding system  
+* `noise.py`, used to describe the nose properties of the guiding system
+* `phasematching.py`, used to calculate the phasematching spectrum
+* `pump.py`, used to generate a 2D pump spectrum to compute joint spectral amplitudes (JSA)
+* `utilities.py`, with some common functions
 
 ### Examples 
 
 To run a simulation, you need to
-1. Create a waveguide object
-2. Load the waveguide object into a phasematching object
-3. Run the *calculate_phasematching* method of the phasematching object
+1. Create a `waveguide` object
+2. Load the `waveguide` object into a phasematching object
+3. Run the `calculate_phasematching` method of the phasematching object
 
 #### Waveguide definition
 
@@ -91,7 +91,7 @@ thisprocess.calculate_phasematching(deltabeta=deltabeta)
 thisprocess.plot()
 ```
 
-#### Phasematching simulation: 1D, wavelength-dependent phasematching 
+#### Phasematching simulation: 1D, wavelength-dependent, three-wave mixing phasematching 
 
 The following snippet loads the previous waveguide into a phasematching object and calculates the 1D phasematching 
 spectrum for an SHG process pumped between 1540 and 1560nm and finally plots it.
@@ -129,6 +129,50 @@ to `output_wavelength`.
 The definition of `input_wavelength` and `output_wavelength` is important to define the plotting x-axis in the `plot`
 routine.
 
+#### Phasematching simulation: 2D, wavelength-dependent, three-wave mixing phasematching
+
+The following snippet loads the previous waveguide into a phasematching object and calculates the 1D phasematching 
+spectrum for a PDC process with signal and idler in the range (1540nm,1560nm) and (1200nm,1400nm) respectively.
+```
+from pynumpm import phasematching
+
+thisprocess = phasematching.Phasematching2D(waveguide=thiswaveguide,
+                                            n_red=n_effective,
+                                            n_green=n_effective,
+                                            n_blue=n_effective)
+wl_signal = np.linspace(1.540, 1.560, 1000) * 1e-6
+wl_idler = np.linspace(1.2, 1.4, 1000)*1e-6
+thisprocess.red_wavelength = wl_signal
+thisprocess.green_wavelength = wl_idler
+thisprocess.set_nonlinearity_profile(profile_type="constant",
+                                     first_order_coefficient=False)
+thisprocess.calculate_phasematching()
+thisprocess.plot() 
+```
+
+Here, `n_effective` is a function describing the refractive index of the light fields as a function of the wavelength 
+and of the variable waveguide parameter - in this case, the waveguide width. 
+In particular, it **needs** to be defined such that `n(parameter)(wavelength)` returns a float (or array, 
+depending on `wavelength`).
+
+To define the wavelength range, you can directly access the wavelengths using the attributes `red_wavelength`, 
+`green_wavelength` and `blue_wavelength` of the classe `Phasematching1D`.
+The class automatically detects which kind of process you are considering depending on the following criteria: 
+
+* If only one wavelength is defined, then it is considered a *SHG process*, 
+i.e. `red_wavelength` == `green_wavelength` == `blue_wavelength`/2.
+The `red_wavelength` is also assigned to `input_wavelength`, while `blue_wavelength` is also assigned to `output_wavelength`. 
+* If two wavelengths are defined (one array and one float), then it is considered a *SFG/DFG process*. 
+The input vector is assigned to `input_wavelength` while the dependent output vector is assigned 
+to `output_wavelength`.
+
+The definition of `input_wavelength` and `output_wavelength` is important to define the plotting x-axis in the `plot`
+routine.
+
+## In development/ToDo list
+
+* The class `Phasematching1D` can be collapesd in the class `PhasematchingDeltaBeta` with a proper 'middle' class that 
+translates the wavelengths vectors into a single Deltabeta vector.  
 
 ## Author
 
@@ -136,7 +180,6 @@ routine.
 
 ## License 
 his project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
 
 ## Acknowledgment
 * Benjamin Brecht, University of Paderborn (*pump.py* module)

@@ -224,7 +224,8 @@ class Phasematching1D(object):
             self.propagation_type = "backpropagation"
         else:
             self.propagation_type = "copropagation"
-        self._nonlinear_profile_set = False
+        self.__nonlinear_profile_set = False
+        self.__nonlinear_profile = None
         self.__noise_length_product = None
         self.scanning_wavelength = None
         self.__cumulative_delta_beta = None
@@ -233,6 +234,10 @@ class Phasematching1D(object):
         self.__lamr0 = None
         self.__lamg0 = None
         self.__lamb0 = None
+
+    @property
+    def nonlinear_profile(self):
+        return self.__nonlinear_profile
 
     @property
     def waveguide(self):
@@ -416,8 +421,8 @@ class Phasematching1D(object):
             g = interp.interp1d(self.waveguide.z, g, kind="cubic")
         else:
             raise ValueError("The nonlinear profile {0} has not been implemented yet.".format(profile_type))
-        self._nonlinear_profile_set = True
-        self.nonlinear_profile = g
+        self.__nonlinear_profile_set = True
+        self.__nonlinear_profile = g
         return self.nonlinear_profile
 
     def plot_nonlinearity_profile(self):
@@ -483,7 +488,7 @@ class Phasematching1D(object):
         logger = logging.getLogger(__name__)
         logger.info("Calculating phasematching")
 
-        if not self._nonlinear_profile_set:
+        if not self.__nonlinear_profile_set:
             self.set_nonlinearity_profile(profile_type="constant", first_order_coefficient=False)
         if self.waveguide.poling_structure_set:
             logger.info("Poling period is not set. Calculating from structure.")
@@ -633,6 +638,8 @@ class Phasematching2D(object):
             self.propagation_type = "backpropagation"
         else:
             self.propagation_type = "copropagation"
+        self.__nonlinear_profile_set = False
+        self.__nonlinear_profile = None
 
     @property
     def signal_wavelength(self):
@@ -641,6 +648,10 @@ class Phasematching2D(object):
     @signal_wavelength.setter
     def signal_wavelength(self, value):
         self.__signal_wavelength = value
+
+    @property
+    def nonlinear_profile(self):
+        return self.__nonlinear_profile
 
     @property
     def idler_wavelength(self):
@@ -713,6 +724,58 @@ class Phasematching2D(object):
             logging.debug("Wavelength matrices sizes: {0},{1},{2}".format(self.__WL_RED.shape, self.__WL_GREEN.shape,
                                                                           self.__WL_BLUE.shape))
 
+    def set_nonlinearity_profile(self, profile_type="constant", first_order_coeff=False, **kwargs):
+        """
+        Method to set the nonlinear profile. As a default it is set to "constant", i.e. birefringent or QPM.
+        If **profile_type** is set to "constant", the you can select whether to use the first order Fourier coefficient (2/pi) using
+        the keyword *first_order_coefficient* =**True**/False.
+
+        If **profile_type** is set to *"gaussian"*, then you can select the width of the gaussian g(z) using the keyword
+        *sigma_g_norm*, that reads the sigma in units of the length. Defauls to 0.5 (i.e. L/2).
+
+        :param profile_type:
+        :param kwargs:
+        :return:
+        """
+        logger = logging.getLogger(__name__)
+        logger.info("Setting the nonlinear profile.")
+        logger.info("Profile type: {pt}".format(pt=profile_type))
+        if profile_type == "constant":
+            logger.debug("Value of first_order_coeff: {foc}".format(foc=first_order_coeff))
+            if first_order_coeff:
+                g = lambda z: 2 / pi
+            else:
+                g = lambda z: 1.
+        elif profile_type == "gaussian":
+            if first_order_coeff:
+                coeff = 2 / np.pi
+            else:
+                coeff = 1
+            sigma_norm = kwargs.get("sigma_g_norm", 0.5)
+            # I drop the phase in the exponential term of the delta beta in the main loop
+            g = lambda z: coeff * np.exp(
+                -(z - self.waveguide.length / 2.) ** 2 / (2 * (sigma_norm * self.waveguide.length) ** 2))
+        elif profile_type == "hamming":
+            g = np.hamming(len(self.waveguide.z))
+            g = interp.interp1d(self.waveguide.z, g, kind="cubic")
+        elif profile_type == "bartlett":
+            g = np.bartlett(len(self.waveguide.z))
+            g = interp.interp1d(self.waveguide.z, g, kind="cubic")
+        elif profile_type == "hanning":
+            g = np.hanning(len(self.waveguide.z))
+            g = interp.interp1d(self.waveguide.z, g, kind="cubic")
+        elif profile_type == "blackman":
+            g = np.blackman(len(self.waveguide.z))
+            g = interp.interp1d(self.waveguide.z, g, kind="cubic")
+        elif profile_type == "kaiser":
+            g = np.kaiser(len(self.waveguide.z), kwargs.get("beta", 1.))
+            g = interp.interp1d(self.waveguide.z, g, kind="cubic")
+        else:
+            raise ValueError("The nonlinear profile {0} has not been implemented yet.".format(profile_type))
+        self.__nonlinear_profile_set = True
+        self.__nonlinear_profile = g
+        return self.nonlinear_profile
+
     def calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
         try:
@@ -762,6 +825,10 @@ class Phasematching2D(object):
             logger.info("Poling period is not set. Calculating from structure.")
         else:
             logger.info("Poling period is set. Calculating with constant poling structure.")
+
+        if not self._nonlinear_profile_set:
+            self.set_nonlinearity_profile(profile_type="constant", first_order_coefficient=False)
+
         self.__set_wavelengths()
         self.__cumulative_deltabeta = np.zeros(shape=(len(self.idler_wavelength), len(self.signal_wavelength)),
                                                dtype=complex)
@@ -777,11 +844,13 @@ class Phasematching2D(object):
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
                 # TODO: rewrite this as a sum over the sinc, instead with rectangular approximation
-                self.__cumulative_exponential += self.waveguide.poling_structure[idx] * dz[idx] * \
+                self.__cumulative_exponential += self.nonlinear_profile(z) * self.waveguide.poling_structure[idx] * dz[
+                    idx] * \
                                                  (np.exp(-1j * dz[idx] * self.__cumulative_deltabeta) -
                                                   np.exp(-1j * dz[idx] * (self.__cumulative_deltabeta - DK)))
             else:
-                self.__cumulative_exponential += dz[idx] * np.exp(-1j * dz[idx] * self.__cumulative_deltabeta)
+                self.__cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * np.exp(
+                    -1j * dz[idx] * self.__cumulative_deltabeta)
 
         logger.info("Calculation terminated")
         self.phi = 1 / self.waveguide.length * self.__cumulative_exponential
