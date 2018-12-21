@@ -33,6 +33,7 @@ Alternatively, it is possible to install the package by downloading the package 
 The package *pynumpm* is useful to calculate the phasematching spectrum of a variety of nonlinear processes.
 
 In this version, it can calculate 
+
 * the phasematching spectrum of a general nonlinear process, as a function of the wavevector mismatch
 * the phasematching spectrum of a three wave mixing process as a function of one or two independent wavelength(s)
 
@@ -40,6 +41,7 @@ in the presence of a variation of the phase mismatch along the propagation axes 
 
 
 It consists of five modules
+
 * waveguide, helpful to describe the properties of the guiding system  
 * noise, used to describe the nose properties of the guiding system
 * phasematching, used to calculate the phasematching spectrum
