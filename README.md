@@ -156,17 +156,12 @@ In particular, it **needs** to be defined such that `n(parameter)(wavelength)` r
 depending on `wavelength`).
 
 To define the wavelength range, you can directly access the wavelengths using the attributes `red_wavelength`, 
-`green_wavelength` and `blue_wavelength` of the classe `Phasematching1D`.
-The class automatically detects which kind of process you are considering depending on the following criteria: 
+`green_wavelength` and `blue_wavelength` of the classe `Phasematching2D`.
+It is necessary to define two wavelength ranges. 
+The `signal_wavelength` and the `idler_wavelength` are defined as the two input wavelength vectors, sorted in increasing
+energy, i.e. `red_wavelength`<`green_wavelength`<`blue_wavelength`. 
 
-* If only one wavelength is defined, then it is considered a *SHG process*, 
-i.e. `red_wavelength` == `green_wavelength` == `blue_wavelength`/2.
-The `red_wavelength` is also assigned to `input_wavelength`, while `blue_wavelength` is also assigned to `output_wavelength`. 
-* If two wavelengths are defined (one array and one float), then it is considered a *SFG/DFG process*. 
-The input vector is assigned to `input_wavelength` while the dependent output vector is assigned 
-to `output_wavelength`.
-
-The definition of `input_wavelength` and `output_wavelength` is important to define the plotting x-axis in the `plot`
+The definition of `signal_wavelength` and `idler_wavelength` is important to define the plotting x-axis in the `plot`
 routine.
 
 ## In development/ToDo list
@@ -176,10 +171,11 @@ translates the wavelengths vectors into a single Deltabeta vector.
 
 ## Author
 
-* Matteo Santandrea, University of Paderborn
+* Matteo Santandrea, University of Paderborn.
 
 ## License 
-his project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgment
 * Benjamin Brecht, University of Paderborn (*pump.py* module)
