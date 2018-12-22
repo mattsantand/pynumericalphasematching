@@ -1,11 +1,16 @@
 # coding=utf-8
 """
-Module to calculate the phasematching of a given waveguide, as specified by the Waveguide class.
+.. module:: phasematching.py
+.. moduleauthor:: Matteo Santandrea <matteo.santandrea@upb.de>
+   :platform: Windows (tested), Unix
+   :synopsis: Module to calculate the phasematching of a given waveguide, as specified by the Waveguide class.
 
-It can calculate different types of phasematching:
-    * :class:`PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
-    * :class:`Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
-    * :class:`Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+This module is used to calculate different types of phasematching:
+    * :class:`~pynumpm.phasematching.PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
+    * :class:`~pynumpm.phasematching.Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+    * :class:`~pynumpm.phasematching.Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+
+
 
 """
 import logging
@@ -14,6 +19,7 @@ import matplotlib.pyplot as plt
 from scipy.constants import pi
 import scipy.interpolate as interp
 from scipy.integrate import simps
+from pynumpm import pump
 
 
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
@@ -21,7 +27,7 @@ from scipy.integrate import simps
 class PhasematchingDeltaBeta(object):
     """
     This class is used to simulate phasematching of systems considering only the wavevector mismatch (:math:`\Delta\\beta`).
-    The class is characterized by the following attributes:
+    The accessible attributes in this class are:
 
     :param waveguide: Waveguide object
     :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
@@ -113,7 +119,7 @@ class PhasematchingDeltaBeta(object):
         Function to plot the phasematching intensity.
 
         :param ax: Optional argument. Handle of the axis of the plot. Default: None
-        :param normalized: Optional argument. If True, normalizes the plotted phasematchig to have the maximum to 1. Default: False
+        :param normalized: Optional argument. If True, normalizes the plotted phasematching to have the maximum to 1. Default: False
         :type normalized: bool
         :param verbose: Optional. If True, writes the main information in the plot. Default: False
         :type verbose: bool
@@ -151,7 +157,7 @@ class PhasematchingDeltaBeta(object):
         """
         Function to calculate the integral of the phasematching curve. It uses the function `simps` from the scipy module.
 
-        :return: Phasematching integral
+        :return: Intensity integral
         """
         return simps(abs(self.phi) ** 2, self.deltabeta)
 
@@ -174,22 +180,27 @@ class Phasematching1D(object):
     :type waveguide: :class:`pynumpm.waveguide.Waveguide`
     :param phi: One dimensional phasematching spectrum (complex valued function)
     :type phi: :class:`~numpy:numpy.ndarray`
-    :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e. n(parameter)(wavelength). *The wavelength must be in micron (usual convention for Sellmeier's equations)*
+    :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
+        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
     :type n_red: function of function
-    :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e. n(parameter)(wavelength). *The wavelength must be in micron (usual convention for Sellmeier's equations)*
+    :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
+        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
     :type n_green: function of function
-    :param n_blue: refractive index for "blue" wavelengthIt must be a function of a function, i.e. n(parameter)(wavelength). *The wavelength must be in micron (usual convention for Sellmeier's equations)*
+    :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
+        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
     :type n_blue: function of function
-    :param order: order of phasematching
-    :type order: int
-    :param propagation_type:  copropagating or counterpropagating
-    :type propagation_type: str
+    :param int order: order of phasematching
+    :param str propagation_type:  copropagating or counterpropagating
     :param red_wavelength: None, Single float or vector of float, containing the "red" wavelengths, in meters.
     :type red_wavelength: :class:`numpy:numpy.ndarray`
     :param green_wavelength: None, Single float or vector of float, containing the "green" wavelengths, in meters.
     :type green_wavelength: :class:`numpy:numpy.ndarray`
     :param blue_wavelength: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
     :type blue_wavelength: :class:`numpy:numpy.ndarray`
+    :param input_wavelength: Input (scanning) wavelength of the process. It cannot be set, it is automatically detected.
+    :type input_wavelength: :class:`numpy:numpy.ndarray`
+    :param output_wavelength: Output (scanning) wavelength of the process. It cannot be set, it is automatically detected.
+    :type output_wavelength: :class:`numpy:numpy.ndarray`
 
     """
 
@@ -198,6 +209,7 @@ class Phasematching1D(object):
         Initialization of the class requires the following parameters:
 
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
+        :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
         :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
@@ -375,16 +387,27 @@ class Phasematching1D(object):
 
     def set_nonlinearity_profile(self, profile_type="constant", first_order_coeff=False, **kwargs):
         """
-        Method to set the nonlinear profile. As a default it is set to "constant", i.e. birefringent or QPM.
-        If **profile_type** is set to "constant", the you can select whether to use the first order Fourier coefficient (2/pi) using
-        the keyword *first_order_coefficient* =**True**/False.
+        Method to set the nonlinearity profile g(z), with either a constant profile or a variety of different windowing functions.
 
-        If **profile_type** is set to *"gaussian"*, then you can select the width of the gaussian g(z) using the keyword
-        *sigma_g_norm*, that reads the sigma in units of the length. Defauls to 0.5 (i.e. L/2).
+        :param str profile_type: Type of nonlinearity profile to consider. Possible options are [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
+        :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase matching or not.
+        :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective if `profile_type` is *"gaussian"* or *"kaiser*.
+        :return: The function returns the nonlinearity profile of the system.
 
-        :param profile_type:
-        :param kwargs:
-        :return:
+        The different types of profile available are:
+
+        * constant: Uniform nonlinear profile.
+        * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`.
+        * hamming: :func:`numpy.hamming`
+        * bartlett :func:`numpy.bartlett`
+        * hanning: :func:`numpy.hanning`
+        * blackman: :func:`numpy.blackman`
+        * kaiser: :func:`numpy.kaiser`
+
+        If *profile_type* is set to *"gaussian"*, then `**kwargs` accets the keyword `sigma_g_norm`, defining the standard
+        deviation of the gaussian profile in units of the length (defauls to 0.5, i.e. L/2).
+        If *profile_type* is set to *"kaiser"*, then `**kwargs` accepts the keyword `beta`, describing the
+        :math:`\\beta` parameter of the Kaiser distribution.
         """
         logger = logging.getLogger(__name__)
         logger.info("Setting the nonlinear profile.")
@@ -426,16 +449,15 @@ class Phasematching1D(object):
         return self.nonlinear_profile
 
     def plot_nonlinearity_profile(self):
+        """
+        Function to plot the nonlinearity profile
+
+        """
         x = self.waveguide.z
         y = self.nonlinear_profile(self.waveguide.z)
         plt.plot(x, y)
 
     def __calculate_local_neff(self, posidx):
-        """
-        Function to calculate the local effective refractive index
-        :param posidx:
-        :return:
-        """
         local_parameter = self.waveguide.profile[posidx]
         try:
             n_red = self.n_red(local_parameter)
@@ -452,10 +474,6 @@ class Phasematching1D(object):
         return n_red, n_green, n_blue
 
     def __calculate_delta_k(self, wl_red, wl_green, wl_blue, n_red, n_green, n_blue):
-        """
-        Computes the delta k.
-        The wavelengths are provided in meter.
-        """
         logger = logging.getLogger(__name__)
         if self.propagation_type == "copropagation":
             dd = 2 * pi * (n_blue(abs(wl_blue) * 1e6) / wl_blue -
@@ -475,12 +493,13 @@ class Phasematching1D(object):
 
     def calculate_phasematching(self, normalized=True):
         """
-        This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and
-        scanning the other two.
+        This function is the core of the class. It calculates the phasematching of the process, considering one
+        wavelength fixed and scanning the other two.
 
-        :param normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the waveguide length, Default: True
-        :type normalized: bool
-        :return:
+        :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
+        waveguide length, Default: True
+
+        :return: the complex-valued phasematching spectrum
         """
         if not self.__wavelength_set:
             self.__set_wavelengths()
@@ -532,6 +551,11 @@ class Phasematching1D(object):
         return self.phi
 
     def calculate_integral(self):
+        """
+        Calculate the phasematching intensity integral
+
+        :return: the phasematching intensity integral
+        """
         return simps(abs(self.phi) ** 2, self.scanning_wavelength)
 
     def plot_deltabeta_error(self, ax=None):
@@ -544,18 +568,23 @@ class Phasematching1D(object):
         ax.plot(self.waveguide.z, self.__delta_beta0_profile)
         return ax
 
-    def plot(self, plot_intensity=True, plot_input=True, **kwargs):
-        fig = kwargs.get("fig", None)
-        ax = kwargs.get("ax", None)
+    def plot(self, ax=None, plot_intensity=True, plot_input=True, **kwargs):
+        """
+        Plot the phasematching intensity/amplitude.
 
+        :param ax: Axis handle for the plot. If None, plots in a new figure. Default is None.
+        :param bool plot_intensity: Set to True to plot the intensity profile, False to plot the amplitude and phase.
+        Default to True.
+        :param bool plot_input: Select the x axis for the plot. If True, use the `input_wavelength` as input, otherwise use `output_wavelength`.
+        :param kwargs: :func:`matplotlib.pyplot.plot` **kwargs arguments
+        :return: figure and axis handle
+        """
         if ax is None:
-            if fig is None:
-                plt.figure()
-            else:
-                plt.figure(fig.number)
+            fig = plt.figure()
             ax = plt.gca()
         else:
-            ax = plt.gca()
+            fig = plt.gcf()
+
         if plot_input:
             wl = self.input_wavelength
         else:
@@ -578,54 +607,71 @@ class Phasematching1D(object):
         ax.set_ylabel(ylabel)
         ax.set_title("Phasematching")
         fig = plt.gcf()
-        d = {"fig": fig,
-             "ax": ax}
-        return d
+        return fig, ax
 
 
 class Phasematching2D(object):
     """
-    Phasematching2d class
+        Class to calculate the 2D-phasematching, i.e. having one fixed wavelength and scanning another one (the third is
+        fixed due to energy conservation.
+        The convention for labelling wavelength is
 
-    """
+        .. math::
+
+            |\\lambda_{red}| \\geq |\\lambda_{green}| \\geq |\\lambda_{blue}|
+
+        i.e. according to their "energy".
+
+        Accessible attributes of the class are
+
+        :param waveguide: waveguide object
+        :type waveguide: :class:`pynumpm.waveguide.Waveguide`
+        :param phi: One dimensional phasematching spectrum (complex valued function)
+        :type phi: :class:`~numpy:numpy.ndarray`
+        :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
+            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+        :type n_red: function of function
+        :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
+            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+        :type n_green: function of function
+        :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
+            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+        :type n_blue: function of function
+        :param int order: order of phasematching
+        :param str propagation_type:  copropagating or counterpropagating
+        :param red_wavelength: None, Single float or vector of float, containing the "red" wavelengths, in meters.
+        :type red_wavelength: :class:`numpy:numpy.ndarray`
+        :param green_wavelength: None, Single float or vector of float, containing the "green" wavelengths, in meters.
+        :type green_wavelength: :class:`numpy:numpy.ndarray`
+        :param blue_wavelength: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
+        :type blue_wavelength: :class:`numpy:numpy.ndarray`
+        :param signal_wavelength: Signal (scanning) wavelength of the process. It cannot be set, it is automatically set
+        to be the lowest energetic wavelength of the user-defined wavelength ranges.
+        :type signal_wavelength: :class:`numpy:numpy.ndarray`
+        :param idler_wavelength: Output (scanning) wavelength of the process. It cannot be set, it is automatically set
+        to be the highest energetic wavelength of the user-defined wavelength ranges.
+        :type idler_wavelength: :class:`numpy:numpy.ndarray`
+
+        """
 
     def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
         """
-        Initialize the process to be studied.
+        Initialization of the class requires the following parameters:
 
-        :param waveguide: An Object of the class Waveguide, properly initialized.
-        :param n_red: function to compute the Sellmeier depending on the parameter that varies in the waveguide
-            (i.e., n(w) if the width changes along the waveguide)
-        :param n_green: function to compute the Sellmeier depending on the parameter that varies in the waveguide
-            (i.e., n(w) if the width changes along the waveguide)
-        :param n_blue: function to compute the Sellmeier depending on the parameter that varies in the waveguide
-            (i.e., n(w) if the width changes along the waveguide)
-
-        Additional parameters are:
-
-        * :param process: [**PDC**/SFG]: process to be studied. If process is PDC, then you must specify the red
-        and green wavelengths; if process is SFG, you must specify red and blue wavelengths.
-        * :param order: [**1**]: order of the phasematching process
-          :type order: int
-
-        Other parameters related to this objects are:
-
-        * :param __red_is_set: Parameter that is set to True if the red wl has been initialized
-          :type __red_is_set: bool
-        * :param __green_is_set: Parameter that is set to True if the green wl has been initialized
-          :type __green_is_set: bool
-        * :param __blue_is_set: Parameter that is set to True if the blue wl has been initialized
-          :type __blue_is_set: bool
+        :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
+        :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+        :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
+        :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
+        :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
+        :param order: order of phasematching. Default: 1
+        :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
 
         """
         self.waveguide = waveguide
-        self.__red_is_set = False
-        self.__green_is_set = False
-        self.__blue_is_set = False
         # these n_xxx functions are function that accept one parameter and provide a lambda function (n = n(wavelength))
-        self.n_red = n_red
-        self.n_green = n_green
-        self.n_blue = n_blue
+        self.__n_red = n_red
+        self.__n_green = n_green
+        self.__n_blue = n_blue
         # ====================================================
         self.order = order
         # self.process = kwargs.get("process", "PDC").lower()
@@ -634,12 +680,14 @@ class Phasematching2D(object):
         self.__blue_wavelength = None
         self.__signal_wavelength = None
         self.__idler_wavelength = None
+        self.__pump_centre = None
         if backpropagation:
             self.propagation_type = "backpropagation"
         else:
             self.propagation_type = "copropagation"
         self.__nonlinear_profile_set = False
         self.__nonlinear_profile = None
+        self.__pump_spectrum = None
 
     @property
     def signal_wavelength(self):
@@ -685,6 +733,34 @@ class Phasematching2D(object):
     def blue_wavelength(self, value):
         self.__blue_wavelength = value
 
+    @property
+    def n_red(self):
+        return self.__n_red
+
+    @property
+    def n_green(self):
+        return self.__n_green
+
+    @property
+    def n_blue(self):
+        return self.__n_blue
+
+    @property
+    def pump_centre(self):
+        return self.__pump_centre
+
+    @pump_centre.setter
+    def pump_centre(self, value):
+        self.__pump_centre = value
+
+    @property
+    def pump_spectrum(self):
+        return self.pump_spectrum
+
+    @pump_spectrum.setter
+    def pump_spectrum(self, value):
+        self.__pump_spectrum = value
+
     def __set_wavelengths(self):
         logger = logging.getLogger(__name__)
         num_of_none = (self.red_wavelength is None) + \
@@ -706,9 +782,11 @@ class Phasematching2D(object):
             if self.red_wavelength is None:
                 self.signal_wavelength = self.green_wavelength
                 self.idler_wavelength = self.blue_wavelength
+                self.pump_centre = (self.blue_wavelength ** -1 - self.green_wavelength ** -1) ** -1
                 self.__WL_GREEN, self.__WL_BLUE = np.meshgrid(self.green_wavelength, self.blue_wavelength)
                 self.__WL_RED = (self.__WL_BLUE ** -1 - self.__WL_GREEN ** -1) ** -1
             elif self.green_wavelength is None:
+                self.pump_centre = (self.blue_wavelength ** -1 - self.red_wavelength ** -1) ** -1
                 self.signal_wavelength = self.red_wavelength
                 self.idler_wavelength = self.blue_wavelength
                 self.__WL_RED, self.__WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
@@ -716,6 +794,7 @@ class Phasematching2D(object):
             elif self.blue_wavelength is None:
                 self.signal_wavelength = self.red_wavelength
                 self.idler_wavelength = self.green_wavelength
+                self.pump_centre = (self.green_wavelength ** -1 + self.red_wavelength ** -1) ** -1
                 self.__WL_RED, self.__WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
                 self.__WL_BLUE = (self.__WL_RED ** -1 + self.__WL_GREEN ** -1) ** -1
             else:
@@ -726,16 +805,27 @@ class Phasematching2D(object):
 
     def set_nonlinearity_profile(self, profile_type="constant", first_order_coeff=False, **kwargs):
         """
-        Method to set the nonlinear profile. As a default it is set to "constant", i.e. birefringent or QPM.
-        If **profile_type** is set to "constant", the you can select whether to use the first order Fourier coefficient (2/pi) using
-        the keyword *first_order_coefficient* =**True**/False.
+        Method to set the nonlinearity profile g(z), with either a constant profile or a variety of different windowing functions.
 
-        If **profile_type** is set to *"gaussian"*, then you can select the width of the gaussian g(z) using the keyword
-        *sigma_g_norm*, that reads the sigma in units of the length. Defauls to 0.5 (i.e. L/2).
+        :param str profile_type: Type of nonlinearity profile to consider. Possible options are [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
+        :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase matching or not.
+        :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective if `profile_type` is *"gaussian"* or *"kaiser*.
+        :return: The function returns the nonlinearity profile of the system.
 
-        :param profile_type:
-        :param kwargs:
-        :return:
+        The different types of profile available are:
+
+        * constant: Uniform nonlinear profile.
+        * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`.
+        * hamming: :func:`numpy.hamming`
+        * bartlett :func:`numpy.bartlett`
+        * hanning: :func:`numpy.hanning`
+        * blackman: :func:`numpy.blackman`
+        * kaiser: :func:`numpy.kaiser`
+
+        If *profile_type* is set to *"gaussian"*, then `**kwargs` accets the keyword `sigma_g_norm`, defining the standard
+        deviation of the gaussian profile in units of the length (defauls to 0.5, i.e. L/2).
+        If *profile_type* is set to *"kaiser"*, then `**kwargs` accepts the keyword `beta`, describing the
+        :math:`\\beta` parameter of the Kaiser distribution.
         """
         logger = logging.getLogger(__name__)
         logger.info("Setting the nonlinear profile.")
@@ -776,7 +866,7 @@ class Phasematching2D(object):
         self.__nonlinear_profile = g
         return self.nonlinear_profile
 
-    def calculate_local_neff(self, posidx):
+    def __calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
         try:
             n_red = self.n_red(local_parameter)
@@ -793,11 +883,6 @@ class Phasematching2D(object):
         return n_red, n_green, n_blue
 
     def __calculate_delta_k(self, wl_red, wl_green, wl_blue, n_red, n_green, n_blue):
-        """
-        Computes the delta k.
-        The wavelengths are provided in meter.
-        """
-        # print(self.waveguide.poling_period)
         if self.propagation_type == "copropagation":
             dd = 2 * pi * (n_blue(abs(wl_blue) * 1e6) / wl_blue -
                            n_green(abs(wl_green) * 1e6) / wl_green -
@@ -813,11 +898,15 @@ class Phasematching2D(object):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self):
+    def calculate_phasematching(self, normalized=True):
         """
-        This function is the core. Calculates the phasematching of the process, considering one wavelength fixed and scanning the other two.
+        This function is the core of the class. It calculates the 2D phasematching of the process, scanning the two
+        user-defined wavelength ranges.
 
-        :return:
+        :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
+        waveguide length, Default: True
+
+        :return: the complex-valued phasematching spectrum
         """
         logger = logging.getLogger(__name__)
         logger.info("Calculating phasematching")
@@ -826,7 +915,7 @@ class Phasematching2D(object):
         else:
             logger.info("Poling period is set. Calculating with constant poling structure.")
 
-        if not self._nonlinear_profile_set:
+        if not self.__nonlinear_profile_set:
             self.set_nonlinearity_profile(profile_type="constant", first_order_coefficient=False)
 
         self.__set_wavelengths()
@@ -836,7 +925,7 @@ class Phasematching2D(object):
         dz = np.diff(self.waveguide.z)
         for idx, z in enumerate(self.waveguide.z[:-1]):
             # 1) retrieve the current parameter (width, thickness, ...)
-            n_red, n_green, n_blue = self.calculate_local_neff(idx)
+            n_red, n_green, n_blue = self.__calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
             DK = self.__calculate_delta_k(self.__WL_RED, self.__WL_GREEN, self.__WL_BLUE, n_red, n_green, n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
@@ -851,17 +940,18 @@ class Phasematching2D(object):
             else:
                 self.__cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * np.exp(
                     -1j * dz[idx] * self.__cumulative_deltabeta)
-
+        if normalized:
+            self.phi = 1 / self.waveguide.length * self.__cumulative_exponential
         logger.info("Calculation terminated")
-        self.phi = 1 / self.waveguide.length * self.__cumulative_exponential
         return self.phi
 
-    def calculate_JSA(self, pump):
+    def calculate_JSA(self, pump_width, pump_centre=None):
         """
         Function to calculate the JSA.
-        Requires as an input a pump Object (from the class Pump written by Benni)
 
-        :param pump:
+        :param pump_width: Pump object. Signal and idler wavelengths of the pump are overwritten to match the one of the
+        phasematching process
+        :type pump: :class:`~pynumpm.pump.Pump`
         :return:
         """
         logger = logging.getLogger(__name__)
@@ -869,13 +959,17 @@ class Phasematching2D(object):
         d_wl_signal = np.diff(self.signal_wavelength)[0]
         d_wl_idler = np.diff(self.idler_wavelength)[0]
 
+        thispump = pump.Pump()
         WL_SIGNAL, WL_IDLER = np.meshgrid(self.signal_wavelength, self.idler_wavelength)
-        if pump.signal_wavelength is None:
-            pump.signal_wavelength = WL_SIGNAL
-        if pump.idler_wavelength is None:
-            pump.idler_wavelength = WL_IDLER
-        self.pump = pump.pump()
-        self.JSA = self.pump * self.phi
+        thispump.signal_wavelength = WL_SIGNAL
+        thispump.idler_wavelength = WL_IDLER
+        if pump_centre is None:
+            thispump.pump_center = self.pump_centre
+        else:
+            thispump.pump_center = pump_centre
+        thispump.pump_width = pump_width
+        self.pump_spectrum = thispump
+        self.JSA = self.pump_spectrum.pump() * self.phi
         self.JSA /= np.sqrt((abs(self.JSA) ** 2).sum() * d_wl_signal * d_wl_idler)
         self.JSI = abs(self.JSA) ** 2
         return self.JSA, self.JSI
@@ -884,13 +978,18 @@ class Phasematching2D(object):
         """
         Function to calculate the Schidt decomposition.
 
-        :return:
+        :param bool verbose: Print to screen the Schmidt number and the purity of the state.
+
+        :return: the Schmidt number.
         """
         logger = logging.getLogger(__name__)
         U, self.singular_values, V = np.linalg.svd(self.JSA)
         self.singular_values /= np.sqrt((self.singular_values ** 2).sum())
         self.K = 1 / (self.singular_values ** 4).sum()
-
+        text = "Schmidt number K: {K}\nPurity: {P}".format(K=self.K, P=1 / self.K)
+        if verbose:
+            print(text)
+        logger.info(text)
         logger.debug("Check normalization: sum of s^2 = " + str((abs(self.singular_values) ** 2).sum()))
         return self.K
 
@@ -934,20 +1033,17 @@ class Phasematching2D(object):
              "cbar": cbar}
         return d
 
-    def plot_JSI(self, **kwargs):
+    def plot_JSI(self, ax=None, **kwargs):
         """
         Function to plot JSI. Pass ax handle through "ax" to plot in a specified axis environment.
 
         :param kwargs:
         :return:
         """
-        ax = kwargs.get("ax", None)
-        title = kwargs.get("title", "JSI")
-
         if ax is None:
-            plt.figure()
-            ax = plt.gca()
+            fig, ax = plt.subplots(1, 1)
 
+        title = kwargs.get("title", "JSI")
         x = self.signal_wavelength * 1e9
         y = self.idler_wavelength * 1e9
 
@@ -956,7 +1052,7 @@ class Phasematching2D(object):
         if kwargs.get("plot_pump", False):
             print("Plot Pump")
             X, Y = np.meshgrid(x, y)
-            Z = abs(self.pump) ** 2
+            Z = abs(self.pump_spectrum.pump()) ** 2
             CS = ax.contour(X, Y, Z / Z.max(), 4, colors="w", ls=":", lw=0.5)
             ax.clabel(CS, fontsize=9, inline=1)
 
@@ -968,10 +1064,15 @@ class Phasematching2D(object):
     def slice_phasematching(self, const_wl):
         """
         Slice the phasematching. The function interpolates the phasematching in the direction of the wavelength
-        to be kept fixed (**fix_wl**) and evaluating the interpolation at the value provided (**value**). In this way, it is possible to cut
-        along wavelength not present in the original grid.
+        to be kept fixed (**fix_wl**) and evaluating the interpolation at the value provided (**value**). In this way,
+        it is possible to cut along wavelength not present in the original grid.
 
+        :param float const_wl: Constant wavelength where to cut the phasematching. The program detects whether it is
+        within the signal or idler range.
+
+        :return wl, phi: scanning wavelength and interpolated complex-valued phasematching spectrum.
         """
+        # TODO: What happens in case of wavelength degeneracy?
         logger = logging.getLogger(__name__)
         f_real = interp.interp2d(self.signal_wavelength, self.idler_wavelength, np.real(self.phi), kind='linear')
         f_imag = interp.interp2d(self.signal_wavelength, self.idler_wavelength, np.imag(self.phi), kind='linear')
@@ -988,6 +1089,11 @@ class Phasematching2D(object):
         return wl, phi
 
     def calculate_marginals(self):
+        """
+        Calculates the signal and idler marginals of the spectrum
+
+        :return (signal, marginal_signal), (idler, marginal_idler): Signal and idler marginals.
+        """
         marginal_signal = self.JSI.sum(axis=0) * abs(np.diff(self.idler_wavelength)[0])
         marginal_idler = self.JSI.sum(axis=1) * abs(np.diff(self.signal_wavelength)[0])
         return (self.signal_wavelength, marginal_signal), (self.idler_wavelength, marginal_idler)
@@ -996,6 +1102,7 @@ class Phasematching2D(object):
         """
         Extract the curve of max phasematching. Useful to estimate GVM.
 
+        :param ax: Axis handle.
         :return:
         """
         # TODO: this function has been reimplemented. There is an offset sometimes in between the reconstructed peak

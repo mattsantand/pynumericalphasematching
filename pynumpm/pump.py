@@ -1,5 +1,9 @@
-import logging
+# coding=utf-8
+"""
+Module to simulate the 2D spectrum of a pump field for the simulation of joint spectral amplitudes of nonlinear processes.
 
+"""
+import logging
 from numpy import exp, pi, sqrt, shape, zeros, log
 from scipy.misc import factorial
 from scipy.special import hermite
