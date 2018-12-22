@@ -46,6 +46,7 @@ class Pump(object):
     _result -- about every calculation result
     _pump_function -- matrix containing the pump function
     _filter -- matrix containing the filter function
+
     """
 
     def __init__(self, pump_center=None, pump_wavelength=None,

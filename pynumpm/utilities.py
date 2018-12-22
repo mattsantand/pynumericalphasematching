@@ -35,19 +35,30 @@ def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, o
     return lamr, lamg, lamb, Lambda
 
 
-def deltabeta(lam1, lam2, free_param, nr, ng, nb, poling=np.infty):
-    if free_param == "b":
-        wlr, wlg = lam1, lam2
-        wlb = (wlr ** -1 + wlg ** -1) ** -1
-    elif free_param == "g":
-        wlr, wlb = lam1, lam2
-        wlg = (wlb ** -1 - wlr ** -1) ** -1
-    elif free_param == "r":
-        wlg, wlb = lam1, lam2
-        wlr = (wlb ** -1 - wlg ** -1) ** -1
-    else:
-        raise ValueError("Wrong label for free parameter")
-    return wlr, wlg, wlb, 2 * np.pi * (nb(wlb) / wlb - ng(wlg) / wlg - nr(wlr) / wlr - 1 / poling)
+# def deltabeta(lam1, lam2, free_param, nr, ng, nb, poling=np.infty):
+#     """
+#     Function to calculate the delta
+#     :param lam1:
+#     :param lam2:
+#     :param free_param:
+#     :param nr:
+#     :param ng:
+#     :param nb:
+#     :param poling:
+#     :return:
+#     """
+#     if free_param == "b":
+#         wlr, wlg = lam1, lam2
+#         wlb = (wlr ** -1 + wlg ** -1) ** -1
+#     elif free_param == "g":
+#         wlr, wlb = lam1, lam2
+#         wlg = (wlb ** -1 - wlr ** -1) ** -1
+#     elif free_param == "r":
+#         wlg, wlb = lam1, lam2
+#         wlr = (wlb ** -1 - wlg ** -1) ** -1
+#     else:
+#         raise ValueError("Wrong label for free parameter")
+#     return wlr, wlg, wlb, 2 * np.pi * (nb(wlb) / wlb - ng(wlg) / wlg - nr(wlr) / wlr - 1 / poling)
 
 
 def bandwidth(wl, phi, **kwargs):
@@ -81,6 +92,17 @@ def bandwidth(wl, phi, **kwargs):
 
 
 def calculate_profile_properties(z=None, profile=None):
+    """
+    Function to calculate the noise properties (autocorrelation and power density spectrum) of the noise on the
+    waveguide profile
+    :param z: z mesh of the system
+    :type z: `numpy:numpy.ndarray`
+    :param profile: Profile of the varying variable of the waveguide.
+    :type profile: `numpy:numpy.ndarray`
+
+    :return z_autocorr, autocorrelation, f, power_spectrum: Returns the autocorrelation profile (z axis included)
+    and the power spectrum (frequency and power)
+    """
     logger = logging.getLogger(__name__)
     logger.info("Calculating profile properties")
     if z is None:
