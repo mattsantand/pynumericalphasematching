@@ -80,6 +80,9 @@ class PhasematchingDeltaBeta(object):
     def noise_length_product(self):
         return self.__noise_length_product
 
+    def load_waveguide(self, waveguide):
+        self.__waveguide = waveguide
+
     def calculate_phasematching(self, normalized=False):
         """
         Function that calculates the phasematching.
@@ -306,6 +309,9 @@ class Phasematching1D(object):
     @property
     def noise_length_product(self):
         return self.__noise_length_product
+
+    def load_waveguide(self, waveguide):
+        self.__waveguide = waveguide
 
     def __set_wavelengths(self):
         logger = logging.getLogger(__name__)
@@ -760,6 +766,9 @@ class Phasematching2D(object):
     @pump_spectrum.setter
     def pump_spectrum(self, value):
         self.__pump_spectrum = value
+
+    def load_waveguide(self, waveguide):
+        self.__waveguide = waveguide
 
     def __set_wavelengths(self):
         logger = logging.getLogger(__name__)
