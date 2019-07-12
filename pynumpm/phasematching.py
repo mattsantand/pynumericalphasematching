@@ -526,7 +526,7 @@ class Phasematching1D(object):
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_delta_beta.shape, dtype=complex)
         logger.debug("Shape cumulative deltabeta:" + str(self.__cumulative_delta_beta.shape))
         logger.debug("Shape cum_exp:" + str(self.__cumulative_exponential.shape))
-        self.__delta_beta0_profile = np.zeros(shape=self.waveguide.z.shape)
+        self.__delta_beta0_profile = np.nan*np.ones(shape=self.waveguide.z.shape)
         dz = np.diff(self.waveguide.z)
         for idx, z in enumerate(self.waveguide.z[:-1]):
             # 1) retrieve the current parameter (width, thickness, ...)
