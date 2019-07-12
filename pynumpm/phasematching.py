@@ -250,6 +250,11 @@ class Phasematching1D(object):
         self.__lamg0 = None
         self.__lamb0 = None
 
+
+    @property
+    def deltabeta_profile(self):
+        return self.__delta_beta0_profile
+
     @property
     def nonlinear_profile(self):
         return self.__nonlinear_profile
