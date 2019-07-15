@@ -782,7 +782,7 @@ class Phasematching2D(object):
             logger.debug("Wavelengths set:", self.red_wavelength, self.green_wavelength, self.blue_wavelength,
                          num_of_none)
             raise ValueError(
-                "Here you must be more precise. I need exactly 2 wavelenght ranges, so only one wavelength can be none")
+                "Here you must be more precise. I need exactly 2 wavelength ranges, so only one wavelength can be none")
         else:
             for i in [self.red_wavelength, self.green_wavelength, self.blue_wavelength]:
                 if i is not None:
@@ -791,11 +791,11 @@ class Phasematching2D(object):
             if self.red_wavelength is None:
                 self.signal_wavelength = self.green_wavelength
                 self.idler_wavelength = self.blue_wavelength
-                self.pump_centre = (self.blue_wavelength ** -1 - self.green_wavelength ** -1) ** -1
+                self.pump_centre = (self.blue_wavelength.mean() ** -1 - self.green_wavelength.mean() ** -1) ** -1
                 self.__WL_GREEN, self.__WL_BLUE = np.meshgrid(self.green_wavelength, self.blue_wavelength)
                 self.__WL_RED = (self.__WL_BLUE ** -1 - self.__WL_GREEN ** -1) ** -1
             elif self.green_wavelength is None:
-                self.pump_centre = (self.blue_wavelength ** -1 - self.red_wavelength ** -1) ** -1
+                self.pump_centre = (self.blue_wavelength.mean() ** -1 - self.red_wavelength.mean() ** -1) ** -1
                 self.signal_wavelength = self.red_wavelength
                 self.idler_wavelength = self.blue_wavelength
                 self.__WL_RED, self.__WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
@@ -803,7 +803,7 @@ class Phasematching2D(object):
             elif self.blue_wavelength is None:
                 self.signal_wavelength = self.red_wavelength
                 self.idler_wavelength = self.green_wavelength
-                self.pump_centre = (self.green_wavelength ** -1 + self.red_wavelength ** -1) ** -1
+                self.pump_centre = (self.green_wavelength.mean() ** -1 + self.red_wavelength.mean() ** -1) ** -1
                 self.__WL_RED, self.__WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
                 self.__WL_BLUE = (self.__WL_RED ** -1 + self.__WL_GREEN ** -1) ** -1
             else:
