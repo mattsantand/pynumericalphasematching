@@ -99,8 +99,8 @@ def example_phasematching_deltabeta():
 
     deltabeta = np.linspace(-5000, 5000, 1000)
     thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
-    thisprocess.calculate_phasematching(deltabeta=deltabeta,
-                                        normalized=True)
+    thisprocess.deltabeta = deltabeta
+    thisprocess.calculate_phasematching(normalized=True)
     thisprocess.plot(verbose=True)
 
 
@@ -122,6 +122,7 @@ def example_1D_phasematching():
                                         nominal_parameter_name=r"Wg width [$\mu$m]")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
                                          noise_amplitude=3)
+    thiswaveguide.plot_waveguide_properties()
     thisprocess = phasematching.Phasematching1D(waveguide=thiswaveguide,
                                                 n_red=ntm,
                                                 n_green=ntm,
@@ -152,7 +153,8 @@ def example_1D_SFG():
                                         nominal_parameter=40,
                                         nominal_parameter_name=r"Wg width [$\mu$m]")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
-                                         noise_amplitude=0)
+                                         noise_amplitude=0.5)
+    thiswaveguide.plot_waveguide_properties()
     thisprocess = phasematching.Phasematching1D(waveguide=thiswaveguide,
                                                 n_red=nte,
                                                 n_green=ntm,
@@ -193,7 +195,7 @@ def example_2D_phasematching():
     thisprocess.red_wavelength = np.linspace(1.50e-6, 1.6e-6, 100)
     thisprocess.blue_wavelength = np.linspace(0.549e-6, 0.551e-6, 1000)
     thisprocess.calculate_phasematching()
-    thisprocess.plot_phasematching()
+    thisprocess.plot()
 
     pump = pump.Pump(process="SFG")
     signal_wl = thisprocess.red_wavelength
@@ -229,7 +231,7 @@ if __name__ == '__main__':
     example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
-    # example_1D_phasematching()
-    # example_1D_SFG()
+    example_1D_phasematching()
+    example_1D_SFG()
     # example_2D_phasematching()
     plt.show()
