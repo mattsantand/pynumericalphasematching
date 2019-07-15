@@ -693,7 +693,7 @@ class Phasematching2D(object):
             self.propagation_type = "copropagation"
         self.__nonlinear_profile_set = False
         self.__nonlinear_profile = None
-        self.__pump_spectrum = None
+        self.__JSA = None
 
     @property
     def signal_wavelength(self):
@@ -759,13 +759,6 @@ class Phasematching2D(object):
     def pump_centre(self, value):
         self.__pump_centre = value
 
-    @property
-    def pump_spectrum(self):
-        return self.pump_spectrum
-
-    @pump_spectrum.setter
-    def pump_spectrum(self, value):
-        self.__pump_spectrum = value
 
     def load_waveguide(self, waveguide):
         self.__waveguide = waveguide
@@ -954,7 +947,7 @@ class Phasematching2D(object):
         logger.info("Calculation terminated")
         return self.phi
 
-    def calculate_JSA(self, pump_width, pump_centre=None):
+    def calculate_JSA(self, thispump):
         """
         Function to calculate the JSA.
 
@@ -967,21 +960,15 @@ class Phasematching2D(object):
         logger.info("Calculating JSA")
         d_wl_signal = np.diff(self.signal_wavelength)[0]
         d_wl_idler = np.diff(self.idler_wavelength)[0]
-
-        thispump = pump.Pump()
+                
         WL_SIGNAL, WL_IDLER = np.meshgrid(self.signal_wavelength, self.idler_wavelength)
         thispump.signal_wavelength = WL_SIGNAL
         thispump.idler_wavelength = WL_IDLER
-        if pump_centre is None:
-            thispump.pump_center = self.pump_centre
-        else:
-            thispump.pump_center = pump_centre
-        thispump.pump_width = pump_width
-        self.pump_spectrum = thispump
-        self.JSA = self.pump_spectrum.pump() * self.phi
-        self.JSA /= np.sqrt((abs(self.JSA) ** 2).sum() * d_wl_signal * d_wl_idler)
-        self.JSI = abs(self.JSA) ** 2
-        return self.JSA, self.JSI
+        pump_spectrum = thispump.pump()
+        self.__JSA = pump_spectrum * self.phi
+        self.__JSA /= np.sqrt((abs(self.__JSA) ** 2).sum() * d_wl_signal * d_wl_idler)
+        self.JSI = abs(self.__JSA) ** 2
+        return self.__JSA, self.JSI
 
     def calculate_schmidt_number(self, verbose=False):
         """
@@ -992,7 +979,7 @@ class Phasematching2D(object):
         :return: the Schmidt number.
         """
         logger = logging.getLogger(__name__)
-        U, self.singular_values, V = np.linalg.svd(self.JSA)
+        U, self.singular_values, V = np.linalg.svd(self.__JSA)
         self.singular_values /= np.sqrt((self.singular_values ** 2).sum())
         self.K = 1 / (self.singular_values ** 4).sum()
         text = "Schmidt number K: {K}\nPurity: {P}".format(K=self.K, P=1 / self.K)
