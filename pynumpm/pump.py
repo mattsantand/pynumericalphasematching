@@ -5,8 +5,7 @@ Module to simulate the 2D spectrum of a pump field for the simulation of joint s
 """
 import logging
 from numpy import exp, pi, sqrt, shape, zeros, log
-from scipy.misc import factorial
-from scipy.special import hermite
+from scipy.special import hermite, factorial
 
 
 class Pump(object):

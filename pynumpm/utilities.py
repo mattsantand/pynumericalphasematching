@@ -2,9 +2,14 @@ import numpy as np
 from scipy.interpolate import UnivariateSpline
 from scipy.signal import savgol_filter
 import logging
+import enum
 
+class Propagation(enum.Enum):
+    COPROPAGATION = "Copropagation"
+    COUNTEPROPAGATION = "Counterpropagation"
 
-def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, order=1, **kwargs):
+def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, order=1,
+                            propagation=Propagation.COPROPAGATION, fulloutput = False):
     """
     Function to calculate the poling period of a specific process. To ensure energy conservation, specify only 2
     wavelengths (in meter) and leave the free one to 0
@@ -19,46 +24,47 @@ def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, o
     :param kwargs:
     :return:
     """
-    propagation_type = kwargs.get("propagation_type", "copropagation")
+
     if (lamb == 0):
         lamb = 1. / (1. / abs(lamg) + 1. / abs(lamr))
     if (lamg == 0):
         lamg = 1. / (1. / abs(lamb) - 1. / abs(lamr))
     if (lamr == 0):
         lamr = 1. / (1. / abs(lamb) - 1. / abs(lamg))
-    if propagation_type.lower() == "copropagation":
+    if propagation == Propagation.COPROPAGATION:
         Lambda = order / (nb(abs(lamb) * 1e6) / lamb - ng(abs(lamg) * 1e6) / lamg - nr(abs(lamr) * 1e6) / lamr)
-    elif propagation_type.lower() == "counterpropagation":
+    elif propagation == Propagation.COUNTEPROPAGATION:
         Lambda = order / (nb(abs(lamb) * 1e6) / lamb - ng(abs(lamg) * 1e6) / lamg + nr(abs(lamr) * 1e6) / lamr)
     else:
-        raise ValueError("Don't know " + propagation_type)
-    return lamr, lamg, lamb, Lambda
+        raise ValueError("Don't know {0}".format(propagation))
+    if fulloutput:
+        return lamr, lamg, lamb, Lambda
+    return Lambda
 
-
-# def deltabeta(lam1, lam2, free_param, nr, ng, nb, poling=np.infty):
-#     """
-#     Function to calculate the delta
-#     :param lam1:
-#     :param lam2:
-#     :param free_param:
-#     :param nr:
-#     :param ng:
-#     :param nb:
-#     :param poling:
-#     :return:
-#     """
-#     if free_param == "b":
-#         wlr, wlg = lam1, lam2
-#         wlb = (wlr ** -1 + wlg ** -1) ** -1
-#     elif free_param == "g":
-#         wlr, wlb = lam1, lam2
-#         wlg = (wlb ** -1 - wlr ** -1) ** -1
-#     elif free_param == "r":
-#         wlg, wlb = lam1, lam2
-#         wlr = (wlb ** -1 - wlg ** -1) ** -1
-#     else:
-#         raise ValueError("Wrong label for free parameter")
-#     return wlr, wlg, wlb, 2 * np.pi * (nb(wlb) / wlb - ng(wlg) / wlg - nr(wlr) / wlr - 1 / poling)
+def deltabeta(lam1, lam2, free_param, nr, ng, nb, poling=np.infty):
+    """
+    Function to calculate the delta
+    :param lam1:
+    :param lam2:
+    :param free_param:
+    :param nr:
+    :param ng:
+    :param nb:
+    :param poling:
+    :return:
+    """
+    if free_param == "b":
+        wlr, wlg = lam1, lam2
+        wlb = (wlr ** -1 + wlg ** -1) ** -1
+    elif free_param == "g":
+        wlr, wlb = lam1, lam2
+        wlg = (wlb ** -1 - wlr ** -1) ** -1
+    elif free_param == "r":
+        wlg, wlb = lam1, lam2
+        wlr = (wlb ** -1 - wlg ** -1) ** -1
+    else:
+        raise ValueError("Wrong label for free parameter")
+    return wlr, wlg, wlb, 2 * np.pi * (nb(wlb) / wlb - ng(wlg) / wlg - nr(wlr) / wlr - 1 / poling)
 
 
 def bandwidth(wl, phi, **kwargs):
