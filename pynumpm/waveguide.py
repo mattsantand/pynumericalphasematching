@@ -35,6 +35,11 @@ class Waveguide(object):
         :param nominal_parameter_name: name of the nominal parameter (used for the axes). LaTeX syntax is allowed.
         :type nominal_parameter_name: string
         """
+        if z is None:
+            raise ValueError("Please, provide the waveguide mesh 'z'.")
+        if poling_period is None:
+            raise ValueError(
+                "Please, provide the poling period of the structure ('poling_period'). If no poling is required, set poling_period = +np.infty")
         self.__z = z
         self.__dz = np.diff(self.z)[0]
         self.__length = self.z[-1] - self.z[0]
