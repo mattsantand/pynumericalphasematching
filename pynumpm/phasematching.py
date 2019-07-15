@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from scipy.constants import pi
 import scipy.interpolate as interp
 from scipy.integrate import simps
-from pynumpm import pump
+from pynumpm import jsa
 
 
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
@@ -953,7 +953,7 @@ class Phasematching2D(object):
 
         :param pump_width: Pump object. Signal and idler wavelengths of the pump are overwritten to match the one of the
         phasematching process
-        :type pump: :class:`~pynumpm.pump.Pump`
+        :type pump: :class:`~pynumpm.jsa.Pump`
         :return:
         """
         logger = logging.getLogger(__name__)

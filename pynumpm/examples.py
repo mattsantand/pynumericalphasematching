@@ -169,7 +169,7 @@ def example_1D_SFG():
 
 
 def example_2D_phasematching():
-    from pynumpm import waveguide, utilities, phasematching, pump
+    from pynumpm import waveguide, utilities, phasematching, jsa
 
     length = 25e-3  # length in m
     dz = 100e-6  # discretization in m
@@ -197,7 +197,7 @@ def example_2D_phasematching():
     thisprocess.calculate_phasematching()
     thisprocess.plot()
 
-    pump = pump.Pump(process="SFG")
+    pump = jsa.Pump(process="SFG")
     signal_wl = thisprocess.red_wavelength
     idler_wl = thisprocess.blue_wavelength
     SIG, ID = np.meshgrid(signal_wl, idler_wl)
