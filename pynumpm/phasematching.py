@@ -616,6 +616,159 @@ class Phasematching1D(object):
         return fig, ax
 
 
+class Simple2DPhasematching(object):
+    def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
+        self.__waveguide = waveguide
+        self.__n_red = n_red
+        self.__n_green = n_green
+        self.__n_blue = n_blue
+        # ====================================================
+        self.order = order
+        # self.process = kwargs.get("process", "PDC").lower()
+        self.__red_wavelength = None
+        self.__green_wavelength = None
+        self.__blue_wavelength = None
+        self.__signal_wavelength = None
+        self.__idler_wavelength = None
+        self.__backpropagation = backpropagation
+        if self.__backpropagation:
+            self.propagation_type = "backpropagation"
+        else:
+            self.propagation_type = "copropagation"
+
+        self.__phi = None
+
+    @property
+    def phi(self):
+        return self.__phi
+
+    @property
+    def red_wavelength(self):
+        return self.__red_wavelength
+
+    @red_wavelength.setter
+    def red_wavelength(self, value):
+        self.__red_wavelength = value
+
+    @property
+    def green_wavelength(self):
+        return self.__green_wavelength
+
+    @green_wavelength.setter
+    def green_wavelength(self, value):
+        self.__green_wavelength = value
+
+    @property
+    def blue_wavelength(self):
+        return self.__blue_wavelength
+
+    @blue_wavelength.setter
+    def blue_wavelength(self, value):
+        self.__blue_wavelength = value
+
+    def __set_wavelengths(self):
+        logger = logging.getLogger(__name__)
+        num_of_none = (self.red_wavelength is None) + \
+                      (self.green_wavelength is None) + \
+                      (self.blue_wavelength is None)
+        logger.info("Number of wavelengths set to 'None': " + str(num_of_none))
+        if num_of_none != 1:
+            logger.info(
+                "num_of_none != 1, the user has left more than 1 wavelength ranges unknown. An error will be raised.")
+            logger.debug("Wavelengths set:", self.red_wavelength, self.green_wavelength, self.blue_wavelength,
+                         num_of_none)
+            raise ValueError(
+                "Here you must be more precise. I need exactly 2 wavelength ranges, so only one wavelength can be none")
+        else:
+            for i in [self.red_wavelength, self.green_wavelength, self.blue_wavelength]:
+                if i is not None:
+                    if type(i) != np.ndarray:
+                        raise ValueError("The wavelengths have to be either None or an array.")
+            if self.red_wavelength is None:
+                self.signal_wavelength = self.green_wavelength
+                self.idler_wavelength = self.blue_wavelength
+                self.pump_centre = (self.blue_wavelength.mean() ** -1 - self.green_wavelength.mean() ** -1) ** -1
+                self.__WL_GREEN, self.__WL_BLUE = np.meshgrid(self.green_wavelength, self.blue_wavelength)
+                self.__WL_RED = (self.__WL_BLUE ** -1 - self.__WL_GREEN ** -1) ** -1
+            elif self.green_wavelength is None:
+                self.pump_centre = (self.blue_wavelength.mean() ** -1 - self.red_wavelength.mean() ** -1) ** -1
+                self.signal_wavelength = self.red_wavelength
+                self.idler_wavelength = self.blue_wavelength
+                self.__WL_RED, self.__WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
+                self.__WL_GREEN = (self.__WL_BLUE ** -1 - self.__WL_RED ** -1) ** -1
+            elif self.blue_wavelength is None:
+                self.signal_wavelength = self.red_wavelength
+                self.idler_wavelength = self.green_wavelength
+                self.pump_centre = (self.green_wavelength.mean() ** -1 + self.red_wavelength.mean() ** -1) ** -1
+                self.__WL_RED, self.__WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
+                self.__WL_BLUE = (self.__WL_RED ** -1 + self.__WL_GREEN ** -1) ** -1
+            else:
+                logging.info("An error occurred while setting the wavelengths.")
+
+            logging.debug("Wavelength matrices sizes: {0},{1},{2}".format(self.__WL_RED.shape, self.__WL_GREEN.shape,
+                                                                          self.__WL_BLUE.shape))
+
+    def calculate_phasematching(self, normalized=True):
+        length = self.__waveguide.z.max() - self.__waveguide.z.min()
+        poling_period = self.__waveguide.poling_period
+        self.__set_wavelengths()
+        if self.__backpropagation:
+            deltabeta = 2 * np.pi * (self.__n_blue(self.__WL_BLUE * 1e6) / self.__WL_BLUE -
+                                     self.__n_green(self.__WL_GREEN * 1e6) / self.__WL_GREEN +
+                                     self.__n_red(self.__WL_RED * 1e6) / self.__WL_RED -
+                                     1 / poling_period)
+        else:
+            deltabeta = 2 * np.pi * (self.__n_blue(self.__WL_BLUE * 1e6) / self.__WL_BLUE -
+                                     self.__n_green(self.__WL_GREEN * 1e6) / self.__WL_GREEN -
+                                     self.__n_red(self.__WL_RED * 1e6) / self.__WL_RED -
+                                     1 / poling_period)
+
+        self.__phi = np.sinc(deltabeta * length / 2 / np.pi) * np.exp(-1j * deltabeta * length / 2)
+        if not normalized:
+            self.__phi /= length
+        return self.phi
+
+    def plot(self, **kwargs):
+        """
+        Function to plot phasematching. Pass ax handle through "ax" to plot in a specified axis environment.
+
+        :param kwargs:
+        :return:
+        """
+
+        plot_intensity = kwargs.get("plot_intensity", True)
+        ax = kwargs.get("ax", None)
+        if ax is None:
+            fig = plt.figure()
+            ax = plt.gca()
+
+        phi = abs(self.phi)
+        if plot_intensity:
+            phi = phi ** 2
+
+        cmap = kwargs.get("cmap", "viridis")
+        vmin = kwargs.get("vmin", phi.min())
+        vmax = kwargs.get("vmax", phi.max())
+
+        im = ax.pcolormesh(self.signal_wavelength * 1e9, self.idler_wavelength * 1e9, phi, cmap=cmap, vmin=vmin,
+                           vmax=vmax)
+        if kwargs.get("cbar", True):
+            cbar = plt.colorbar(im)
+        else:
+            cbar = None
+        ax.set_xlabel("Wavelength [nm]")
+        ax.set_ylabel("Wavelength [nm]")
+        ax.set_title("Phasematching")
+        fig = plt.gcf()
+        d = {"fig": fig,
+             "ax": ax,
+             "im": im,
+             "vmin": vmin,
+             "vmax": vmax,
+             "cbar": cbar}
+        return d
+
+
 class Phasematching2D(object):
     """
         Class to calculate the 2D-phasematching, i.e. having one fixed wavelength and scanning another one (the third is
@@ -686,14 +839,12 @@ class Phasematching2D(object):
         self.__blue_wavelength = None
         self.__signal_wavelength = None
         self.__idler_wavelength = None
-        self.__pump_centre = None
         if backpropagation:
             self.propagation_type = "backpropagation"
         else:
             self.propagation_type = "copropagation"
         self.__nonlinear_profile_set = False
         self.__nonlinear_profile = None
-        self.__JSA = None
 
     @property
     def signal_wavelength(self):
@@ -750,15 +901,6 @@ class Phasematching2D(object):
     @property
     def n_blue(self):
         return self.__n_blue
-
-    @property
-    def pump_centre(self):
-        return self.__pump_centre
-
-    @pump_centre.setter
-    def pump_centre(self, value):
-        self.__pump_centre = value
-
 
     def load_waveguide(self, waveguide):
         self.__waveguide = waveguide
@@ -947,48 +1089,6 @@ class Phasematching2D(object):
         logger.info("Calculation terminated")
         return self.phi
 
-    def calculate_JSA(self, thispump):
-        """
-        Function to calculate the JSA.
-
-        :param pump_width: Pump object. Signal and idler wavelengths of the pump are overwritten to match the one of the
-        phasematching process
-        :type pump: :class:`~pynumpm.jsa.Pump`
-        :return:
-        """
-        logger = logging.getLogger(__name__)
-        logger.info("Calculating JSA")
-        d_wl_signal = np.diff(self.signal_wavelength)[0]
-        d_wl_idler = np.diff(self.idler_wavelength)[0]
-                
-        WL_SIGNAL, WL_IDLER = np.meshgrid(self.signal_wavelength, self.idler_wavelength)
-        thispump.signal_wavelength = WL_SIGNAL
-        thispump.idler_wavelength = WL_IDLER
-        pump_spectrum = thispump.pump()
-        self.__JSA = pump_spectrum * self.phi
-        self.__JSA /= np.sqrt((abs(self.__JSA) ** 2).sum() * d_wl_signal * d_wl_idler)
-        self.JSI = abs(self.__JSA) ** 2
-        return self.__JSA, self.JSI
-
-    def calculate_schmidt_number(self, verbose=False):
-        """
-        Function to calculate the Schidt decomposition.
-
-        :param bool verbose: Print to screen the Schmidt number and the purity of the state.
-
-        :return: the Schmidt number.
-        """
-        logger = logging.getLogger(__name__)
-        U, self.singular_values, V = np.linalg.svd(self.__JSA)
-        self.singular_values /= np.sqrt((self.singular_values ** 2).sum())
-        self.K = 1 / (self.singular_values ** 4).sum()
-        text = "Schmidt number K: {K}\nPurity: {P}".format(K=self.K, P=1 / self.K)
-        if verbose:
-            print(text)
-        logger.info(text)
-        logger.debug("Check normalization: sum of s^2 = " + str((abs(self.singular_values) ** 2).sum()))
-        return self.K
-
     def plot(self, **kwargs):
         """
         Function to plot phasematching. Pass ax handle through "ax" to plot in a specified axis environment.
@@ -1029,34 +1129,6 @@ class Phasematching2D(object):
              "cbar": cbar}
         return d
 
-    def plot_JSI(self, ax=None, **kwargs):
-        """
-        Function to plot JSI. Pass ax handle through "ax" to plot in a specified axis environment.
-
-        :param kwargs:
-        :return:
-        """
-        if ax is None:
-            fig, ax = plt.subplots(1, 1)
-
-        title = kwargs.get("title", "JSI")
-        x = self.signal_wavelength * 1e9
-        y = self.idler_wavelength * 1e9
-
-        im = ax.pcolormesh(x, y, self.JSI)
-
-        if kwargs.get("plot_pump", False):
-            print("Plot Pump")
-            X, Y = np.meshgrid(x, y)
-            Z = abs(self.pump_spectrum.pump()) ** 2
-            CS = ax.contour(X, Y, Z / Z.max(), 4, colors="w", ls=":", lw=0.5)
-            ax.clabel(CS, fontsize=9, inline=1)
-
-        plt.gcf().colorbar(im)
-        ax.set_xlabel("Signal [nm]")
-        ax.set_ylabel("Idler [nm]")
-        ax.set_title(title)
-
     def slice_phasematching(self, const_wl):
         """
         Slice the phasematching. The function interpolates the phasematching in the direction of the wavelength
@@ -1083,16 +1155,6 @@ class Phasematching2D(object):
             raise NotImplementedError(
                 "MY dumb programmer hasn't implemented the slice along a line not parallel to the axes...")
         return wl, phi
-
-    def calculate_marginals(self):
-        """
-        Calculates the signal and idler marginals of the spectrum
-
-        :return (signal, marginal_signal), (idler, marginal_idler): Signal and idler marginals.
-        """
-        marginal_signal = self.JSI.sum(axis=0) * abs(np.diff(self.idler_wavelength)[0])
-        marginal_idler = self.JSI.sum(axis=1) * abs(np.diff(self.signal_wavelength)[0])
-        return (self.signal_wavelength, marginal_signal), (self.idler_wavelength, marginal_idler)
 
     def extract_max_phasematching_curve(self, ax=None, **kwargs):
         """

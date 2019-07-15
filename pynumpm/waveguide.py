@@ -10,6 +10,29 @@ LOOKUPTABLE = {0: " [m]",
                9: " [nm]"}
 
 
+class SimpleWaveguide(object):
+    def __init__(self, z=None, poling_period=None):
+        if z is None:
+            raise ValueError("Please, provide the waveguide mesh 'z'.")
+        if poling_period is None:
+            raise ValueError(
+                "Please, provide the poling period of the structure ('poling_period'). If no poling is required, set poling_period = +np.infty")
+        self.__z = z
+        self.__poling_period = poling_period
+
+    @property
+    def z(self):
+        return self.__z
+
+    @property
+    def poling_period(self):
+        return self.__poling_period
+
+    @property
+    def poling_period_um(self):
+        return self.__poling_period * 1e6
+
+
 class Waveguide(object):
     """
     Waveguide class.
