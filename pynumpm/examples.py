@@ -169,7 +169,7 @@ def example_1D_SFG():
 
 
 def example_2D_phasematching():
-    from pynumpm import waveguide, utilities, phasematching, pump
+    from pynumpm import waveguide, utilities, phasematching
 
     length = 25e-3  # length in m
     dz = 100e-6  # discretization in m
@@ -197,29 +197,7 @@ def example_2D_phasematching():
     thisprocess.calculate_phasematching()
     thisprocess.plot()
 
-    pump = pump.Pump(process="SFG")
-    signal_wl = thisprocess.red_wavelength
-    idler_wl = thisprocess.blue_wavelength
-    SIG, ID = np.meshgrid(signal_wl, idler_wl)
-    pump_center = lamg
-    pump_width = 2E-9
-    pump.signal_wavelength = SIG
-    pump.idler_wavelength = ID
-    pump.pump_center = pump_center
-    pump.pump_width = pump_width
-    res = pump.pump()
-    res /= (abs(res) ** 2).max()
-    thisprocess.calculate_JSA(pump=pump)
-    thisprocess.plot_JSI()
 
-    thisprocess.extract_max_phasematching_curve()
-    print("K: ", thisprocess.calculate_schmidt_number(verbose=True))
-    m1, m2 = thisprocess.calculate_marginals()
-    plt.figure()
-    plt.subplot(121)
-    plt.plot(m1[0], m1[1])
-    plt.subplot(122)
-    plt.plot(m2[0], m2[1])
 
 
 if __name__ == '__main__':
@@ -228,10 +206,10 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
-    example_waveguide()
+    # example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
-    example_1D_phasematching()
-    example_1D_SFG()
+    # example_1D_phasematching()
+    # example_1D_SFG()
     # example_2D_phasematching()
     plt.show()

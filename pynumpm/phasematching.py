@@ -23,6 +23,7 @@ from pynumpm import pump
 
 
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
+# TODO: Use class inheritance for the 1D and 2D phasematching
 
 class PhasematchingDeltaBeta(object):
     """
