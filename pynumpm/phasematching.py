@@ -64,16 +64,14 @@ class PhasematchingDeltaBeta(object):
         return self.__deltabeta
 
     @deltabeta.setter
-    def deltabeta(self, value):
+    def deltabeta(self, value: np.ndarray):
+        if not isinstance(value, np.ndarray):
+            raise TypeError("The deltabeta has to be a numpy.ndarray")
         self.__deltabeta = value
 
     @property
     def phi(self):
         return self.__phi
-
-    @phi.setter
-    def phi(self, value):
-        self.__phi = value
 
     @property
     def noise_length_product(self):
@@ -844,6 +842,11 @@ class Phasematching2D(object):
             self.propagation_type = "copropagation"
         self.__nonlinear_profile_set = False
         self.__nonlinear_profile = None
+        self.__phi = None
+
+    @property
+    def phi(self):
+        return self.__phi
 
     @property
     def signal_wavelength(self):
@@ -1084,9 +1087,9 @@ class Phasematching2D(object):
                 self.__cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * np.exp(
                     -1j * dz[idx] * self.__cumulative_deltabeta)
         if normalized:
-            self.phi = 1 / self.waveguide.length * self.__cumulative_exponential
+            self.__phi = 1 / self.waveguide.length * self.__cumulative_exponential
         logger.info("Calculation terminated")
-        return self.phi
+        return self.__phi
 
     def plot(self, **kwargs):
         """
