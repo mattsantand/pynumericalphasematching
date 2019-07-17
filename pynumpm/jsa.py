@@ -4,12 +4,12 @@ Module to simulate the 2D spectrum of a pump field for the simulation of joint s
 
 """
 import logging
-from numpy import exp, pi, sqrt, shape, zeros, log
 from scipy.special import hermite, factorial
 from scipy.constants import c as _sol
 import matplotlib.pyplot as plt
 import numpy as np
 import enum
+import warnings
 
 
 class Process(enum.Enum):
@@ -59,24 +59,30 @@ class Pump(object):
 
     """
 
-    def __init__(self, process=Process.PDC, pump_center=None, pump_wavelength=None,
-                 pump_width=None, signal_wavelength=None,
-                 idler_wavelength=None, filter_pump=False,
-                 pump_delay=0, pump_chirp=0,
-                 pump_temporal_mode=0, pump_filter_width=100):
+    def __init__(self, process: Process):
         """ Initialise a pump with default parameters. """
-        self.pump_center = pump_center
-        self.pump_wavelength = pump_wavelength
-        self.pump_width = pump_width
-        self.__filter_pump = filter_pump
-        self.__process = process
-        self.pump_delay = pump_delay
-        self.pump_chirp = pump_chirp
-        self.pump_temporal_mode = pump_temporal_mode
-        self.pump_filter_width = pump_filter_width
-        # _sol = 299792458.0
-        self.__signal_wavelength = signal_wavelength
-        self.__idler_wavelength = idler_wavelength
+
+        self.__process = None
+        self.process = process
+
+        self.__pump_centre = None
+        self.__pump_wavelength2D = None
+        self.__pump_width = None
+        self.__filter_pump = False
+        self.__pump_delay = 0
+        self.__pump_chirp = 0
+        self.__pump_temporal_mode = 0
+        self.__pump_filter_width = None
+        self.__signal_wavelength = None
+        self.__idler_wavelength = None
+        self.__signal_wavelength2D = None
+        self.__idler_wavelength2D = None
+        self.__pump_spectrum = None
+        self.__correct_pump_width = None
+
+    @property
+    def pump_spectrum(self):
+        return self.__pump_spectrum
 
     @property
     def signal_wavelength(self):
@@ -100,24 +106,86 @@ class Pump(object):
 
     @process.setter
     def process(self, value):
-        if isinstance(value, Process):
+        if not isinstance(value, Process):
             raise TypeError("The type of 'process' must be pynumpm.jsa.Process")
         self.__process = value
 
+    @property
+    def pump_centre(self):
+        return self.__pump_centre
+
+    @pump_centre.setter
+    def pump_centre(self, value):
+        self.__pump_centre = value
+
+    @property
+    def pump_width(self):
+        return self.__pump_width
+
+    @pump_width.setter
+    def pump_width(self, value):
+        self.__pump_width = value
+
+    @property
+    def filter_width(self):
+        return self.__pump_filter_width
+
+    @filter_width.setter
+    def filter_width(self, value):
+        self.__filter_pump = True
+        self.__pump_filter_width = value
+
+    @property
+    def pump_delay(self):
+        return self.__pump_delay
+
+    @pump_delay.setter
+    def pump_delay(self, value):
+        self.__pump_delay = value
+
+    @property
+    def pump_chirp(self):
+        return self.__pump_chirp
+
+    @pump_chirp.setter
+    def pump_chirp(self, value):
+        self.__pump_chirp = value
+
+    @property
+    def pump_temporal_mode(self):
+        return self.__pump_temporal_mode
+
+    @pump_temporal_mode.setter
+    def pump_temporal_mode(self, value: int):
+        errormsg = "The pump temporal mode has to be non-negative integer"
+        if not isinstance(value, int):
+            raise TypeError(errormsg)
+        if value < 0:
+            raise ValueError(errormsg)
+        self.__pump_temporal_mode = value
+
+    @property
+    def signal_wavelength2D(self):
+        return self.__signal_wavelength2D
+
+    @property
+    def idler_wavelength2D(self):
+        return self.__idler_wavelength2D
+
     def _hermite_mode(self, x):
         """ A normalised Hermite-Gaussian function """
-        # On 22.11.2017, Matteo changed all the self.pump_width to self.correct_pump_width
+        # On 22.11.2017, Matteo changed all the self.pump_width to self.__correct_pump_width
         # _result = hermite(self.pump_temporal_mode)((self.pump_center - x) /
         #                                            self.pump_width) *    \
         #     exp(-(self.pump_center - x)**2 / (2 * self.pump_width**2)) /\
         #     sqrt(factorial(self.pump_temporal_mode) * sqrt(pi) *
         #          2**self.pump_temporal_mode * self.pump_width)
-        # TODO: Check the correctness of the pump_width parameter
-        _result = hermite(self.pump_temporal_mode)((self.pump_center - x) /
-                                                   self.correct_pump_width) * \
-                  exp(-(self.pump_center - x) ** 2 / (2 * self.correct_pump_width ** 2)) / \
-                  sqrt(factorial(self.pump_temporal_mode) * sqrt(pi) *
-                       2 ** self.pump_temporal_mode * self.correct_pump_width)
+        # TODO: Check the correctness of the __correct_pump_width parameter
+        _result = hermite(self.pump_temporal_mode)((self.pump_centre - x) /
+                                                   self.__correct_pump_width) * \
+                  np.exp(-(self.pump_centre - x) ** 2 / (2 * self.__correct_pump_width ** 2)) / \
+                  np.sqrt(factorial(self.pump_temporal_mode) * np.sqrt(np.pi) *
+                          2 ** self.pump_temporal_mode * self.__correct_pump_width)
         return _result
 
     def __set_wavelengths(self):
@@ -132,10 +200,33 @@ class Pump(object):
         if error:
             raise ValueError(text.rstrip())
 
-        if len(self.signal_wavelength.shape) == 1 and len(self.idler_wavelength.shape) == 1:
-            self.signal_wavelength, self.idler_wavelength = np.meshgrid(self.signal_wavelength, self.idler_wavelength)
+        self.__signal_wavelength2D, self.__idler_wavelength2D = np.meshgrid(self.signal_wavelength,
+                                                                            self.idler_wavelength)
+        message = "The pump central wavelength hasn't been set. Inferring its value from the signal/idler arrays"
+        if self.process == Process.PDC or self.process == Process.BWPDC:
+            self.pump_wavelength = 1.0 / (1.0 / self.__signal_wavelength2D +
+                                          1.0 / self.__idler_wavelength2D)
+            if self.pump_centre is None:
+                warnings.warn(message, UserWarning)
+                self.pump_centre = (self.signal_wavelength.mean() ** -1 + self.idler_wavelength.mean() ** -1) ** -1
 
-    def pump(self):
+        elif self.process == Process.SFG:
+            self.pump_wavelength = 1.0 / (1.0 / self.__idler_wavelength2D -
+                                          1.0 / self.__signal_wavelength2D)
+            if self.pump_centre is None:
+                warnings.warn(message, UserWarning)
+                self.pump_centre = (self.idler_wavelength.mean() ** -1 - self.signal_wavelength.mean() ** -1) ** -1
+
+        elif self.process == Process.DFG:
+            self.pump_wavelength = 1.0 / (1.0 / self.__signal_wavelength2D -
+                                          1.0 / self.__idler_wavelength2D)
+            if self.pump_centre is None:
+                warnings.warn(message, UserWarning)
+                self.pump_centre = (self.signal_wavelength.mean() ** -1 - self.idler_wavelength.mean() ** -1) ** -1
+        else:
+            raise NotImplementedError("The process {0} has not been implemented yet.".format(self.process))
+
+    def calculate_pump_spectrum(self):
         """ Calculates the pump function
 
         === Returns ===
@@ -143,70 +234,76 @@ class Pump(object):
                           signal and idler frequecy plane
         """
         logger = logging.getLogger(__name__)
-        # self.pump_width /= 2 * sqrt(log(2))
-        # self.pump_width = self.pump_width /( 2 * sqrt(log(2)))
         self.__set_wavelengths()
 
-        self.correct_pump_width = self.pump_width / (2 * sqrt(log(2)))
-        if self.process == Process.PDC or self.process == Process.BWPDC:
-            self.pump_wavelength = 1.0 / (1.0 / self.signal_wavelength +
-                                          1.0 / self.idler_wavelength)
-        elif self.process == Process.SFG:
-            self.pump_wavelength = 1.0 / (1.0 / self.idler_wavelength -
-                                          1.0 / self.signal_wavelength)
-        elif self.process == Process.DFG:
-            self.pump_wavelength = 1.0 / (1.0 / self.signal_wavelength -
-                                          1.0 / self.idler_wavelength)
+        # self.pump_width /= 2 * sqrt(log(2))
+        # self.pump_width = self.pump_width /( 2 * sqrt(log(2)))
+        self.__correct_pump_width = self.pump_width / (2 * np.sqrt(np.log(2)))
         if self.__filter_pump:
-            self.pump_filter_width *= sqrt(2)
-            _filter = zeros(shape(self.pump_wavelength), float)
-            logger.debug("Pump wavelength: %f", shape(self.pump_wavelength))
+            self.filter_width *= np.sqrt(2)
+            _filter = np.zeros(np.shape(self.pump_wavelength), float)
+            logger.debug("Pump wavelength: %f", np.shape(self.pump_wavelength))
             for i in range(len(self.signal_wavelength)):
                 logger.debug("Loop index: %d", i)
                 for j in range(len(self.idler_wavelength)):
-                    if self.pump_wavelength[j, i] < self.pump_center - \
-                            0.5 * self.pump_filter_width:
+                    if self.pump_wavelength[j, i] < self.pump_centre - \
+                            0.5 * self.filter_width:
                         pass
-                    elif self.pump_wavelength[j, i] <= self.pump_center + \
-                            0.5 * self.pump_filter_width:
+                    elif self.pump_wavelength[j, i] <= self.pump_centre + \
+                            0.5 * self.filter_width:
                         _filter[j, i] = 1
                     else:
                         pass
             _pump_function = self._hermite_mode(self.pump_wavelength) * \
-                             exp(1j * 2 * pi * _sol / self.pump_wavelength *
-                                 self.pump_delay) * \
-                             exp(1j * (2 * pi * _sol / self.pump_wavelength) ** 2 *
-                                 self.pump_chirp) * _filter
+                             np.exp(1j * 2 * np.pi * _sol / self.pump_wavelength *
+                                    self.pump_delay) * \
+                             np.exp(1j * (2 * np.pi * _sol / self.pump_wavelength) ** 2 *
+                                    self.pump_chirp) * _filter
         else:
             _pump_function = self._hermite_mode(self.pump_wavelength) * \
-                             exp(1j * 2 * pi * _sol / self.pump_wavelength *
-                                 self.pump_delay) * \
-                             exp(1j * (2 * pi * _sol / self.pump_wavelength) ** 2 *
-                                 self.pump_chirp)
+                             np.exp(1j * 2 * np.pi * _sol / self.pump_wavelength *
+                                    self.pump_delay) * \
+                             np.exp(1j * (2 * np.pi * _sol / self.pump_wavelength) ** 2 *
+                                    self.pump_chirp)
+        self.__pump_spectrum = _pump_function
         return _pump_function
 
-    def plot(self, ax=None):
+    def plot(self, ax=None, light_plot=False, **kwargs):
         if ax is None:
             fig, ax = plt.subplots(1, 1)
-        ax.pcolormesh(self.signal_wavelength * 1e9, self.idler_wavelength * 1e9, abs(self.pump()) ** 2)
+
+        if self.pump_spectrum is None:
+            self.calculate_pump_spectrum()
+
+        if light_plot:
+            x, y = self.signal_wavelength * 1e9, self.idler_wavelength * 1e9,
+            ax.imshow(abs(self.pump_spectrum) ** 2, origin="lower", extent=[x.min(), x.max(), y.min(), y.max()],
+                      aspect="auto")
+            warnings.warn("The light_plot mode is compatible only with linear meshes of the signal/idler wavelengths.")
+        else:
+            ax.pcolormesh(self.signal_wavelength * 1e9, self.idler_wavelength * 1e9, abs(self.pump_spectrum) ** 2)
+
         ax.set_title("Pump intensity")
         if self.process == Process.SFG or self.process == Process.DFG:
-            ax.set_xlabel("$\lambda_{input}$ [nm]")
-            ax.set_ylabel("$\lambda_{output}$ [nm]")
+            ax.set_xlabel(r"$\lambda_{input}$ [nm]")
+            ax.set_ylabel(r"$\lambda_{output}$ [nm]")
         else:
-            ax.set_xlabel("$\lambda_{signal}$ [nm]")
-            ax.set_ylabel("$\lambda_{idler}$ [nm]")
+            ax.set_xlabel(r"$\lambda_{signal}$ [nm]")
+            ax.set_ylabel(r"$\lambda_{idler}$ [nm]")
+        plt.tight_layout()
 
 
 class JSA(object):
-    def __init__(self, phasematching, pump):
+    def __init__(self, phasematching, pump: Pump):
         self.__phasematching = phasematching
-        self.__pump = pump
+        self.__pump = None
+        self.pump = pump
         self.__JSA = None
         self.__JSI = None
         self.__K = None
         self.__marginal1 = None
         self.__marginal2 = None
+        self.__singular_values = None
 
     @property
     def phasematching(self):
@@ -221,7 +318,11 @@ class JSA(object):
         return self.__pump
 
     @pump.setter
-    def pump(self, value):
+    def pump(self, value: Pump):
+        if not isinstance(value, Pump):
+            raise TypeError("The pump must be an object of the class pynumpm.jsa.Pump")
+        if value.pump_spectrum is None:
+            value.calculate_pump_spectrum()
         self.__pump = value
 
     @property
@@ -264,8 +365,8 @@ class JSA(object):
         WL_SIGNAL, WL_IDLER = np.meshgrid(signal_wl, idler_wl)
         self.pump.signal_wavelength = WL_SIGNAL
         self.pump.idler_wavelength = WL_IDLER
-        pump_spectrum = self.pump.pump()
-        JSA = pump_spectrum * self.phasematching.phi
+
+        JSA = self.pump.pump_spectrum * self.phasematching.phi
 
         d_wl_signal = np.gradient(signal_wl)
         d_wl_idler = np.gradient(idler_wl)
@@ -288,18 +389,18 @@ class JSA(object):
         """
         logger = logging.getLogger(__name__)
         if self.JSA is None:
-            raise ValueError("You need to calculate the JSA first, use the command calculate_jsa()")
-        U, self.singular_values, V = np.linalg.svd(self.__JSA)
-        self.singular_values /= np.sqrt((self.singular_values ** 2).sum())
-        self.__K = 1 / (self.singular_values ** 4).sum()
+            self.calculate_JSA()
+        U, self.__singular_values, V = np.linalg.svd(self.__JSA)
+        self.__singular_values /= np.sqrt((self.__singular_values ** 2).sum())
+        self.__K = 1 / (self.__singular_values ** 4).sum()
         text = "Schmidt number K: {K}\nPurity: {P}".format(K=self.K, P=1 / self.K)
         if verbose:
             print(text)
         logger.info(text)
-        logger.debug("Check normalization: sum of s^2 = " + str((abs(self.singular_values) ** 2).sum()))
+        logger.debug("Check normalization: sum of s^2 = " + str((abs(self.__singular_values) ** 2).sum()))
         return self.__K
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax=None, light_plot=False, **kwargs):
         """
         Function to plot JSI. Pass ax handle through "ax" to plot in a specified axis environment.
 
@@ -314,19 +415,26 @@ class JSA(object):
         title = kwargs.get("title", "JSI")
         x = self.phasematching.signal_wavelength * 1e9
         y = self.phasematching.idler_wavelength * 1e9
-        im = ax.pcolormesh(x, y, self.JSI)
+
+        if light_plot:
+            im = ax.imshow(self.JSI, origin="lower", extent=[x.min(), x.max(), y.min(), y.max()],
+                           aspect="auto")
+            warnings.warn("The light_plot mode is compatible only with linear meshes of the signal/idler wavelengths.")
+        else:
+            im = ax.pcolormesh(x, y, self.JSI)
 
         if kwargs.get("plot_pump", False):
             print("Plot Pump")
             X, Y = np.meshgrid(x, y)
-            Z = abs(self.pump.pump()) ** 2
+            Z = abs(self.pump.pump_spectrum) ** 2
             CS = ax.contour(X, Y, Z / Z.max(), 4, colors="w", ls=":", lw=0.5)
             ax.clabel(CS, fontsize=9, inline=1)
 
         plt.gcf().colorbar(im)
-        ax.set_xlabel("Signal [nm]")
-        ax.set_ylabel("Idler [nm]")
+        ax.set_xlabel(r"$\lambda_{signal}$ [nm]")
+        ax.set_ylabel(r"$\lambda_{idler}$ [nm]")
         ax.set_title(title)
+        plt.tight_layout()
 
     def plot_marginals(self, ax=None, **kwargs):
         if ax is None:
@@ -347,22 +455,21 @@ class JSA(object):
 def main():
     import numpy
     import matplotlib.pyplot as plt
-    pump = Pump()
+    pump = Pump(process=Process.PDC)
     signal_wl = numpy.linspace(790E-9, 810E-9, 150)
     idler_wl = numpy.linspace(790E-9, 810E-9, 250)
-    SIG, ID = numpy.meshgrid(signal_wl, idler_wl)
-    pump_center = 400E-9
+    pump_centre = 400E-9
     pump_width = 1E-9
-    pump.signal_wavelength = SIG
-    pump.idler_wavelength = ID
-    pump.pump_center = pump_center
+    pump.signal_wavelength = signal_wl
+    pump.idler_wavelength = idler_wl
+    pump.pump_center = pump_centre
     pump.pump_width = pump_width
     pump.pump_filter_width = 1.0E-9
     pump.__filter_pump = 'filtered'
-    result = pump.pump()
+    result = pump.pump_spectrum
     result /= abs(result).max()
     plt.figure(figsize=(4, 4))
-    plt.contourf(SIG, ID, abs(result), 10)
+    plt.contourf(pump.signal_wavelength2D, pump.idler_wavelength2D, abs(result), 10)
     plt.colorbar()
     plt.tight_layout()
     plt.show()

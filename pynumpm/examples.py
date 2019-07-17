@@ -198,7 +198,7 @@ def example_2D_phasematching():
     thisprocess.plot()
 
 
-def example_jsa():
+def example_jsa1():
     from pynumpm import waveguide, utilities, phasematching, jsa
 
     length = 25e-3  # length in m
@@ -217,7 +217,7 @@ def example_jsa():
                                                       n_green=ntm(T0),
                                                       n_blue=nte(T0))
 
-    thisprocess.red_wavelength = np.linspace(1.50e-6, 1.6e-6, 100)
+    thisprocess.red_wavelength = np.linspace(1.50e-6, 1.6e-6, 500)
     thisprocess.blue_wavelength = np.linspace(0.549e-6, 0.551e-6, 1000)
     thisprocess.calculate_phasematching()
     thisprocess.plot()
@@ -226,9 +226,6 @@ def example_jsa():
     thispump = jsa.Pump(process=jsa.Process.SFG)
     thispump.signal_wavelength = thisprocess.signal_wavelength
     thispump.idler_wavelength = thisprocess.idler_wavelength
-    # being an SFG process, the idler is the output and the signal is the input
-    thispump.pump_center = (thisprocess.idler_wavelength.mean() ** -1 -
-                            thisprocess.signal_wavelength.mean() ** -1) ** -1
     # set the bandwidth to 1nm
     thispump.pump_width = 1e-9
     thispump.plot()
@@ -253,5 +250,5 @@ if __name__ == '__main__':
     # example_1D_phasematching()
     # example_1D_SFG()
     # example_2D_phasematching()
-    example_jsa()
+    example_jsa1()
     plt.show()
