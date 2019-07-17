@@ -39,7 +39,7 @@ with open(os.path.join(here, 'README.md')) as f:
 
 setup(
     name='pynumpm',
-    version='0.1',
+    version='0.2',
     description='''Numerical phasematching routines''',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -50,8 +50,8 @@ setup(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.6',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'Programming Language :: Python :: 3.7',
     ],
     install_requires=[
         'numpy', 'matplotlib', 'scipy', "warnings;python_version<'3.4'", "logging;python_version<'3.4'"
