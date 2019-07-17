@@ -6,6 +6,7 @@ Module to simulate the 2D spectrum of a pump field for the simulation of joint s
 import logging
 from numpy import exp, pi, sqrt, shape, zeros, log
 from scipy.special import hermite, factorial
+from scipy.constants import c as _sol
 import matplotlib.pyplot as plt
 import numpy as np
 import enum
@@ -61,7 +62,7 @@ class Pump(object):
     def __init__(self, process=Process.PDC, pump_center=None, pump_wavelength=None,
                  pump_width=None, signal_wavelength=None,
                  idler_wavelength=None, filter_pump=False,
-                  pump_delay=0, pump_chirp=0,
+                 pump_delay=0, pump_chirp=0,
                  pump_temporal_mode=0, pump_filter_width=100):
         """ Initialise a pump with default parameters. """
         self.pump_center = pump_center
@@ -73,7 +74,7 @@ class Pump(object):
         self.pump_chirp = pump_chirp
         self.pump_temporal_mode = pump_temporal_mode
         self.pump_filter_width = pump_filter_width
-        self.sol = 299792458.0
+        # _sol = 299792458.0
         self.__signal_wavelength = signal_wavelength
         self.__idler_wavelength = idler_wavelength
 
@@ -99,8 +100,8 @@ class Pump(object):
 
     @process.setter
     def process(self, value):
-        if type(value) is not Process:
-            raise TypeError("The type of 'process' must be {0}".format(type(Process)))
+        if isinstance(value, Process):
+            raise TypeError("The type of 'process' must be pynumpm.jsa.Process")
         self.__process = value
 
     def _hermite_mode(self, x):
@@ -111,6 +112,7 @@ class Pump(object):
         #     exp(-(self.pump_center - x)**2 / (2 * self.pump_width**2)) /\
         #     sqrt(factorial(self.pump_temporal_mode) * sqrt(pi) *
         #          2**self.pump_temporal_mode * self.pump_width)
+        # TODO: Check the correctness of the pump_width parameter
         _result = hermite(self.pump_temporal_mode)((self.pump_center - x) /
                                                    self.correct_pump_width) * \
                   exp(-(self.pump_center - x) ** 2 / (2 * self.correct_pump_width ** 2)) / \
@@ -144,6 +146,7 @@ class Pump(object):
         # self.pump_width /= 2 * sqrt(log(2))
         # self.pump_width = self.pump_width /( 2 * sqrt(log(2)))
         self.__set_wavelengths()
+
         self.correct_pump_width = self.pump_width / (2 * sqrt(log(2)))
         if self.process == Process.PDC or self.process == Process.BWPDC:
             self.pump_wavelength = 1.0 / (1.0 / self.signal_wavelength +
@@ -170,15 +173,15 @@ class Pump(object):
                     else:
                         pass
             _pump_function = self._hermite_mode(self.pump_wavelength) * \
-                             exp(1j * 2 * pi * self.sol / self.pump_wavelength *
+                             exp(1j * 2 * pi * _sol / self.pump_wavelength *
                                  self.pump_delay) * \
-                             exp(1j * (2 * pi * self.sol / self.pump_wavelength) ** 2 *
+                             exp(1j * (2 * pi * _sol / self.pump_wavelength) ** 2 *
                                  self.pump_chirp) * _filter
         else:
             _pump_function = self._hermite_mode(self.pump_wavelength) * \
-                             exp(1j * 2 * pi * self.sol / self.pump_wavelength *
+                             exp(1j * 2 * pi * _sol / self.pump_wavelength *
                                  self.pump_delay) * \
-                             exp(1j * (2 * pi * self.sol / self.pump_wavelength) ** 2 *
+                             exp(1j * (2 * pi * _sol / self.pump_wavelength) ** 2 *
                                  self.pump_chirp)
         return _pump_function
 
