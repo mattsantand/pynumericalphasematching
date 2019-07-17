@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 from scipy.constants import pi
 import scipy.interpolate as interp
 from scipy.integrate import simps
-from pynumpm import jsa
 
 
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
@@ -616,7 +615,7 @@ class Phasematching1D(object):
         return fig, ax
 
 
-class Simple2DPhasematching(object):
+class SimplePhasematching2D(object):
     def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
         self.__waveguide = waveguide
         self.__n_red = n_red

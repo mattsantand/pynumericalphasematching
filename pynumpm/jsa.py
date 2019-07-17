@@ -9,6 +9,14 @@ from scipy.misc import factorial
 from scipy.special import hermite
 import matplotlib.pyplot as plt
 import numpy as np
+import enum
+
+
+class Process(enum.Enum):
+    SFG = "SFG. Signal is the input, Idler is the output."
+    DFG = "DFG. Signal is the input, Idler is the output."
+    PDC = "PDC."
+    BWPDC = "BWPDC. Signal is the for the backward propagating field."  # TODO: Check this
 
 
 class Pump(object):
@@ -51,17 +59,17 @@ class Pump(object):
 
     """
 
-    def __init__(self, pump_center=None, pump_wavelength=None,
+    def __init__(self, process=Process.PDC, pump_center=None, pump_wavelength=None,
                  pump_width=None, signal_wavelength=None,
-                 idler_wavelength=None, pump_type="normal",
-                 process="PDC", pump_delay=0, pump_chirp=0,
+                 idler_wavelength=None, filter_pump=False,
+                  pump_delay=0, pump_chirp=0,
                  pump_temporal_mode=0, pump_filter_width=100):
         """ Initialise a pump with default parameters. """
         self.pump_center = pump_center
         self.pump_wavelength = pump_wavelength
         self.pump_width = pump_width
-        self.type = pump_type
-        self.process = process
+        self.__filter_pump = filter_pump
+        self.__process = process
         self.pump_delay = pump_delay
         self.pump_chirp = pump_chirp
         self.pump_temporal_mode = pump_temporal_mode
@@ -85,6 +93,16 @@ class Pump(object):
     @idler_wavelength.setter
     def idler_wavelength(self, value):
         self.__idler_wavelength = value
+
+    @property
+    def process(self):
+        return self.__process
+
+    @process.setter
+    def process(self, value):
+        if type(value) is not Process:
+            raise TypeError("The type of 'process' must be {0}".format(type(Process)))
+        self.__process = value
 
     def _hermite_mode(self, x):
         """ A normalised Hermite-Gaussian function """
@@ -128,22 +146,16 @@ class Pump(object):
         # self.pump_width = self.pump_width /( 2 * sqrt(log(2)))
         self.__set_wavelengths()
         self.correct_pump_width = self.pump_width / (2 * sqrt(log(2)))
-        if self.process.upper() in ['PDC', 'BWPDC']:
+        if self.process == Process.PDC or self.process == Process.BWPDC:
             self.pump_wavelength = 1.0 / (1.0 / self.signal_wavelength +
                                           1.0 / self.idler_wavelength)
-        elif self.process.upper() == 'SFG':
+        elif self.process == Process.SFG:
             self.pump_wavelength = 1.0 / (1.0 / self.idler_wavelength -
                                           1.0 / self.signal_wavelength)
-        elif self.process.upper() == 'DFG':
+        elif self.process == Process.DFG:
             self.pump_wavelength = 1.0 / (1.0 / self.signal_wavelength -
                                           1.0 / self.idler_wavelength)
-        if self.type.upper() == 'NORMAL':
-            _pump_function = self._hermite_mode(self.pump_wavelength) * \
-                             exp(1j * 2 * pi * self.sol / self.pump_wavelength *
-                                 self.pump_delay) * \
-                             exp(1j * (2 * pi * self.sol / self.pump_wavelength) ** 2 *
-                                 self.pump_chirp)
-        elif self.type.upper() == 'FILTERED':
+        if self.__filter_pump:
             self.pump_filter_width *= sqrt(2)
             _filter = zeros(shape(self.pump_wavelength), float)
             logger.debug("Pump wavelength: %f", shape(self.pump_wavelength))
@@ -163,17 +175,25 @@ class Pump(object):
                                  self.pump_delay) * \
                              exp(1j * (2 * pi * self.sol / self.pump_wavelength) ** 2 *
                                  self.pump_chirp) * _filter
-        elif self.type.upper() == 'CUSTOM':
-            _pump_function = None
-
         else:
-            _pump_function = None
+            _pump_function = self._hermite_mode(self.pump_wavelength) * \
+                             exp(1j * 2 * pi * self.sol / self.pump_wavelength *
+                                 self.pump_delay) * \
+                             exp(1j * (2 * pi * self.sol / self.pump_wavelength) ** 2 *
+                                 self.pump_chirp)
         return _pump_function
 
     def plot(self, ax=None):
         if ax is None:
             fig, ax = plt.subplots(1, 1)
         ax.pcolormesh(self.signal_wavelength * 1e9, self.idler_wavelength * 1e9, abs(self.pump()) ** 2)
+        ax.set_title("Pump intensity")
+        if self.process == Process.SFG or self.process == Process.DFG:
+            ax.set_xlabel("$\lambda_{input}$ [nm]")
+            ax.set_ylabel("$\lambda_{output}$ [nm]")
+        else:
+            ax.set_xlabel("$\lambda_{signal}$ [nm]")
+            ax.set_ylabel("$\lambda_{idler}$ [nm]")
 
 
 class JSA(object):
@@ -336,7 +356,7 @@ def main():
     pump.pump_center = pump_center
     pump.pump_width = pump_width
     pump.pump_filter_width = 1.0E-9
-    pump.type = 'filtered'
+    pump.__filter_pump = 'filtered'
     result = pump.pump()
     result /= abs(result).max()
     plt.figure(figsize=(4, 4))
