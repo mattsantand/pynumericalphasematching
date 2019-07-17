@@ -7,14 +7,13 @@ Welcome to PyNumericalPhasematching's documentation!
 ====================================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Resources:
 
-   waveguide
-   noise
-   pump
-   phasematching
-   utilities
+   tutorials
+   how-to
+   apiguide
+   references
 
 
 

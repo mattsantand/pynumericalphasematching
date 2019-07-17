@@ -1,10 +1,10 @@
-Pump
+JSA
 ****
 
 Classes
 =======
 
-.. automodule:: pynumpm.pump
+.. automodule:: pynumpm.jsa
     :members:
 
 

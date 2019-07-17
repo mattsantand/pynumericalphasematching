@@ -178,6 +178,6 @@ texinfo_documents = [
 ]
 
 # Parse of Markdown doc (for readme and changelog)
-source_parsers = {
-    '.md': 'recommonmark.parser.CommonMarkParser'
-}
+# source_parsers = {
+#     '.md': 'recommonmark.parser.CommonMarkParser'
+# }

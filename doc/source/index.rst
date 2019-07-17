@@ -3,18 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PyNumericalPhasematching's documentation!
+Welcome to PyNumPy's documentation!
 ====================================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Resources:
 
-   waveguide
-   noise
-   pump
-   phasematching
-   utilities
+   tutorials
+   how-to
+   apiguide
+   references
 
 
 
