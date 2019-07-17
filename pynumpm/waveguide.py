@@ -19,6 +19,8 @@ class SimpleWaveguide(object):
                 "Please, provide the poling period of the structure ('poling_period'). If no poling is required, set poling_period = +np.infty")
         self.__z = z
         self.__poling_period = poling_period
+        self.__poling_structure_set = False
+        self.__length = self.z[-1] - self.z[0]
 
     @property
     def z(self):
@@ -32,6 +34,15 @@ class SimpleWaveguide(object):
     def poling_period_um(self):
         return self.__poling_period * 1e6
 
+    @property
+    def poling_structure_set(self):
+        """Boolean to describe if the poling structure is set."""
+        return self.__poling_structure_set
+
+    @property
+    def length(self):
+        return self.__length
+
 
 class Waveguide(object):
     """
@@ -43,7 +54,6 @@ class Waveguide(object):
     moment).
 
     """
-
     def __init__(self, z=None, poling_period=None, nominal_parameter=1., nominal_parameter_name="parameter"):
         """
         Initialize the waveguide by providing a z-mesh and the nominal parameter of the profile. This will automatically

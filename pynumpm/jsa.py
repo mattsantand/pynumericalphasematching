@@ -20,47 +20,19 @@ class Process(enum.Enum):
 
 
 class Pump(object):
-    """ Provides the pump function of a nonlinear process.
-
-    === Public methods ===
-    pump -- generates the pump function from the provided
-            parameters
-
-    === Private methods ===
-    _hermite_mode -- normalised Hermite-Gaussian function
-
-    === Public Variables ===
-    pump_center -- pump central wavelength [m] (default: None)
-    pump_wavelength -- matrix containing the pump wavelengths
-                       in the signal and idler frequency plane [m]
-                       (default: None)
-    pump_width -- the intensity FWHM of the pump pulses [m] (default: None)
-    signal_wavelength -- matrix containing the signal wavelengths [m]
-                         (default: None)
-    idler_wavelength -- matrix containing the idler wavelengths [m]
-                        (default: None)
-    type -- keyword defining the pump type; must be in ['normal',
-            'filtered', custom] (default: 'normal')
-    process -- nonlinear process (default: 'PDC')
-    pump_delay -- temporal pump delay with respect to a reference [s]
-                  (default: 0)
-    pump_chirp -- quadratic chirp parameter of the pump pulse [s**2]
-                  (default: 0)
-    pump_temporal_mode -- temporal mode order of the pump pulse
-                          (default: 0)
-    pump_filter_width -- intensity FWHM of a spectral filter [m]
-                         (default: 100)
-    sol -- speed of light [m] (default: 299792458)
-
-    === Private Variables ===
-    _result -- about every calculation result
-    _pump_function -- matrix containing the pump function
-    _filter -- matrix containing the filter function
-
     """
+    Pump class. It is used to describe 2D pump functions for the calculation of JSA.
 
+    Initialize the pump object calling the class and passing a suitable `Process` element.
+    """
     def __init__(self, process: Process):
-        """ Initialise a pump with default parameters. """
+        """
+        Initialize the pump object.
+
+
+        :param process: Process under investigation. An element of the class `pynumpm.jsa.Process`.
+        :type process: Process
+        """
 
         self.__process = None
         self.process = process

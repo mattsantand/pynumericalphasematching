@@ -104,6 +104,28 @@ def example_phasematching_deltabeta():
     thisprocess.plot(verbose=True)
 
 
+def example_simple1D_phasematching():
+    from pynumpm import waveguide, phasematching, utilities
+
+    nte, ntm = custom_sellmeier()
+
+    length = 10e-3
+    poling = utilities.calculate_poling_period(1550e-9, 890e-9, 0,
+                                               ntm(20),
+                                               ntm(20),
+                                               ntm(20))[-1]
+    z = np.array([0, length])
+    thissimplewaveguide = waveguide.SimpleWaveguide(z=z,
+                                                    poling_period=poling)
+    thisprocess = phasematching.SimplePhasematching1D(waveguide=thissimplewaveguide,
+                                                      n_red=ntm(20),
+                                                      n_green=ntm(20),
+                                                      n_blue=ntm(20))
+    thisprocess.red_wavelength = np.linspace(1530, 1580, 1000) * 1e-9
+    thisprocess.green_wavelength = 890e-9
+    thisprocess.calculate_phasematching()
+    thisprocess.plot()
+
 def example_1D_phasematching():
     from pynumpm import waveguide, phasematching, utilities
 
@@ -247,8 +269,9 @@ if __name__ == '__main__':
     # example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
+    example_simple1D_phasematching()
     # example_1D_phasematching()
     # example_1D_SFG()
     # example_2D_phasematching()
-    example_jsa1()
+    # example_jsa1()
     plt.show()
