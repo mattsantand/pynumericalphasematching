@@ -12,6 +12,36 @@ class Propagation(enum.Enum):
     COUNTEPROPAGATION = +1
     """Sign of signal in counterpropagation"""
 
+def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, order=1, **kwargs):
+    """
+    Function to calculate the poling period of a specific process. To ensure energy conservation, specify only 2
+    wavelengths (in meter) and leave the free one to 0
+
+    :param lamr:
+    :param lamg:
+    :param lamb:
+    :param nr:
+    :param ng:
+    :param nb:
+    :param order:
+    :param kwargs:
+    :return:
+    """
+    propagation_type = kwargs.get("propagation_type", "copropagation")
+    if (lamb == 0):
+        lamb = 1. / (1. / abs(lamg) + 1. / abs(lamr))
+    if (lamg == 0):
+        lamg = 1. / (1. / abs(lamb) - 1. / abs(lamr))
+    if (lamr == 0):
+        lamr = 1. / (1. / abs(lamb) - 1. / abs(lamg))
+    if propagation_type.lower() == "copropagation":
+        Lambda = order / (nb(abs(lamb) * 1e6) / lamb - ng(abs(lamg) * 1e6) / lamg - nr(abs(lamr) * 1e6) / lamr)
+    elif propagation_type.lower() == "counterpropagation":
+        Lambda = order / (nb(abs(lamb) * 1e6) / lamb - ng(abs(lamg) * 1e6) / lamg + nr(abs(lamr) * 1e6) / lamr)
+    else:
+        raise ValueError("Don't know " + propagation_type)
+    return lamr, lamg, lamb, Lambda
+
 
 def deltabeta(lamr=None, lamg=None, lamb=None, nr=None, ng=None, nb=None, poling=np.infty, order=1,
               propagation=Propagation.COPROPAGATION):
