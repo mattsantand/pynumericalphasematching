@@ -422,30 +422,3 @@ class JSA(object):
         ax[0].plot(self.phasematching.signal_wavelength * 1e9, self.marginal1)
         ax[1].plot(self.phasematching.idler_wavelength * 1e9, self.marginal2)
         plt.suptitle(suptitle)
-
-
-def main():
-    import numpy
-    import matplotlib.pyplot as plt
-    pump = Pump(process=Process.PDC)
-    signal_wl = numpy.linspace(790E-9, 810E-9, 150)
-    idler_wl = numpy.linspace(790E-9, 810E-9, 250)
-    pump_centre = 400E-9
-    pump_width = 1E-9
-    pump.signal_wavelength = signal_wl
-    pump.idler_wavelength = idler_wl
-    pump.pump_center = pump_centre
-    pump.pump_width = pump_width
-    pump.pump_filter_width = 1.0E-9
-    pump.__filter_pump = 'filtered'
-    result = pump.pump_spectrum
-    result /= abs(result).max()
-    plt.figure(figsize=(4, 4))
-    plt.contourf(pump.signal_wavelength2D, pump.idler_wavelength2D, abs(result), 10)
-    plt.colorbar()
-    plt.tight_layout()
-    plt.show()
-
-
-if __name__ == '__main__':
-    main()
