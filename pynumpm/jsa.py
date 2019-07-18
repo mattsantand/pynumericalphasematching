@@ -18,7 +18,7 @@ class Process(enum.Enum):
     PDC = "PDC."
     BWPDC = "BWPDC. Signal is the for the backward propagating field."  # TODO: Check this
 
-
+# TODO: add function to upload custom pump spectrum
 class Pump(object):
     """
     Pump class. It is used to describe 2D pump functions for the calculation of JSA.
