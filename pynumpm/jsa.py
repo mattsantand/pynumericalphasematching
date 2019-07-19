@@ -18,13 +18,14 @@ class Process(enum.Enum):
     PDC = "PDC."
     BWPDC = "BWPDC. Signal is the for the backward propagating field."  # TODO: Check this
 
-# TODO: add function to upload custom pump spectrum
+
 class Pump(object):
     """
     Pump class. It is used to describe 2D pump functions for the calculation of JSA.
 
     Initialize the pump object calling the class and passing a suitable `Process` element.
     """
+
     def __init__(self, process: Process):
         """
         Initialize the pump object.
@@ -55,6 +56,18 @@ class Pump(object):
     @property
     def pump_spectrum(self):
         return self.__pump_spectrum
+
+    @pump_spectrum.setter
+    def pump_spectrum(self, value: np.ndarray):
+        if not isinstance(value, np.ndarray):
+            raise TypeError("The 'pump_spectrum' must be a numpy.ndarray object.")
+        if value.shape[0] != len(self.signal_wavelength):
+            raise ValueError("The input pump spectrum is not compatible with the signal wavelength set. "
+                             "Make sure pump_spectrum.shape[0] == len(signal_wavelength)")
+        if value.shape[1] != len(self.idler_wavelength):
+            raise ValueError("The input pump spectrum is not compatible with the idler wavelength set. "
+                             "Make sure pump_spectrum.shape[1] == len(idler_wavelength)")
+        self.__pump_spectrum = value
 
     @property
     def signal_wavelength(self):
