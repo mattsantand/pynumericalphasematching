@@ -105,15 +105,15 @@ def example_phasematching_deltabeta():
 
 
 def example_simple1D_phasematching():
-    from pynumpm import waveguide, phasematching, utilities
+    from pynumpm import waveguide, phasematching, utils
 
     nte, ntm = custom_sellmeier()
 
     length = 10e-3
-    poling = utilities.calculate_poling_period(1550e-9, 890e-9, 0,
-                                               ntm(20),
-                                               ntm(20),
-                                               ntm(20))[-1]
+    poling = utils.calculate_poling_period(1550e-9, 890e-9, 0,
+                                           ntm(20),
+                                           ntm(20),
+                                           ntm(20))[-1]
     z = np.array([0, length])
     thissimplewaveguide = waveguide.SimpleWaveguide(z=z,
                                                     poling_period=poling)
@@ -127,7 +127,7 @@ def example_simple1D_phasematching():
     thisprocess.plot()
 
 def example_1D_phasematching():
-    from pynumpm import waveguide, phasematching, utilities
+    from pynumpm import waveguide, phasematching, utils
 
     length = 30e-3  # length in m
     dz = 50e-6  # discretization in m
@@ -135,7 +135,7 @@ def example_1D_phasematching():
 
     nte, ntm = custom_sellmeier()
 
-    poling_period = utilities.calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(40), ntm(40), ntm(40), 1)[-1]
+    poling_period = utils.calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(40), ntm(40), ntm(40), 1)[-1]
     print("Poling period: ", poling_period)
 
     thiswaveguide = waveguide.Waveguide(z=z,
@@ -159,7 +159,7 @@ def example_1D_phasematching():
 
 
 def example_1D_SFG():
-    from pynumpm import waveguide, phasematching, utilities
+    from pynumpm import waveguide, phasematching, utils
 
     length = 30e-3  # length in m
     dz = 50e-6  # discretization in m
@@ -167,7 +167,7 @@ def example_1D_SFG():
 
     nte, ntm = custom_sellmeier()
 
-    poling_period = utilities.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(40), ntm(40), nte(40), 1)[-1]
+    poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(40), ntm(40), nte(40), 1)[-1]
     print("Poling period: ", poling_period)
 
     thiswaveguide = waveguide.Waveguide(z=z,
@@ -191,7 +191,7 @@ def example_1D_SFG():
 
 
 def example_2D_phasematching():
-    from pynumpm import waveguide, utilities, phasematching
+    from pynumpm import waveguide, utils, phasematching
 
     length = 25e-3  # length in m
     dz = 100e-6  # discretization in m
@@ -199,8 +199,8 @@ def example_2D_phasematching():
     nte, ntm = custom_sellmeier()
     T0 = 25
 
-    lamr, lamg, lamb, poling_period = utilities.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
-                                                                        nte(T0), 1)
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
+                                                                    nte(T0), 1)
     print("Poling period: ", poling_period)
     z = np.arange(0, length + dz, dz)
     thiswaveguide = waveguide.Waveguide(z=z,
@@ -221,15 +221,15 @@ def example_2D_phasematching():
 
 
 def example_jsa1():
-    from pynumpm import waveguide, utilities, phasematching, jsa
+    from pynumpm import waveguide, utils, phasematching, jsa
 
     length = 25e-3  # length in m
 
     nte, ntm = custom_sellmeier()
     T0 = 25
 
-    lamr, lamg, lamb, poling_period = utilities.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
-                                                                        nte(T0), 1)
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
+                                                                    nte(T0), 1)
     print("Poling period: ", poling_period)
     z = np.array([0, length])
     thiswaveguide = waveguide.SimpleWaveguide(z=z,

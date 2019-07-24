@@ -9,7 +9,7 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-from pynumpm import utilities
+from pynumpm import utils
 
 
 class NoiseProfile(object):
@@ -57,7 +57,7 @@ class NoiseProfile(object):
         return newnoise
 
     def plot_noise_properties(self, fig=None, **kwargs):
-        z_autocorr, autocorr, f, power_spectrum = utilities.calculate_profile_properties(self.z, self.profile)
+        z_autocorr, autocorr, f, power_spectrum = utils.calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
         else:

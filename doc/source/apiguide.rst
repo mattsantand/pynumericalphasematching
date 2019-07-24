@@ -8,4 +8,4 @@ API references
    noise
    jsa
    phasematching
-   utilities
+   utils
