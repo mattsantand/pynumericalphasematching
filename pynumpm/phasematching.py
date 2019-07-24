@@ -3,7 +3,7 @@
 .. module:: phasematching.py
 .. moduleauthor:: Matteo Santandrea <matteo.santandrea@upb.de>
    :platform: Windows (tested), Unix
-   :synopsis: Module to calculate the phasematching of a given waveguide, as specified by the Waveguide class.
+   :synopsis: Module to calculate the phasematching of a given waveguide, as specified by the RealisticWaveguide class.
 
 This module is used to calculate different types of phasematching:
     * :class:`~pynumpm.phasematching.PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
@@ -32,7 +32,7 @@ class PhasematchingDeltaBeta(object):
     The accessible attributes in this class are:
 
     :param waveguide: Waveguide object
-    :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+    :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
     :param deltabeta: vector containing the values of :math:`\Delta\\beta` needed to calculate the phasematching
     :type deltabeta: :class:`~numpy:numpy.ndarray`
     :param phi: Vector containing the phasematching spectrum
@@ -47,7 +47,7 @@ class PhasematchingDeltaBeta(object):
         Initialization of the class requires the following parameter:
 
         :param waveguide: Waveguide object, as provided by the class waveguide.
-        :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
 
         """
         self.__waveguide = waveguide
@@ -179,7 +179,7 @@ class SimplePhasematching1D(object):
         Accessible attributes of the class are
 
         :param waveguide: waveguide object
-        :type waveguide: :class:`pynumpm.waveguide.Waveguide`
+        :type waveguide: :class:`pynumpm.waveguide.RealisticWaveguide`
         :param phi: One dimensional phasematching spectrum (complex valued function)
         :type phi: :class:`~numpy:numpy.ndarray`
         :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
@@ -206,12 +206,12 @@ class SimplePhasematching1D(object):
 
         """
 
-    def __init__(self, waveguide: waveguide.SimpleWaveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
+    def __init__(self, waveguide: waveguide.Waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
         """
         Initialization of the class requires the following parameters:
 
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
-        :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
         :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
@@ -485,7 +485,7 @@ class Phasematching1D(object):
     Accessible attributes of the class are
 
     :param waveguide: waveguide object
-    :type waveguide: :class:`pynumpm.waveguide.Waveguide`
+    :type waveguide: :class:`pynumpm.waveguide.RealisticWaveguide`
     :param phi: One dimensional phasematching spectrum (complex valued function)
     :type phi: :class:`~numpy:numpy.ndarray`
     :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
@@ -517,7 +517,7 @@ class Phasematching1D(object):
         Initialization of the class requires the following parameters:
 
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
-        :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
         :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
@@ -1089,7 +1089,7 @@ class Phasematching2D(object):
         Accessible attributes of the class are
 
         :param waveguide: waveguide object
-        :type waveguide: :class:`pynumpm.waveguide.Waveguide`
+        :type waveguide: :class:`pynumpm.waveguide.RealisticWaveguide`
         :param phi: One dimensional phasematching spectrum (complex valued function)
         :type phi: :class:`~numpy:numpy.ndarray`
         :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
@@ -1123,7 +1123,7 @@ class Phasematching2D(object):
         Initialization of the class requires the following parameters:
 
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
-        :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
         :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
         :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)

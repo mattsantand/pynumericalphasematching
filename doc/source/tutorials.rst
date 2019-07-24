@@ -17,7 +17,7 @@ poling = utilities.calculate_poling_period(1550e-9, 890e-9, 0,
                                            n_blue)[-1]
 length = 10e-3
 z = np.array([0, length])
-thissimplewaveguide = waveguide.SimpleWaveguide(z=z,
+thissimplewaveguide = waveguide.Waveguide(z=z,
                                                 poling_period=poling)
 thisprocess = phasematching.SimplePhasematching1D(waveguide=thissimplewaveguide,
                                                   n_red=n_red,
@@ -55,7 +55,7 @@ import numpy as np
 from pynumpm import waveguide
 
 z_mesh = np.linspace(0, 10, 1000)*1e-3
-thiswaveguide = waveguide.Waveguide(z=z_mesh,
+thiswaveguide = waveguide.RealisticWaveguide(z=z_mesh,
                                     poling = 16e-6,
                                     nominal_parameter_name = "Width [$\mu$m]",
                                     nominal_parameter = 7.0e-6)

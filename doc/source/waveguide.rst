@@ -19,7 +19,7 @@ Define the z-mesh (in meters). The waveguide will have the same length as the me
 Create a waveguide on the mesh. In this case, the code will generate a waveguide with nominal parameter *7*. The name of
 the parameter is set to "Width :math:`[\\mum]`" to enable LaTeX formatting of the y-axis label.
 
->>> thiswaveguide = Waveguide(z=z, nominal_parameter=7., nominal_parameter_name=r"Width [$\mu$m]")
+>>> thiswaveguide = RealisticWaveguide(z=z, nominal_parameter=7., nominal_parameter_name=r"Width [$\mu$m]")
 
 Create a 1/f noise on top of the generated waveguide
 
