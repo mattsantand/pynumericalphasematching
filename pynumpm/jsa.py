@@ -1,6 +1,7 @@
 # coding=utf-8
 """
-Module to simulate the 2D spectrum of a pump field for the simulation of joint spectral amplitudes of nonlinear processes.
+Module to simulate the 2D spectrum of a pump field for the simulation of joint spectral amplitudes of nonlinear
+processes.
 
 """
 import logging

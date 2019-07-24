@@ -252,7 +252,7 @@ class Waveguide(object):
 
         exponent = int(np.log10(set_multiplier_x))
         set_multiplier_x = 10 ** exponent  # round the set_multiplier to be a power of 10.
-        z_autocorr, autocorr, f, power_spectrum = utilities.calculate_profile_properties(self.z, self.profile)
+        z_autocorr, autocorr, f, power_spectrum = utils.calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
         else:
