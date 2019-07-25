@@ -44,7 +44,6 @@ class SimplePhasematchingDeltaBeta(object):
         self.__deltabeta = None
         self._phi = None
 
-
     @property
     def waveguide(self):
         """
@@ -262,9 +261,12 @@ class SimplePhasematching1D(object):
 
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
         :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
-        :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
-        :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
-        :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
+        :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function,
+        i.e. n(variable_parameter)(wavelength in um)
+        :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda
+        function, i.e. n(variable_parameter)(wavelength in um)
+        :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function,
+        i.e. n(variable_parameter)(wavelength in um)
         :param order: order of phasematching. Default: 1
         :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
 
@@ -532,34 +534,6 @@ class Phasematching1D(object):
 
     i.e. according to their "energy".
 
-    Accessible attributes of the class are
-
-    :param waveguide: waveguide object
-    :type waveguide: :class:`pynumpm.waveguide.RealisticWaveguide`
-    :param phi: One dimensional phasematching spectrum (complex valued function)
-    :type phi: :class:`~numpy:numpy.ndarray`
-    :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
-        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
-    :type n_red: function of function
-    :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
-        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
-    :type n_green: function of function
-    :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
-        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
-    :type n_blue: function of function
-    :param int order: order of phasematching
-    :param str propagation_type:  copropagating or counterpropagating
-    :param red_wavelength: None, Single float or vector of float, containing the "red" wavelengths, in meters.
-    :type red_wavelength: :class:`numpy:numpy.ndarray`
-    :param green_wavelength: None, Single float or vector of float, containing the "green" wavelengths, in meters.
-    :type green_wavelength: :class:`numpy:numpy.ndarray`
-    :param blue_wavelength: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
-    :type blue_wavelength: :class:`numpy:numpy.ndarray`
-    :param input_wavelength: Input (scanning) wavelength of the process. It cannot be set, it is automatically detected.
-    :type input_wavelength: :class:`numpy:numpy.ndarray`
-    :param output_wavelength: Output (scanning) wavelength of the process. It cannot be set, it is automatically detected.
-    :type output_wavelength: :class:`numpy:numpy.ndarray`
-
     """
 
     def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
@@ -568,11 +542,19 @@ class Phasematching1D(object):
 
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
         :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
-        :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
-        :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
-        :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
+        :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
+        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+        :type n_red: function of function
+        :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
+        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+        :type n_green: function of function
+        :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
+            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+        :type n_blue: function of function
         :param order: order of phasematching. Default: 1
-        :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
+        :type order: int
+        :param backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
+        :type backpropagation: bool
 
         """
         self.__waveguide = waveguide
@@ -615,6 +597,10 @@ class Phasematching1D(object):
 
     @property
     def phi(self):
+        """
+        One dimensional phasematching spectrum (complex valued function) numpy.ndarray
+
+        """
         return self.__phi
 
     @property
@@ -635,7 +621,15 @@ class Phasematching1D(object):
 
     @red_wavelength.setter
     def red_wavelength(self, value):
+        """
+        Red wavelength of the process.
+
+        :param value: None, Single float or vector of float, containing the "red" wavelengths, in meters.
+        :type value: float, numpy.ndarray
+        :return:
+        """
         self.__red_wavelength = value
+
 
     @property
     def green_wavelength(self):
@@ -643,6 +637,13 @@ class Phasematching1D(object):
 
     @green_wavelength.setter
     def green_wavelength(self, value):
+        """
+        Green wavelength of the process.
+
+        :param value: None, Single float or vector of float, containing the "green" wavelengths, in meters.
+        :type value: float, numpy.ndarray
+        :return:
+        """
         self.__green_wavelength = value
 
     @property
@@ -651,21 +652,47 @@ class Phasematching1D(object):
 
     @blue_wavelength.setter
     def blue_wavelength(self, value):
+        """
+        Blue wavelength of the process.
+
+        :param value: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
+        :type value: float, numpy.ndarray
+        :return:
+        """
         self.__blue_wavelength = value
 
     @property
     def input_wavelength(self):
+        """
+        Input (scanning) wavelength of the process. It cannot be set, it is automatically detected.
+
+        """
         return self.__input_wavelength
 
     @property
     def output_wavelength(self):
+        """
+        Output (scanning) wavelength of the process. It cannot be set, it is automatically detected.
+
+        """
         return self.__output_wavelength
 
     @property
     def noise_length_product(self):
+        """
+        Product between the sample length and the maximum :math:`\Delta\beta\` variation for the process. If this value
+        is above 10, the phasematching is likely to be noisy.
+
+        """
         return self.__noise_length_product
 
     def load_waveguide(self, waveguide):
+        """
+        Method to load a waveguide object.
+
+        :param waveguide:
+        :return:
+        """
         self.__waveguide = waveguide
 
     def __set_wavelengths(self):
