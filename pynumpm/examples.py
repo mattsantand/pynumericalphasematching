@@ -114,7 +114,8 @@ def example_phasematching_deltabeta():
     deltabeta = np.linspace(-5000, 5000, 1000)
     thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
     thisprocess.deltabeta = deltabeta
-    thisprocess.calculate_phasematching(normalized=True)
+    phi = thisprocess.calculate_phasematching(normalized=True)
+    print(thisprocess.noise_length_product)
     thisprocess.plot(verbose=True)
 
 
@@ -278,13 +279,14 @@ def example_jsa1():
 if __name__ == '__main__':
     import logging
 
+    FORMAT = "%(asctime)s.%(msecs)03d -- %(filename)s:%(lineno)s - %(funcName)20s() :>> %(message)s"
     logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-                        datefmt='%m-%d %H:%M')
+                        format=FORMAT,#'%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                        datefmt='%Y%m%d %H:%M:%S')
     # example_waveguide()
     # example_noise()
-    example_simple_phasematching_deltabeta()
-    # example_phasematching_deltabeta()
+    # example_simple_phasematching_deltabeta()
+    example_phasematching_deltabeta()
     # example_simple1D_phasematching()
     # example_1D_phasematching()
     # example_1D_SFG()

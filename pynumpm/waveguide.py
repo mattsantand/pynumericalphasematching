@@ -26,6 +26,9 @@ class Waveguide(object):
         self.__poling_period = poling_period
         self.__poling_structure_set = False
         self.__length = length
+        self.__z = None
+        self.__dz = None
+        self.__waveguide_profile = None
 
     @property
     def poling_period(self):
@@ -50,6 +53,23 @@ class Waveguide(object):
 
         """
         return self.__length
+
+    @property
+    def z(self):
+        warnings.warn("No z mesh defined for the Waveguide class")
+        return self.__z
+
+    @property
+    def dz(self):
+        warnings.warn("No z mesh defined for the Waveguide class")
+        return self.__dz
+
+    @property
+    def profile(self):
+        warnings.warn("No profile mesh defined for the Waveguide class")
+        return self.__waveguide_profile
+
+
 
 
 class RealisticWaveguide(Waveguide):

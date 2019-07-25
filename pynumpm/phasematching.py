@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from scipy.constants import pi
 import scipy.interpolate as interp
 from scipy.integrate import simps
-from pynumpm import waveguide
+from pynumpm import waveguide as waveg
 
 
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
@@ -27,28 +27,61 @@ from pynumpm import waveguide
 
 # TODO: the __calculate_delta_k functions can access the wavelength through their internal self.xxx_wavelength
 class SimplePhasematchingDeltaBeta(object):
-    def __init__(self, waveguide: waveguide.Waveguide):
+    """
+    Class used for the calculation of phasematching as a function of :math:`\Delta\beta` for uniform waveguides.
+
+    """
+
+    def __init__(self, waveguide: waveg.Waveguide):
+        """
+
+        :param waveguide: Waveguide object describing the properties of a uniform waveguide.
+        :type waveguide: pynumpm.waveguide.Waveguide
+
+        """
+
         self.__waveguide = waveguide
         self.__deltabeta = None
-        self.__phi = None
+        self._phi = None
+
 
     @property
     def waveguide(self):
+        """
+        The waveguide object
+
+        :return:
+        """
         return self.__waveguide
 
     @property
     def deltabeta(self):
+        """
+        Return the :math:`\Delta\beta` vector used for the phasematching calculation.
+        :return:
+        """
         return self.__deltabeta
 
     @deltabeta.setter
     def deltabeta(self, value: np.ndarray):
+        """
+        Define the :math:`\Delta\beta` vector used for the phasematching calculation.
+
+        :param value: Array of :math:`\Delta\beta` [*1/m*]
+        :type value: numpy.ndarray
+        """
         if not isinstance(value, np.ndarray):
             raise TypeError("The deltabeta has to be a numpy.ndarray")
         self.__deltabeta = value
 
     @property
     def phi(self):
-        return self.__phi
+        """
+        The phasematching complex amplitude
+
+        :return:
+        """
+        return self._phi
 
     def calculate_phasematching(self, normalized=False):
         """
@@ -56,22 +89,22 @@ class SimplePhasematchingDeltaBeta(object):
         Prior to the evaluation of the phasematching, it is necessary to set the :math:`\Delta\\beta` vector by
         assigning it to the variable `deltabeta`.
 
-        :param deltabeta: Vector describing the deltabeta space to be scanned.
-        :type deltabeta: numpy.ndarray
-        :param normalized: Sets the normalization of the phasematching. If the normalization is on (True), the phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]). Default: False.
+        :param normalized: Sets the normalization of the phasematching. If True, the
+        phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]). Default: *False*.
         :type normalized: bool
         :return: the function returns the complex-valued phasematching spectrum.
 
         """
         logger = logging.getLogger(__name__)
+        logger.info("SimplePhasematchingDeltaBeta: Calculating the phasematching.")
         if self.deltabeta is None:
             raise ValueError("You need to define a delta beta range.")
-        logger.info("Calculating the phasematching.")
+
         db = self.deltabeta
         length = self.waveguide.length
-        self.__phi = np.sinc(db * length / 2 / np.pi) * np.exp(1j * db * length / 2)
+        self._phi = np.sinc(db * length / 2 / np.pi) * np.exp(1j * db * length / 2)
         if not normalized:
-            self.__phi *= length
+            self._phi *= length
         return self.phi
 
     def plot(self, ax=None, normalized=False):
@@ -79,7 +112,8 @@ class SimplePhasematchingDeltaBeta(object):
         Function to plot the phasematching intensity.
 
         :param ax: Optional argument. Handle of the axis of the plot. Default: None
-        :param normalized: Optional argument. If True, normalizes the plotted phasematching to have the maximum to 1. Default: False
+        :param normalized: Optional argument. If True, normalizes the plotted phasematching to have the maximum to 1.
+        Default: False
         :type normalized: bool
         :return: the axis handle of the plot
         """
@@ -109,23 +143,14 @@ class SimplePhasematchingDeltaBeta(object):
         return simps(abs(self.phi) ** 2, self.deltabeta)
 
 
-class PhasematchingDeltaBeta(object):
+class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
     """
-    This class is used to simulate phasematching of systems considering only the wavevector mismatch (:math:`\Delta\\beta`).
-    The accessible attributes in this class are:
-
-    :param waveguide: Waveguide object
-    :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
-    :param deltabeta: vector containing the values of :math:`\Delta\\beta` needed to calculate the phasematching
-    :type deltabeta: :class:`~numpy:numpy.ndarray`
-    :param phi: Vector containing the phasematching spectrum
-    :type phi: :class:`~numpy:numpy.ndarray`
-    :param noise_length_product: Value of the noise length product :math:`\sigma L`
-    :type noise_length_product: float
+    This class is used to simulate phasematching of systems considering only the wavevector mismatch
+    (:math:`\Delta\beta`).
 
     """
 
-    def __init__(self, waveguide):
+    def __init__(self, waveguide: waveg.RealisticWaveguide):
         """
         Initialization of the class requires the following parameter:
 
@@ -133,31 +158,11 @@ class PhasematchingDeltaBeta(object):
         :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
 
         """
-        self.__waveguide = waveguide
-        self.__deltabeta = None
-        self.__phi = 0
+        super(PhasematchingDeltaBeta, self).__init__(waveguide)
         self.__cumulative_delta_beta = None
         self.__cumulative_exp = None
         self.__cumulative_sinc = None
         self.__noise_length_product = None
-
-    @property
-    def waveguide(self):
-        return self.__waveguide
-
-    @property
-    def deltabeta(self):
-        return self.__deltabeta
-
-    @deltabeta.setter
-    def deltabeta(self, value: np.ndarray):
-        if not isinstance(value, np.ndarray):
-            raise TypeError("The deltabeta has to be a numpy.ndarray")
-        self.__deltabeta = value
-
-    @property
-    def phi(self):
-        return self.__phi
 
     @property
     def noise_length_product(self):
@@ -168,25 +173,22 @@ class PhasematchingDeltaBeta(object):
 
     def calculate_phasematching(self, normalized=False):
         """
-        Function that calculates the phasematching.
+        Function that calculates the phasematching in case of inhomogeneous waveguide.
         Prior to the evaluation of the phasematching, it is necessary to set the :math:`\Delta\\beta` vector by
         assigning it to the variable `deltabeta`.
 
-        :param deltabeta: Vector describing the deltabeta space to be scanned.
-        :type deltabeta: numpy.ndarray
         :param normalized: Sets the normalization of the phasematching. If the normalization is on (True), the phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]). Default: False.
         :type normalized: bool
         :return: the function returns the complex-valued phasematching spectrum.
 
         """
         logger = logging.getLogger(__name__)
+        logger.info("PhasematchingDeltaBeta: Calculating the phasematching.")
         if self.deltabeta is None:
             raise ValueError("You need to define a delta beta range.")
-        logger.info("Calculating the phasematching.")
         self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
         self.__cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
         self.__cumulative_sinc = np.zeros(shape=len(self.deltabeta), dtype=complex)
-
         for i in range(len(self.waveguide.z) - 1):
             dz = self.waveguide.z[i + 1] - self.waveguide.z[i]
             this_deltabeta = self.deltabeta + self.waveguide.profile[i] - 2 * np.pi / self.waveguide.poling_period
@@ -194,9 +196,10 @@ class PhasematchingDeltaBeta(object):
             self.__cumulative_sinc += dz * np.sinc(x / np.pi) * np.exp(1j * x) * np.exp(
                 1j * self.__cumulative_delta_beta)
             self.__cumulative_delta_beta += this_deltabeta * dz
-        self.__phi = self.__cumulative_sinc
+
+        self._phi = self.__cumulative_sinc
         if normalized:
-            self.__phi /= self.waveguide.z[-1]
+            self._phi /= self.waveguide.length
         self.__noise_length_product = abs(self.waveguide.profile).max() * self.waveguide.length
         return self.phi
 
@@ -217,7 +220,8 @@ class PhasematchingDeltaBeta(object):
             ax = plt.gca()
         if self.phi is None:
             raise IOError(
-                "I'd really like to plot something nice, but you have not calculated the phasematching yet, to this would only be a white canvas.")
+                "I'd really like to plot something nice, but you have not calculated the phasematching yet, "
+                "so this would only be a white canvas.")
         y = abs(self.phi) ** 2
         if normalized:
             y = abs(self.phi) ** 2 / y.max()
@@ -234,18 +238,9 @@ class PhasematchingDeltaBeta(object):
             y0, y1 = plt.ylim()
             x = .7 * (x1 - x0) + x0
             y = .7 * y1
-            print(x, y, text)
             props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
             plt.text(x, y, text, bbox=props)
         return ax
-
-    def calculate_integral(self):
-        """
-        Function to calculate the integral of the phasematching curve. It uses the function `simps` from the scipy module.
-
-        :return: Intensity integral
-        """
-        return simps(abs(self.phi) ** 2, self.deltabeta)
 
 
 class SimplePhasematching1D(object):
@@ -259,37 +254,9 @@ class SimplePhasematching1D(object):
 
         i.e. according to their "energy".
 
-        Accessible attributes of the class are
-
-        :param waveguide: waveguide object
-        :type waveguide: :class:`pynumpm.waveguide.RealisticWaveguide`
-        :param phi: One dimensional phasematching spectrum (complex valued function)
-        :type phi: :class:`~numpy:numpy.ndarray`
-        :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
-            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
-        :type n_red: function of function
-        :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
-            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
-        :type n_green: function of function
-        :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
-            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
-        :type n_blue: function of function
-        :param int order: order of phasematching
-        :param str propagation_type:  copropagating or counterpropagating
-        :param red_wavelength: None, Single float or vector of float, containing the "red" wavelengths, in meters.
-        :type red_wavelength: :class:`numpy:numpy.ndarray`
-        :param green_wavelength: None, Single float or vector of float, containing the "green" wavelengths, in meters.
-        :type green_wavelength: :class:`numpy:numpy.ndarray`
-        :param blue_wavelength: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
-        :type blue_wavelength: :class:`numpy:numpy.ndarray`
-        :param input_wavelength: Input (scanning) wavelength of the process. It cannot be set, it is automatically detected.
-        :type input_wavelength: :class:`numpy:numpy.ndarray`
-        :param output_wavelength: Output (scanning) wavelength of the process. It cannot be set, it is automatically detected.
-        :type output_wavelength: :class:`numpy:numpy.ndarray`
-
         """
 
-    def __init__(self, waveguide: waveguide.Waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
+    def __init__(self, waveguide: waveg.Waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
         """
         Initialization of the class requires the following parameters:
 
