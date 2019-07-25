@@ -90,6 +90,18 @@ def example_noise():
     plt.show()
 
 
+def example_simple_phasematching_deltabeta():
+    from pynumpm import waveguide, phasematching
+
+    thiswaveguide = waveguide.Waveguide(length=25e-3)
+    deltabeta = np.linspace(-5000, 5000, 1000)
+    thisprocess = phasematching.SimplePhasematchingDeltaBeta(waveguide=thiswaveguide)
+    thisprocess.deltabeta = deltabeta
+    thisprocess.calculate_phasematching(normalized=False)
+    print(thisprocess.calculate_integral())
+    thisprocess.plot()
+
+
 def example_phasematching_deltabeta():
     from pynumpm import waveguide, phasematching
 
@@ -127,6 +139,7 @@ def example_simple1D_phasematching():
     thisprocess.green_wavelength = 890e-9
     thisprocess.calculate_phasematching()
     thisprocess.plot()
+
 
 def example_1D_phasematching():
     from pynumpm import waveguide, phasematching, utils
@@ -268,8 +281,9 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
-    example_waveguide()
+    # example_waveguide()
     # example_noise()
+    example_simple_phasematching_deltabeta()
     # example_phasematching_deltabeta()
     # example_simple1D_phasematching()
     # example_1D_phasematching()

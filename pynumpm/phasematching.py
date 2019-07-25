@@ -26,6 +26,89 @@ from pynumpm import waveguide
 # TODO: Use class inheritance for the 1D and 2D phasematching
 
 # TODO: the __calculate_delta_k functions can access the wavelength through their internal self.xxx_wavelength
+class SimplePhasematchingDeltaBeta(object):
+    def __init__(self, waveguide: waveguide.Waveguide):
+        self.__waveguide = waveguide
+        self.__deltabeta = None
+        self.__phi = None
+
+    @property
+    def waveguide(self):
+        return self.__waveguide
+
+    @property
+    def deltabeta(self):
+        return self.__deltabeta
+
+    @deltabeta.setter
+    def deltabeta(self, value: np.ndarray):
+        if not isinstance(value, np.ndarray):
+            raise TypeError("The deltabeta has to be a numpy.ndarray")
+        self.__deltabeta = value
+
+    @property
+    def phi(self):
+        return self.__phi
+
+    def calculate_phasematching(self, normalized=False):
+        """
+        Function that calculates the phasematching.
+        Prior to the evaluation of the phasematching, it is necessary to set the :math:`\Delta\\beta` vector by
+        assigning it to the variable `deltabeta`.
+
+        :param deltabeta: Vector describing the deltabeta space to be scanned.
+        :type deltabeta: numpy.ndarray
+        :param normalized: Sets the normalization of the phasematching. If the normalization is on (True), the phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]). Default: False.
+        :type normalized: bool
+        :return: the function returns the complex-valued phasematching spectrum.
+
+        """
+        logger = logging.getLogger(__name__)
+        if self.deltabeta is None:
+            raise ValueError("You need to define a delta beta range.")
+        logger.info("Calculating the phasematching.")
+        db = self.deltabeta
+        length = self.waveguide.length
+        self.__phi = np.sinc(db * length / 2 / np.pi) * np.exp(1j * db * length / 2)
+        if not normalized:
+            self.__phi *= length
+        return self.phi
+
+    def plot(self, ax=None, normalized=False):
+        """
+        Function to plot the phasematching intensity.
+
+        :param ax: Optional argument. Handle of the axis of the plot. Default: None
+        :param normalized: Optional argument. If True, normalizes the plotted phasematching to have the maximum to 1. Default: False
+        :type normalized: bool
+        :return: the axis handle of the plot
+        """
+        if ax is None:
+            fig = plt.figure()
+            plt.subplot(111)
+            ax = plt.gca()
+        if self.phi is None:
+            raise IOError(
+                "I'd really like to plot something nice, but you have not calculated the phasematching yet, "
+                "so this would only be a white canvas.")
+        y = abs(self.phi) ** 2
+        if normalized:
+            y = abs(self.phi) ** 2 / y.max()
+        ax.plot(self.deltabeta, y)
+        plt.title("Phasematching")
+        plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
+        plt.ylabel("Intensity [a.u.]")
+        return ax
+
+    def calculate_integral(self):
+        """
+        Function to calculate the integral of the phasematching curve. It uses the function `simps` from the scipy module.
+
+        :return: Intensity integral
+        """
+        return simps(abs(self.phi) ** 2, self.deltabeta)
+
+
 class PhasematchingDeltaBeta(object):
     """
     This class is used to simulate phasematching of systems considering only the wavevector mismatch (:math:`\Delta\\beta`).
