@@ -265,7 +265,7 @@ class SimplePhasematching1D(object):
 
     @property
     def n_blue(self):
-        return self.__n_red
+        return self.__n_blue
 
     @property
     def red_wavelength(self):
@@ -577,7 +577,7 @@ class Phasematching1D(object):
 
     @property
     def n_blue(self):
-        return self.__n_red
+        return self.__n_blue
 
     @property
     def red_wavelength(self):
