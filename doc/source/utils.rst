@@ -4,9 +4,5 @@ utilities
 Contents of the module
 ======================
 
-.. automodule:: pynumpm.utilities
+.. automodule:: pynumpm.utils
    :members:
-
-Example of usage
-================
-TBA

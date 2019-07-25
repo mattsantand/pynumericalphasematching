@@ -51,26 +51,26 @@ def custom_sellmeier():
 
 def example_waveguide():
     """
-    This function illustrates the use of the Waveguide module and the Waveguide class.
+    This function illustrates the use of the RealisticWaveguide module and the RealisticWaveguide class.
 
     """
     import pynumpm.waveguide as WG
     z = np.linspace(0, 0.020, 1000)
-    uniform_waveguide = WG.Waveguide(z=z, poling_period=np.infty,
-                                     nominal_parameter=7., nominal_parameter_name="Width")
+    uniform_waveguide = WG.RealisticWaveguide(z=z, poling_period=np.infty,
+                                              nominal_parameter=7., nominal_parameter_name="Width")
     uniform_waveguide.plot()
 
-    noisy_waveguide = WG.Waveguide(z=z, nominal_parameter=7., nominal_parameter_name="Width",
-                                   poling_period=np.infty)
+    noisy_waveguide = WG.RealisticWaveguide(z=z, nominal_parameter=7., nominal_parameter_name="Width",
+                                            poling_period=np.infty)
     noisy_waveguide.create_noisy_waveguide(noise_profile="awgn",
                                            noise_amplitude=0.1)
     noisy_waveguide.plot()
-    noisy_waveguide = WG.Waveguide(z=z, nominal_parameter=7., nominal_parameter_name=r"Width [$\mu$m]",
-                                   poling_period=np.infty)
+    noisy_waveguide = WG.RealisticWaveguide(z=z, nominal_parameter=7., nominal_parameter_name=r"Width [$\mu$m]",
+                                            poling_period=np.infty)
     noisy_waveguide.create_noisy_waveguide(noise_profile="1/f",
                                            noise_amplitude=0.1)
     noisy_waveguide.plot()
-    noisy_waveguide.plot_waveguide_properties(set_multiplier_x=1e3)
+    noisy_waveguide.plot_waveguide_properties()
     plt.show()
 
 
@@ -94,7 +94,7 @@ def example_phasematching_deltabeta():
     from pynumpm import waveguide, phasematching
 
     z = np.linspace(0, 0.02, 1000)
-    thiswaveguide = waveguide.Waveguide(z=z, nominal_parameter=0, nominal_parameter_name=r"\Delta\beta")
+    thiswaveguide = waveguide.RealisticWaveguide(z=z, nominal_parameter=0, nominal_parameter_name=r"\Delta\beta")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
                                          noise_amplitude=500.0)
     thiswaveguide.plot()
@@ -117,8 +117,8 @@ def example_simple1D_phasematching():
                                            ntm(20),
                                            ntm(20))[-1]
     z = np.array([0, length])
-    thissimplewaveguide = waveguide.SimpleWaveguide(z=z,
-                                                    poling_period=poling)
+    thissimplewaveguide = waveguide.Waveguide(z=z,
+                                              poling_period=poling)
     thisprocess = phasematching.SimplePhasematching1D(waveguide=thissimplewaveguide,
                                                       n_red=ntm(20),
                                                       n_green=ntm(20),
@@ -140,10 +140,10 @@ def example_1D_phasematching():
     poling_period = utils.calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(40), ntm(40), ntm(40), 1)[-1]
     print("Poling period: ", poling_period)
 
-    thiswaveguide = waveguide.Waveguide(z=z,
-                                        poling_period=poling_period,
-                                        nominal_parameter=40,
-                                        nominal_parameter_name=r"Wg width [$\mu$m]")
+    thiswaveguide = waveguide.RealisticWaveguide(z=z,
+                                                 poling_period=poling_period,
+                                                 nominal_parameter=40,
+                                                 nominal_parameter_name=r"Wg width [$\mu$m]")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
                                          noise_amplitude=3)
     thiswaveguide.plot_waveguide_properties()
@@ -172,10 +172,10 @@ def example_1D_SFG():
     poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(40), ntm(40), nte(40), 1)[-1]
     print("Poling period: ", poling_period)
 
-    thiswaveguide = waveguide.Waveguide(z=z,
-                                        poling_period=poling_period,
-                                        nominal_parameter=40,
-                                        nominal_parameter_name=r"Wg width [$\mu$m]")
+    thiswaveguide = waveguide.RealisticWaveguide(z=z,
+                                                 poling_period=poling_period,
+                                                 nominal_parameter=40,
+                                                 nominal_parameter_name=r"Wg width [$\mu$m]")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
                                          noise_amplitude=0.5)
     thiswaveguide.plot_waveguide_properties()
@@ -205,10 +205,10 @@ def example_2D_phasematching():
                                                                     nte(T0), 1)
     print("Poling period: ", poling_period)
     z = np.arange(0, length + dz, dz)
-    thiswaveguide = waveguide.Waveguide(z=z,
-                                        poling_period=poling_period,
-                                        nominal_parameter=T0,
-                                        nominal_parameter_name=r"WG temperature[$^\circ$C]")
+    thiswaveguide = waveguide.RealisticWaveguide(z=z,
+                                                 poling_period=poling_period,
+                                                 nominal_parameter=T0,
+                                                 nominal_parameter_name=r"WG temperature[$^\circ$C]")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
                                          noise_amplitude=1.0)
     thisprocess = phasematching.Phasematching2D(waveguide=thiswaveguide,
@@ -234,8 +234,8 @@ def example_jsa1():
                                                                     nte(T0), 1)
     print("Poling period: ", poling_period)
     z = np.array([0, length])
-    thiswaveguide = waveguide.SimpleWaveguide(z=z,
-                                              poling_period=poling_period)
+    thiswaveguide = waveguide.Waveguide(z=z,
+                                        poling_period=poling_period)
     thisprocess = phasematching.SimplePhasematching2D(waveguide=thiswaveguide,
                                                       n_red=nte(T0),
                                                       n_green=ntm(T0),
@@ -268,10 +268,10 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
-    # example_waveguide()
+    example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
-    example_simple1D_phasematching()
+    # example_simple1D_phasematching()
     # example_1D_phasematching()
     # example_1D_SFG()
     # example_2D_phasematching()
