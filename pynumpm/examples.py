@@ -116,8 +116,7 @@ def example_simple1D_phasematching():
                                            ntm(20),
                                            ntm(20),
                                            ntm(20))[-1]
-    z = np.array([0, length])
-    thissimplewaveguide = waveguide.Waveguide(z=z,
+    thissimplewaveguide = waveguide.Waveguide(length=length,
                                               poling_period=poling)
     thisprocess = phasematching.SimplePhasematching1D(waveguide=thissimplewaveguide,
                                                       n_red=ntm(20),
@@ -268,11 +267,11 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
-    example_waveguide()
+    # example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
-    # example_simple1D_phasematching()
-    # example_1D_phasematching()
+    example_simple1D_phasematching()
+    example_1D_phasematching()
     # example_1D_SFG()
     # example_2D_phasematching()
     # example_jsa1()
