@@ -34,6 +34,7 @@ Alternatively, it is possible to install the package by downloading the package 
 ## Examples 
 
 The basic steps to run a simulation, are:
+
 1. Create a `waveguide` object, using a suitable class from the `waveguide` module.
 2. Create a `phasematching` object, using a suitable class from the `phasematching` module and loading the `waveguide` 
 object into such object.
@@ -74,16 +75,13 @@ thisprocess.plot()
 
 For more example, consult the Tutorials.
 
-### Additional tools
-
-* `utility.??`
 
 ## In development/ToDo list
 
 * Update the calculation method in the Phasematching1D and Phasematching2D classes. Instead using a rectangular 
 approximation, it is possible to use the correct integration using a sinc().
 
-* Modify the RealisticWaveguide and Phasematching classes such that the `Waveguide`, `SimplePhasematching1D` and 
+* Modify the Phasematching classes such that the `SimplePhasematching1D` and 
 `SimplePhasematching2D` are used as parent classes and the other classes are their children. 
 
 ## Author
