@@ -9,9 +9,6 @@ This module is used to calculate different types of phasematching:
     * :class:`~pynumpm.phasematching.PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
     * :class:`~pynumpm.phasematching.Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
     * :class:`~pynumpm.phasematching.Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
-
-
-
 """
 import logging
 import numpy as np
@@ -19,12 +16,13 @@ import matplotlib.pyplot as plt
 from scipy.constants import pi
 import scipy.interpolate as interp
 from scipy.integrate import simps
-from pynumpm import waveguide as waveg
+from pynumpm import waveguide as Waveguide
+from typing import Union
 
 
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
 # TODO: Use class inheritance for the 1D and 2D phasematching
-
+# TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile.
 # TODO: the __calculate_delta_k functions can access the wavelength through their internal self.xxx_wavelength
 class SimplePhasematchingDeltaBeta(object):
     """
@@ -32,7 +30,7 @@ class SimplePhasematchingDeltaBeta(object):
 
     """
 
-    def __init__(self, waveguide: waveg.Waveguide):
+    def __init__(self, waveguide: Waveguide.Waveguide):
         """
 
         :param waveguide: Waveguide object describing the properties of a uniform waveguide.
@@ -40,8 +38,8 @@ class SimplePhasematchingDeltaBeta(object):
 
         """
 
-        self.__waveguide = waveguide
-        self.__deltabeta = None
+        self._waveguide = waveguide
+        self._deltabeta = None
         self._phi = None
 
     @property
@@ -51,7 +49,7 @@ class SimplePhasematchingDeltaBeta(object):
 
         :return:
         """
-        return self.__waveguide
+        return self._waveguide
 
     @property
     def deltabeta(self):
@@ -59,7 +57,7 @@ class SimplePhasematchingDeltaBeta(object):
         Return the :math:`\Delta\beta` vector used for the phasematching calculation.
         :return:
         """
-        return self.__deltabeta
+        return self._deltabeta
 
     @deltabeta.setter
     def deltabeta(self, value: np.ndarray):
@@ -71,7 +69,7 @@ class SimplePhasematchingDeltaBeta(object):
         """
         if not isinstance(value, np.ndarray):
             raise TypeError("The deltabeta has to be a numpy.ndarray")
-        self.__deltabeta = value
+        self._deltabeta = value
 
     @property
     def phi(self):
@@ -149,7 +147,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
 
     """
 
-    def __init__(self, waveguide: waveg.RealisticWaveguide):
+    def __init__(self, waveguide: Waveguide.RealisticWaveguide):
         """
         Initialization of the class requires the following parameter:
 
@@ -158,17 +156,17 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
 
         """
         super(PhasematchingDeltaBeta, self).__init__(waveguide)
-        self.__cumulative_delta_beta = None
-        self.__cumulative_exp = None
-        self.__cumulative_sinc = None
-        self.__noise_length_product = None
+        self._cumulative_delta_beta = None
+        self._cumulative_exp = None
+        self._cumulative_sinc = None
+        self._noise_length_product = None
 
     @property
     def noise_length_product(self):
-        return self.__noise_length_product
+        return self._noise_length_product
 
     def load_waveguide(self, waveguide):
-        self.__waveguide = waveguide
+        self._waveguide = waveguide
 
     def calculate_phasematching(self, normalized=False):
         """
@@ -185,21 +183,21 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
         logger.info("PhasematchingDeltaBeta: Calculating the phasematching.")
         if self.deltabeta is None:
             raise ValueError("You need to define a delta beta range.")
-        self.__cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
-        self.__cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
-        self.__cumulative_sinc = np.zeros(shape=len(self.deltabeta), dtype=complex)
+        self._cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
+        self._cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
+        self._cumulative_sinc = np.zeros(shape=len(self.deltabeta), dtype=complex)
         for i in range(len(self.waveguide.z) - 1):
             dz = self.waveguide.z[i + 1] - self.waveguide.z[i]
             this_deltabeta = self.deltabeta + self.waveguide.profile[i] - 2 * np.pi / self.waveguide.poling_period
             x = this_deltabeta * dz / 2
-            self.__cumulative_sinc += dz * np.sinc(x / np.pi) * np.exp(1j * x) * np.exp(
-                1j * self.__cumulative_delta_beta)
-            self.__cumulative_delta_beta += this_deltabeta * dz
+            self._cumulative_sinc += dz * np.sinc(x / np.pi) * np.exp(1j * x) * np.exp(
+                1j * self._cumulative_delta_beta)
+            self._cumulative_delta_beta += this_deltabeta * dz
 
-        self._phi = self.__cumulative_sinc
+        self._phi = self._cumulative_sinc
         if normalized:
             self._phi /= self.waveguide.length
-        self.__noise_length_product = abs(self.waveguide.profile).max() * self.waveguide.length
+        self._noise_length_product = abs(self.waveguide.profile).max() * self.waveguide.length
         return self.phi
 
     def plot(self, ax=None, normalized=False, verbose=False):
@@ -255,7 +253,8 @@ class SimplePhasematching1D(object):
 
         """
 
-    def __init__(self, waveguide: waveg.Waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
+    def __init__(self, waveguide: Waveguide.Waveguide, n_red, n_green, n_blue, order: int = 1,
+                 backpropagation: bool = False):
         """
         Initialization of the class requires the following parameters:
 
@@ -271,90 +270,144 @@ class SimplePhasematching1D(object):
         :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
 
         """
-        self.__waveguide = waveguide
-        self.__phi = None
-        self.__wavelength_set = False
-        self.__n_red = n_red
-        self.__n_green = n_green
-        self.__n_blue = n_blue
+        self._waveguide = waveguide
+        self._phi = None
+        self._wavelengths_set = False
+        self._n_red = n_red
+        self._n_green = n_green
+        self._n_blue = n_blue
         # ====================================================
         self.order = order
         # TODO: check if and how the poling order interferes when the poling structure is set
         self.process = None
-        self.__red_wavelength = None
-        self.__green_wavelength = None
-        self.__blue_wavelength = None
-        self.__input_wavelength = None
-        self.__output_wavelength = None
+        self._red_wavelength = None
+        self._green_wavelength = None
+        self._blue_wavelength = None
+        self._input_wavelength = None
+        self._output_wavelength = None
         if backpropagation:
             self.propagation_type = "backpropagation"
         else:
             self.propagation_type = "copropagation"
-        self.__nonlinear_profile_set = False
-        self.__nonlinear_profile = None
+        # self._nonlinear_profile = None
         self.scanning_wavelength = None
-        self.__cumulative_delta_beta = None
-        self.__cumulative_exponential = None
-        self.__lamr0 = None
-        self.__lamg0 = None
-        self.__lamb0 = None
+        self._cumulative_delta_beta = None
+        self._cumulative_exponential = None
+        self._lamr0 = None
+        self._lamg0 = None
+        self._lamb0 = None
 
     @property
     def waveguide(self):
-        return self.__waveguide
+        return self._waveguide
 
     @property
     def phi(self):
-        return self.__phi
+        """
+        One dimensional phasematching spectrum (complex valued function) numpy.ndarray
+
+        """
+        return self._phi
 
     @property
     def n_red(self):
-        return self.__n_red
+        return self._n_red
 
     @property
     def n_green(self):
-        return self.__n_green
+        return self._n_green
 
     @property
     def n_blue(self):
-        return self.__n_red
+        return self._n_red
 
     @property
     def red_wavelength(self):
-        return self.__red_wavelength
+        return self._red_wavelength
 
     @red_wavelength.setter
     def red_wavelength(self, value):
-        self.__red_wavelength = value
+        """
+        Red wavelength of the process.
+
+        :param value: None, Single float or vector of float, containing the "red" wavelengths, in meters.
+        :type value: float, numpy.ndarray
+        :return:
+        """
+        self._red_wavelength = value
 
     @property
     def green_wavelength(self):
-        return self.__green_wavelength
+        return self._green_wavelength
 
     @green_wavelength.setter
     def green_wavelength(self, value):
-        self.__green_wavelength = value
+        """
+        Green wavelength of the process.
+
+        :param value: None, Single float or vector of float, containing the "green" wavelengths, in meters.
+        :type value: float, numpy.ndarray
+        :return:
+        """
+        self._green_wavelength = value
 
     @property
     def blue_wavelength(self):
-        return self.__blue_wavelength
+        return self._blue_wavelength
 
     @blue_wavelength.setter
     def blue_wavelength(self, value):
-        self.__blue_wavelength = value
+        """
+        Blue wavelength of the process.
+
+        :param value: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
+        :type value: float, numpy.ndarray
+        :return:
+        """
+        self._blue_wavelength = value
 
     @property
     def input_wavelength(self):
-        return self.__input_wavelength
+        """
+        Input (scanning) wavelength of the process. It cannot be set, it is automatically detected.
+
+        """
+        return self._input_wavelength
 
     @property
     def output_wavelength(self):
-        return self.__output_wavelength
+        """
+        Output (scanning) wavelength of the process. It cannot be set, it is automatically detected.
+
+        """
+        return self._output_wavelength
 
     def load_waveguide(self, waveguide):
-        self.__waveguide = waveguide
+        """
+        Method to load a waveguide object.
 
-    def __set_wavelengths(self):
+        :param waveguide:
+        :return:
+        """
+        self._waveguide = waveguide
+
+    @property
+    def wavelengths_set(self):
+        return self._wavelengths_set
+
+    @property
+    def lamr0(self):
+        return self._lamr0
+
+    @property
+    def lamg0(self):
+        return self._lamg0
+
+    @property
+    def lamb0(self):
+        return self._lamb0
+
+    def set_wavelengths(self):
         logger = logging.getLogger(__name__)
         num_of_none = (self.red_wavelength is None) + \
                       (self.green_wavelength is None) + \
@@ -384,38 +437,38 @@ class SimplePhasematching1D(object):
                     b=self.blue_wavelength))
                 raise ValueError("Something unexpected happened in set_wavelength. "
                                  "Check the log please and chat with the developer.")
-            self.__input_wavelength = self.red_wavelength
-            self.__output_wavelength = self.blue_wavelength
+            self._input_wavelength = self.red_wavelength
+            self._output_wavelength = self.blue_wavelength
         elif num_of_none == 1:
             logger.info("Calculating wavelengths for sfg/dfg")
             self.process = "sfg/dfg"
             if self.red_wavelength is None:
                 if type(self.green_wavelength) == np.ndarray:
-                    self.__input_wavelength = self.green_wavelength
+                    self._input_wavelength = self.green_wavelength
                     logger.info("The input wavelength is the green")
                 else:
-                    self.__input_wavelength = self.blue_wavelength
+                    self._input_wavelength = self.blue_wavelength
                     logger.info("The input wavelength is the blue")
                 self.red_wavelength = (self.blue_wavelength ** -1 - self.green_wavelength ** -1) ** -1
-                self.__output_wavelength = self.red_wavelength
+                self._output_wavelength = self.red_wavelength
             elif self.green_wavelength is None:
                 if type(self.red_wavelength) == np.ndarray:
-                    self.__input_wavelength = self.red_wavelength
+                    self._input_wavelength = self.red_wavelength
                     logger.info("The input wavelength is the red")
                 else:
-                    self.__input_wavelength = self.blue_wavelength
+                    self._input_wavelength = self.blue_wavelength
                     logger.info("The input wavelength is the blue")
                 self.green_wavelength = (self.blue_wavelength ** -1 - self.red_wavelength ** -1) ** -1
-                self.__output_wavelength = self.green_wavelength
+                self._output_wavelength = self.green_wavelength
             elif self.blue_wavelength is None:
                 if type(self.red_wavelength) == np.ndarray:
-                    self.__input_wavelength = self.red_wavelength
+                    self._input_wavelength = self.red_wavelength
                     logger.info("The input wavelength is the red")
                 else:
-                    self.__input_wavelength = self.green_wavelength
+                    self._input_wavelength = self.green_wavelength
                     logger.info("The input wavelength is the green")
                 self.blue_wavelength = (self.red_wavelength ** -1 + self.green_wavelength ** -1) ** -1
-                self.__output_wavelength = self.blue_wavelength
+                self._output_wavelength = self.blue_wavelength
             else:
                 logger.error("An error occurred in __set_wavelengths. When setting the SFG/DFG wavelengths, "
                              "all the wavelengths are set but the number of none is 1."
@@ -425,14 +478,14 @@ class SimplePhasematching1D(object):
                     b=self.blue_wavelength))
                 raise ValueError("Something unexpected happened in set_wavelength. "
                                  "Check the log please and chat with the developer.")
-        self.__wavelength_set = True
-        self.__lamr0 = self.red_wavelength.mean() if type(self.red_wavelength) == np.ndarray else self.red_wavelength
-        self.__lamg0 = self.green_wavelength.mean() if type(
+        self._wavelengths_set = True
+        self._lamr0 = self.red_wavelength.mean() if type(self.red_wavelength) == np.ndarray else self.red_wavelength
+        self._lamg0 = self.green_wavelength.mean() if type(
             self.green_wavelength) == np.ndarray else self.green_wavelength
-        self.__lamb0 = self.blue_wavelength.mean() if type(self.blue_wavelength) == np.ndarray else self.blue_wavelength
+        self._lamb0 = self.blue_wavelength.mean() if type(self.blue_wavelength) == np.ndarray else self.blue_wavelength
         return self.red_wavelength, self.green_wavelength, self.blue_wavelength
 
-    def __calculate_delta_k(self):
+    def calculate_delta_k(self):
         logger = logging.getLogger(__name__)
         if self.propagation_type == "copropagation":
             dd = 2 * pi * (self.n_blue(abs(self.blue_wavelength) * 1e6) / self.blue_wavelength -
@@ -461,15 +514,15 @@ class SimplePhasematching1D(object):
 
         :return: the complex-valued phasematching spectrum
         """
-        if not self.__wavelength_set:
-            self.__set_wavelengths()
+        if not self.wavelengths_set:
+            self.set_wavelengths()
 
         logger = logging.getLogger(__name__)
         logger.info("Calculating phasematching")
-        db = self.__calculate_delta_k()
-        self.__phi = np.sinc(db * self.waveguide.length / 2 / np.pi) * np.exp(1j * db * self.waveguide.length / 2)
+        db = self.calculate_delta_k()
+        self._phi = np.sinc(db * self.waveguide.length / 2 / np.pi) * np.exp(-1j * db * self.waveguide.length / 2)
         if not normalized:
-            self.__phi /= self.waveguide.length
+            self._phi /= self.waveguide.length
         return self.phi
 
     def calculate_integral(self):
@@ -478,7 +531,10 @@ class SimplePhasematching1D(object):
 
         :return: the phasematching intensity integral
         """
-        return simps(abs(self.phi) ** 2, self.scanning_wavelength)
+        if self.phi is not None:
+            return simps(abs(self.phi) ** 2, self.scanning_wavelength)
+        else:
+            raise RuntimeError("You need to evaluate the phasematching spectrum, before I can calculate its integral.")
 
     def plot(self, ax=None, plot_intensity=True, plot_input=True, **kwargs):
         """
@@ -522,7 +578,7 @@ class SimplePhasematching1D(object):
         return fig, ax
 
 
-class Phasematching1D(object):
+class Phasematching1D(SimplePhasematching1D):
     """
     Class to calculate the 1D-phasematching, i.e. having one fixed wavelength and scanning another one (the third is
     fixed due to energy conservation.
@@ -536,7 +592,7 @@ class Phasematching1D(object):
 
     """
 
-    def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
+    def __init__(self, waveguide: Waveguide.RealisticWaveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
         """
         Initialization of the class requires the following parameters:
 
@@ -557,125 +613,23 @@ class Phasematching1D(object):
         :type backpropagation: bool
 
         """
-        self.__waveguide = waveguide
-        self.__phi = None
-        self.__wavelength_set = False
-        self.__n_red = n_red
-        self.__n_green = n_green
-        self.__n_blue = n_blue
-        # ====================================================
-        self.order = order
-        # TODO: check if and how the poling order interferes when the poling structure is set
-        self.process = None
-        self.__red_wavelength = None
-        self.__green_wavelength = None
-        self.__blue_wavelength = None
-        self.__input_wavelength = None
-        self.__output_wavelength = None
-        if backpropagation:
-            self.propagation_type = "backpropagation"
-        else:
-            self.propagation_type = "copropagation"
-        self.__nonlinear_profile_set = False
-        self.__nonlinear_profile = None
-        self.__noise_length_product = None
-        self.scanning_wavelength = None
-        self.__cumulative_delta_beta = None
-        self.__cumulative_exponential = None
-        self.__delta_beta0_profile = None
-        self.__lamr0 = None
-        self.__lamg0 = None
-        self.__lamb0 = None
+        super().__init__(waveguide=waveguide,
+                         n_red=n_red,
+                         n_green=n_green,
+                         n_blue=n_blue,
+                         order=order,
+                         backpropagation=backpropagation)
+        self._noise_length_product = None
+        self._delta_beta0_profile = None
+        self._lamr0 = None
+        self._lamg0 = None
+        self._lamb0 = None
+        self._nonlinear_profile = None
+        self._nonlinear_profile_set = False
 
     @property
     def nonlinear_profile(self):
-        return self.__nonlinear_profile
-
-    @property
-    def waveguide(self):
-        return self.__waveguide
-
-    @property
-    def phi(self):
-        """
-        One dimensional phasematching spectrum (complex valued function) numpy.ndarray
-
-        """
-        return self.__phi
-
-    @property
-    def n_red(self):
-        return self.__n_red
-
-    @property
-    def n_green(self):
-        return self.__n_green
-
-    @property
-    def n_blue(self):
-        return self.__n_red
-
-    @property
-    def red_wavelength(self):
-        return self.__red_wavelength
-
-    @red_wavelength.setter
-    def red_wavelength(self, value):
-        """
-        Red wavelength of the process.
-
-        :param value: None, Single float or vector of float, containing the "red" wavelengths, in meters.
-        :type value: float, numpy.ndarray
-        :return:
-        """
-        self.__red_wavelength = value
-
-
-    @property
-    def green_wavelength(self):
-        return self.__green_wavelength
-
-    @green_wavelength.setter
-    def green_wavelength(self, value):
-        """
-        Green wavelength of the process.
-
-        :param value: None, Single float or vector of float, containing the "green" wavelengths, in meters.
-        :type value: float, numpy.ndarray
-        :return:
-        """
-        self.__green_wavelength = value
-
-    @property
-    def blue_wavelength(self):
-        return self.__blue_wavelength
-
-    @blue_wavelength.setter
-    def blue_wavelength(self, value):
-        """
-        Blue wavelength of the process.
-
-        :param value: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
-        :type value: float, numpy.ndarray
-        :return:
-        """
-        self.__blue_wavelength = value
-
-    @property
-    def input_wavelength(self):
-        """
-        Input (scanning) wavelength of the process. It cannot be set, it is automatically detected.
-
-        """
-        return self.__input_wavelength
-
-    @property
-    def output_wavelength(self):
-        """
-        Output (scanning) wavelength of the process. It cannot be set, it is automatically detected.
-
-        """
-        return self.__output_wavelength
+        return self._nonlinear_profile
 
     @property
     def noise_length_product(self):
@@ -684,94 +638,7 @@ class Phasematching1D(object):
         is above 10, the phasematching is likely to be noisy.
 
         """
-        return self.__noise_length_product
-
-    def load_waveguide(self, waveguide):
-        """
-        Method to load a waveguide object.
-
-        :param waveguide:
-        :return:
-        """
-        self.__waveguide = waveguide
-
-    def __set_wavelengths(self):
-        logger = logging.getLogger(__name__)
-        num_of_none = (self.red_wavelength is None) + \
-                      (self.green_wavelength is None) + \
-                      (self.blue_wavelength is None)
-        logger.info("Number of wavelengths set to 'None': " + str(num_of_none))
-        if num_of_none > 2:
-            raise ValueError("It would be cool to know in which wavelength range I should calculate the phasematching!")
-        elif num_of_none == 2:
-            # calculate SHG
-            self.process = "shg"
-            logger.info("Calculating wavelengths for SHG")
-            if self.red_wavelength is not None:
-                self.green_wavelength = self.red_wavelength
-                self.blue_wavelength = self.red_wavelength / 2.
-            elif self.green_wavelength is not None:
-                self.red_wavelength = self.green_wavelength
-                self.blue_wavelength = self.green_wavelength / 2.
-            elif self.blue_wavelength is not None:
-                self.red_wavelength = self.blue_wavelength / 2.
-                self.green_wavelength = self.blue_wavelength / 2.
-            else:
-                logger.error("An error occurred in __set_wavelengths. When setting the SHG wavelengths, "
-                             "all the wavelengths are set but the number of none is 2."
-                             "Red wavelength: {r}\nGreen wavelength: {g}\nBlue wavelength: {b}".format(
-                    r=self.red_wavelength,
-                    g=self.green_wavelength,
-                    b=self.blue_wavelength))
-                raise ValueError("Something unexpected happened in set_wavelength. "
-                                 "Check the log please and chat with the developer.")
-            self.__input_wavelength = self.red_wavelength
-            self.__output_wavelength = self.blue_wavelength
-        elif num_of_none == 1:
-            logger.info("Calculating wavelengths for sfg/dfg")
-            self.process = "sfg/dfg"
-            if self.red_wavelength is None:
-                if type(self.green_wavelength) == np.ndarray:
-                    self.__input_wavelength = self.green_wavelength
-                    logger.info("The input wavelength is the green")
-                else:
-                    self.__input_wavelength = self.blue_wavelength
-                    logger.info("The input wavelength is the blue")
-                self.red_wavelength = (self.blue_wavelength ** -1 - self.green_wavelength ** -1) ** -1
-                self.__output_wavelength = self.red_wavelength
-            elif self.green_wavelength is None:
-                if type(self.red_wavelength) == np.ndarray:
-                    self.__input_wavelength = self.red_wavelength
-                    logger.info("The input wavelength is the red")
-                else:
-                    self.__input_wavelength = self.blue_wavelength
-                    logger.info("The input wavelength is the blue")
-                self.green_wavelength = (self.blue_wavelength ** -1 - self.red_wavelength ** -1) ** -1
-                self.__output_wavelength = self.green_wavelength
-            elif self.blue_wavelength is None:
-                if type(self.red_wavelength) == np.ndarray:
-                    self.__input_wavelength = self.red_wavelength
-                    logger.info("The input wavelength is the red")
-                else:
-                    self.__input_wavelength = self.green_wavelength
-                    logger.info("The input wavelength is the green")
-                self.blue_wavelength = (self.red_wavelength ** -1 + self.green_wavelength ** -1) ** -1
-                self.__output_wavelength = self.blue_wavelength
-            else:
-                logger.error("An error occurred in __set_wavelengths. When setting the SFG/DFG wavelengths, "
-                             "all the wavelengths are set but the number of none is 1."
-                             "Red wavelength: {r}\nGreen wavelength: {g}\nBlue wavelength: {b}".format(
-                    r=self.red_wavelength,
-                    g=self.green_wavelength,
-                    b=self.blue_wavelength))
-                raise ValueError("Something unexpected happened in set_wavelength. "
-                                 "Check the log please and chat with the developer.")
-        self.__wavelength_set = True
-        self.__lamr0 = self.red_wavelength.mean() if type(self.red_wavelength) == np.ndarray else self.red_wavelength
-        self.__lamg0 = self.green_wavelength.mean() if type(
-            self.green_wavelength) == np.ndarray else self.green_wavelength
-        self.__lamb0 = self.blue_wavelength.mean() if type(self.blue_wavelength) == np.ndarray else self.blue_wavelength
-        return self.red_wavelength, self.green_wavelength, self.blue_wavelength
+        return self._noise_length_product
 
     def set_nonlinearity_profile(self, profile_type="constant", first_order_coeff=False, **kwargs):
         """
@@ -832,8 +699,8 @@ class Phasematching1D(object):
             g = interp.interp1d(self.waveguide.z, g, kind="cubic")
         else:
             raise ValueError("The nonlinear profile {0} has not been implemented yet.".format(profile_type))
-        self.__nonlinear_profile_set = True
-        self.__nonlinear_profile = g
+        self._nonlinear_profile_set = True
+        self._nonlinear_profile = g
         return self.nonlinear_profile
 
     def plot_nonlinearity_profile(self):
@@ -845,7 +712,7 @@ class Phasematching1D(object):
         y = self.nonlinear_profile(self.waveguide.z)
         plt.plot(x, y)
 
-    def __calculate_local_neff(self, posidx):
+    def _calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
         try:
             n_red = self.n_red(local_parameter)
@@ -861,7 +728,25 @@ class Phasematching1D(object):
             raise RuntimeError("Something happened here! 'local parameter' was {0}".format(local_parameter))
         return n_red, n_green, n_blue
 
-    def __calculate_delta_k(self, wl_red, wl_green, wl_blue, n_red, n_green, n_blue):
+    def calculate_delta_k(self, wl_red=None, wl_green=None, wl_blue=None, n_red=None, n_green=None, n_blue=None):
+        """
+        Overload of the method to calculate delta_k. This is necessary since this class is used to calculate the
+        phasematching for a sample with variable dispersions.
+
+        :param wl_red: *Red* wavelength of the process.
+        :type wl_red: float or numpy.ndarray
+        :param wl_green: *Green* wavelength of the process.
+        :type wl_green: float or numpy.ndarray
+        :param wl_blue: *Blue* wavelengh of the process.
+        :type wl_blue: float or numpy.ndarray
+        :param n_red: Function returning the refractive index for the *red* field as a function of the wavelength.
+        :type n_red: function
+        :param n_green: Function returning the refractive index for the *green* field as a function of the wavelength.
+        :type n_green: function
+        :param n_blue: Function returning the refractive index for the *blue* field as a function of the wavelength.
+        :type n_blue: function
+        :return:
+        """
         logger = logging.getLogger(__name__)
         if self.propagation_type == "copropagation":
             dd = 2 * pi * (n_blue(abs(wl_blue) * 1e6) / wl_blue -
@@ -881,70 +766,70 @@ class Phasematching1D(object):
 
     def calculate_phasematching(self, normalized=True):
         """
-        This function is the core of the class. It calculates the phasematching of the process, considering one
-        wavelength fixed and scanning the other two.
+        This function calculates the phasematching of the process. Use Phasematching1D.red_wavelength/green_wavelength/
+        blue_wavelength to set the wavelengths of the process:
+
+        * For SHG calculations, set **either** the red_wavelength or green_wavelength as a numpy.ndarray of wavelengths
+        (in meters). The class will detect automatically that it has received a single input and will automatically
+        calculate the SHG.
+        * For other processes, set one wavelength as a numpy.ndarray and the other, fixed one as a float. The third
+        will be calculated automatically.
+
+        This function does not support PDC calculations.
 
         :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
-        waveguide length, Default: True
+        waveguide length. Default: True
 
         :return: the complex-valued phasematching spectrum
         """
-        if not self.__wavelength_set:
-            self.__set_wavelengths()
+        if not self.wavelengths_set:
+            self.set_wavelengths()
 
         logger = logging.getLogger(__name__)
         logger.info("Calculating phasematching")
 
-        if not self.__nonlinear_profile_set:
+        if not self._nonlinear_profile_set:
             self.set_nonlinearity_profile(profile_type="constant", first_order_coefficient=False)
         if self.waveguide.poling_structure_set:
             logger.info("Poling period is not set. Calculating from structure.")
         else:
             logger.info("Poling period is set. Calculating with constant poling structure.")
 
-        tmp_dk = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
-                                          *self.__calculate_local_neff(0))
-        self.__cumulative_delta_beta = np.zeros(shape=tmp_dk.shape)
-        self.__cumulative_exponential = np.zeros(shape=self.__cumulative_delta_beta.shape, dtype=complex)
-        logger.debug("Shape cumulative deltabeta:" + str(self.__cumulative_delta_beta.shape))
-        logger.debug("Shape cum_exp:" + str(self.__cumulative_exponential.shape))
-        self.__delta_beta0_profile = np.nan * np.ones(shape=self.waveguide.z.shape)
+        tmp_dk = self.calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
+                                        *self._calculate_local_neff(0))
+        self._cumulative_delta_beta = np.zeros(shape=tmp_dk.shape)
+        self._cumulative_exponential = np.zeros(shape=self._cumulative_delta_beta.shape, dtype=complex)
+        logger.debug("Shape cumulative deltabeta:" + str(self._cumulative_delta_beta.shape))
+        logger.debug("Shape cum_exp:" + str(self._cumulative_exponential.shape))
+        self._delta_beta0_profile = np.nan * np.ones(shape=self.waveguide.z.shape)
         dz = np.diff(self.waveguide.z)
         for idx, z in enumerate(self.waveguide.z[:-1]):
             # 1) retrieve the current parameter (width, thickness, ...)
-            n_red, n_green, n_blue = self.__calculate_local_neff(idx)
+            n_red, n_green, n_blue = self._calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
-            DK = self.__calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
-                                          n_red, n_green, n_blue)
-            self.__delta_beta0_profile[idx] = self.__calculate_delta_k(self.__lamr0, self.__lamg0, self.__lamb0, n_red,
-                                                                       n_green,
-                                                                       n_blue)
+            DK = self.calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
+                                        n_red, n_green, n_blue)
+            self._delta_beta0_profile[idx] = self.calculate_delta_k(self.lamr0, self.lamg0, self.lamb0, n_red,
+                                                                     n_green,
+                                                                     n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
-            self.__cumulative_delta_beta += DK
+            self._cumulative_delta_beta += DK
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
-                self.__cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * self.waveguide.poling_structure[
+                self._cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * self.waveguide.poling_structure[
                     idx] * \
-                                                 (np.exp(-1j * dz[idx] * self.__cumulative_delta_beta) -
-                                                  np.exp(-1j * dz[idx] * (self.__cumulative_delta_beta - DK)))
+                                                 (np.exp(-1j * dz[idx] * self._cumulative_delta_beta) -
+                                                  np.exp(-1j * dz[idx] * (self._cumulative_delta_beta - DK)))
             else:
-                self.__cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * np.exp(
-                    -1j * dz[idx] * self.__cumulative_delta_beta)
+                self._cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * np.exp(
+                    -1j * dz[idx] * self._cumulative_delta_beta)
 
         logger.info("Calculation terminated")
-        self.__phi = self.__cumulative_exponential  # * self.waveguide.dz
+        self._phi = self._cumulative_exponential  # * self.waveguide.dz
         if normalized:
-            self.__phi /= self.waveguide.length
-        self.__noise_length_product = abs(self.__delta_beta0_profile).max() * self.waveguide.z[-1]
+            self._phi /= self.waveguide.length
+        self._noise_length_product = abs(self._delta_beta0_profile).max() * self.waveguide.z[-1]
         return self.phi
-
-    def calculate_integral(self):
-        """
-        Calculate the phasematching intensity integral
-
-        :return: the phasematching intensity integral
-        """
-        return simps(abs(self.phi) ** 2, self.scanning_wavelength)
 
     def plot_deltabeta_error(self, ax=None):
         # self.calculate_phasematching_error()
@@ -953,49 +838,8 @@ class Phasematching1D(object):
             ax = plt.gca()
         else:
             ax = ax
-        ax.plot(self.waveguide.z, self.__delta_beta0_profile)
+        ax.plot(self.waveguide.z, self._delta_beta0_profile)
         return ax
-
-    def plot(self, ax=None, plot_intensity=True, plot_input=True, **kwargs):
-        """
-        Plot the phasematching intensity/amplitude.
-
-        :param ax: Axis handle for the plot. If None, plots in a new figure. Default is None.
-        :param bool plot_intensity: Set to True to plot the intensity profile, False to plot the amplitude and phase.
-        Default to True.
-        :param bool plot_input: Select the x axis for the plot. If True, use the `input_wavelength` as input, otherwise use `output_wavelength`.
-        :param kwargs: :func:`matplotlib.pyplot.plot` **kwargs arguments
-        :return: figure and axis handle
-        """
-        if ax is None:
-            fig = plt.figure()
-            ax = plt.gca()
-        else:
-            fig = plt.gcf()
-
-        if plot_input:
-            wl = self.input_wavelength
-        else:
-            wl = self.output_wavelength
-
-        if plot_intensity:
-            plt.plot(wl * 1e9, abs(self.phi) ** 2, ls=kwargs.get("ls", "-"),
-                     lw=kwargs.get("lw", 3),
-                     color=kwargs.get("color"),
-                     label=kwargs.get("label"))
-        else:
-            plt.plot(wl * 1e9, np.abs(self.phi), label="Amplitude", **kwargs)
-            plt.gca().set_ylabel("Amplitude")
-            plt.gca().twinx().plot(wl * 1e9, np.unwrap(np.angle(self.phi)), ls=":", color="k", label="Phase", **kwargs)
-            plt.gca().set_ylabel("Phase [rad]")
-
-        xlabel = kwargs.get("xlabel", "Wavelength [nm]")
-        ylabel = kwargs.get("ylabel", "Intensity [a.u.]")
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.set_title("Phasematching")
-        fig = plt.gcf()
-        return fig, ax
 
 
 class SimplePhasematching2D(object):
