@@ -2,8 +2,8 @@
 """
 .. module:: phasematching.py
 .. moduleauthor:: Matteo Santandrea <matteo.santandrea@upb.de>
-   :platform: Windows (tested), Unix
-   :synopsis: Module to calculate the phasematching of a given waveguide, as specified by the RealisticWaveguide class.
+   :synopsis: Module to calculate the phasematching of a given waveguide, as specified by the classes provided in the
+   pynumpm.waveguide module.
 
 This module is used to calculate different types of phasematching:
     * :class:`~pynumpm.phasematching.PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
@@ -25,11 +25,12 @@ _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 
 # TODO: Use module to print the calculation progress bar.
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
-# TODO: Use class inheritance for the 1D and 2D phasematching
-# TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile.
+# TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
+#  (introduce in version 1.1).
 # TODO: the __calculate_delta_k functions can access the wavelength through their internal self.xxx_wavelength
 # TODO: modify the setters for the waveguide to accept separately only Waveguide or RealisticWaveguide objects,
 #  depending where they are called
+
 class SimplePhasematchingDeltaBeta(object):
     """
     Class used for the calculation of phasematching as a function of :math:`\Delta\beta` for uniform waveguides.
@@ -62,7 +63,7 @@ class SimplePhasematchingDeltaBeta(object):
         return self._waveguide
 
     @waveguide.setter
-    def waveguide(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]):
+    def waveguide(self, waveguide: Waveguide.Waveguide):
         if isinstance(waveguide, (Waveguide.Waveguide, Waveguide.RealisticWaveguide)):
             self._waveguide = waveguide
         else:
@@ -177,6 +178,17 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
         self._cumulative_exp = None
         self._cumulative_sinc = None
         self._noise_length_product = None
+
+    @property
+    def waveguide(self):
+        return self._waveguide
+
+    @waveguide.setter
+    def waveguide(self, waveguide: Waveguide.RealisticWaveguide):
+        if isinstance(waveguide, Waveguide.RealisticWaveguide):
+            self._waveguide = waveguide
+        else:
+            raise TypeError("You need to pass an object from the pynumpm.waveguide.RealisticWaveguide class.")
 
     @property
     def noise_length_product(self):
@@ -320,7 +332,7 @@ class SimplePhasematching1D(object):
         return self._waveguide
 
     @waveguide.setter
-    def waveguide(self, waveguide):
+    def waveguide(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]):
         """
         Method to load a waveguide object.
 
@@ -650,6 +662,24 @@ class Phasematching1D(SimplePhasematching1D):
         self._lamb0 = None
         self._nonlinear_profile = None
         self._nonlinear_profile_set = False
+
+    @property
+    def waveguide(self):
+        return self._waveguide
+
+    @waveguide.setter
+    def waveguide(self, waveguide: Waveguide.RealisticWaveguide):
+        """
+        Method to load a waveguide object.
+
+        :param waveguide:
+        :return:
+        """
+        if isinstance(waveguide, Waveguide.RealisticWaveguide):
+            self._waveguide = waveguide
+        else:
+            raise TypeError("You need to pass an object from the pynumpm.waveguide.Waveguide or "
+                            "pynumpm.waveguide.RealisticWaveguide class.")
 
     @property
     def nonlinear_profile(self):
@@ -1120,6 +1150,18 @@ class Phasematching2D(SimplePhasematching2D):
         self.__cumulative_exponential = None
 
     @property
+    def waveguide(self):
+        return self._waveguide
+
+    @waveguide.setter
+    def waveguide(self, waveguide: Waveguide.RealisticWaveguide):
+        if isinstance(waveguide, Waveguide.RealisticWaveguide):
+            self._waveguide = waveguide
+        else:
+            raise TypeError("You need to pass an object from the pynumpm.waveguide.Waveguide or "
+                            "pynumpm.waveguide.RealisticWaveguide class.")
+
+    @property
     def nonlinear_profile(self):
         return self.__nonlinear_profile
 
@@ -1278,18 +1320,18 @@ class Phasematching2D(SimplePhasematching2D):
         """
         # TODO: What happens in case of wavelength degeneracy?
         logger = logging.getLogger(__name__)
-        f_real = interp.interp2d(self.wavelength1, self.output_wavelength, np.real(self.phi), kind='linear')
-        f_imag = interp.interp2d(self.wavelength1, self.output_wavelength, np.imag(self.phi), kind='linear')
+        f_real = interp.interp2d(self.wavelength1, self.wavelength2, np.real(self.phi), kind='linear')
+        f_imag = interp.interp2d(self.wavelength1, self.wavelength2, np.imag(self.phi), kind='linear')
         logger.debug("Constant wl: " + str(const_wl))
         if self.wavelength1.min() <= const_wl <= self.wavelength1.max():
-            wl = self.output_wavelength
-            phi = f_real(const_wl, self.output_wavelength) + 1j * f_imag(const_wl, self.output_wavelength)
-        elif self.output_wavelength.min() <= const_wl <= self.output_wavelength.max():
+            wl = self.wavelength2
+            phi = f_real(const_wl, self.wavelength2) + 1j * f_imag(const_wl, self.wavelength2)
+        elif self.wavelength2.min() <= const_wl <= self.wavelength2.max():
             wl = self.wavelength1
             phi = f_real(self.wavelength1, const_wl) + 1j * f_imag(self.wavelength1, const_wl)
         else:
             raise NotImplementedError(
-                "MY dumb programmer hasn't implemented the slice along a line not parallel to the axes...")
+                "My dumb programmer hasn't implemented the slice along a line not parallel to the axes...")
         return wl, phi
 
     def extract_max_phasematching_curve(self, ax=None, **kwargs):

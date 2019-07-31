@@ -179,6 +179,17 @@ def example_1D_phasematching():
     plt.show()
 
 
+def example_test_load_wg():
+    # TODO: put this function in a test module
+    from pynumpm import waveguide, phasematching, utils
+
+    simplewg = waveguide.Waveguide(length=1, poling_period=1)
+    realwg = waveguide.RealisticWaveguide(z=np.array([0, 1]))
+    simplepm = phasematching.SimplePhasematchingDeltaBeta(waveguide=simplewg)
+    simplepm2 = phasematching.SimplePhasematchingDeltaBeta(waveguide=realwg)
+    # realpm = phasematching.PhasematchingDeltaBeta(waveguide=simplewg)
+    realpm2 = phasematching.PhasematchingDeltaBeta(waveguide=realwg)
+
 def example_test_1DPM():
     # TODO: put this function in a test module
     from pynumpm import waveguide, phasematching, utils
@@ -364,12 +375,13 @@ if __name__ == '__main__':
     # example_waveguide()
     # example_noise()
     # example_simple_phasematching_deltabeta()
-    example_phasematching_deltabeta()
+    # example_phasematching_deltabeta()
     # example_simple1D_phasematching()
     # example_1D_phasematching()
     # example_test_1DPM()
+    example_test_load_wg()
     # example_1D_SFG()
     # example_simple2D_phasematching()
     # example_2D_phasematching()
-    example_jsa1()
+    # example_jsa1()
     plt.show()
