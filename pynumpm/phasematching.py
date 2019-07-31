@@ -17,7 +17,10 @@ from scipy.constants import pi
 import scipy.interpolate as interp
 from scipy.integrate import simps
 from pynumpm import waveguide as Waveguide
-from typing import Union
+from typing import Union, Callable
+
+_REF_INDEX_TYPE0 = Callable[[float], float]
+_REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 
 
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
@@ -41,6 +44,10 @@ class SimplePhasematchingDeltaBeta(object):
         self._waveguide = waveguide
         self._deltabeta = None
         self._phi = None
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__}"
+        return text
 
     @property
     def waveguide(self):
@@ -253,8 +260,8 @@ class SimplePhasematching1D(object):
 
         """
 
-    def __init__(self, waveguide: Waveguide.Waveguide, n_red, n_green, n_blue, order: int = 1,
-                 backpropagation: bool = False):
+    def __init__(self, waveguide: Waveguide.Waveguide, n_red: _REF_INDEX_TYPE0, n_green: _REF_INDEX_TYPE0,
+                 n_blue: _REF_INDEX_TYPE0, order: int = 1, backpropagation: bool = False):
         """
         Initialization of the class requires the following parameters:
 
@@ -592,7 +599,8 @@ class Phasematching1D(SimplePhasematching1D):
 
     """
 
-    def __init__(self, waveguide: Waveguide.RealisticWaveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
+    def __init__(self, waveguide: Waveguide.RealisticWaveguide, n_red: _REF_INDEX_TYPE1, n_green: _REF_INDEX_TYPE1,
+                 n_blue: _REF_INDEX_TYPE1, order: int = 1, backpropagation: bool = False):
         """
         Initialization of the class requires the following parameters:
 
@@ -810,16 +818,16 @@ class Phasematching1D(SimplePhasematching1D):
             DK = self.calculate_delta_k(self.red_wavelength, self.green_wavelength, self.blue_wavelength,
                                         n_red, n_green, n_blue)
             self._delta_beta0_profile[idx] = self.calculate_delta_k(self.lamr0, self.lamg0, self.lamb0, n_red,
-                                                                     n_green,
-                                                                     n_blue)
+                                                                    n_green,
+                                                                    n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
             self._cumulative_delta_beta += DK
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
             if self.waveguide.poling_structure_set:
                 self._cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * self.waveguide.poling_structure[
                     idx] * \
-                                                 (np.exp(-1j * dz[idx] * self._cumulative_delta_beta) -
-                                                  np.exp(-1j * dz[idx] * (self._cumulative_delta_beta - DK)))
+                                                (np.exp(-1j * dz[idx] * self._cumulative_delta_beta) -
+                                                 np.exp(-1j * dz[idx] * (self._cumulative_delta_beta - DK)))
             else:
                 self._cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * np.exp(
                     -1j * dz[idx] * self._cumulative_delta_beta)
@@ -843,56 +851,86 @@ class Phasematching1D(SimplePhasematching1D):
 
 
 class SimplePhasematching2D(object):
-    def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
-        self.__waveguide = waveguide
-        self.__n_red = n_red
-        self.__n_green = n_green
-        self.__n_blue = n_blue
-        # ====================================================
-        self.order = order
-        # self.process = kwargs.get("process", "PDC").lower()
-        self.__red_wavelength = None
-        self.__green_wavelength = None
-        self.__blue_wavelength = None
-        self.__signal_wavelength = None
-        self.__idler_wavelength = None
-        self.__backpropagation = backpropagation
-        if self.__backpropagation:
+    def __init__(self, waveguide: Waveguide.Waveguide, n_red: _REF_INDEX_TYPE0, n_green: _REF_INDEX_TYPE0,
+                 n_blue: _REF_INDEX_TYPE0, order: int = 1, backpropagation: bool = False):
+        self._waveguide = waveguide
+        self._n_red = n_red
+        self._n_green = n_green
+        self._n_blue = n_blue
+        self._order = order
+        self._red_wavelength = None
+        self._green_wavelength = None
+        self._blue_wavelength = None
+        self._pump_centre = None
+        self._wavelength1 = None
+        self._wavelength2 = None
+        self._backpropagation = backpropagation
+        if self._backpropagation:
             self.propagation_type = "backpropagation"
         else:
             self.propagation_type = "copropagation"
+        self._WL_RED = None
+        self._WL_GREEN = None
+        self._WL_BLUE = None
+        self._phi = None
 
-        self.__phi = None
+    @property
+    def waveguide(self):
+        return self._waveguide
+
+    @waveguide.setter
+    def waveguide(self, value):
+        self._waveguide = value
+
+    @property
+    def order(self):
+        return self._order
+
+    @order.setter
+    def order(self, value):
+        self._order = value
 
     @property
     def phi(self):
-        return self.__phi
+        return self._phi
 
     @property
     def red_wavelength(self):
-        return self.__red_wavelength
+        return self._red_wavelength
 
     @red_wavelength.setter
     def red_wavelength(self, value):
-        self.__red_wavelength = value
+        self._red_wavelength = value
 
     @property
     def green_wavelength(self):
-        return self.__green_wavelength
+        return self._green_wavelength
 
     @green_wavelength.setter
     def green_wavelength(self, value):
-        self.__green_wavelength = value
+        self._green_wavelength = value
 
     @property
     def blue_wavelength(self):
-        return self.__blue_wavelength
+        return self._blue_wavelength
 
     @blue_wavelength.setter
     def blue_wavelength(self, value):
-        self.__blue_wavelength = value
+        self._blue_wavelength = value
 
-    def __set_wavelengths(self):
+    @property
+    def pump_centre(self):
+        return self._pump_centre
+
+    @property
+    def wavelength1(self):
+        return self._wavelength1
+
+    @property
+    def wavelength2(self):
+        return self._wavelength2
+
+    def set_wavelengths(self):
         logger = logging.getLogger(__name__)
         num_of_none = (self.red_wavelength is None) + \
                       (self.green_wavelength is None) + \
@@ -911,47 +949,47 @@ class SimplePhasematching2D(object):
                     if type(i) != np.ndarray:
                         raise ValueError("The wavelengths have to be either None or an array.")
             if self.red_wavelength is None:
-                self.signal_wavelength = self.green_wavelength
-                self.idler_wavelength = self.blue_wavelength
-                self.pump_centre = (self.blue_wavelength.mean() ** -1 - self.green_wavelength.mean() ** -1) ** -1
-                self.__WL_GREEN, self.__WL_BLUE = np.meshgrid(self.green_wavelength, self.blue_wavelength)
-                self.__WL_RED = (self.__WL_BLUE ** -1 - self.__WL_GREEN ** -1) ** -1
+                self._wavelength1 = self.green_wavelength
+                self._wavelength2 = self.blue_wavelength
+                self._pump_centre = (self.blue_wavelength.mean() ** -1 - self.green_wavelength.mean() ** -1) ** -1
+                self._WL_GREEN, self._WL_BLUE = np.meshgrid(self.green_wavelength, self.blue_wavelength)
+                self._WL_RED = (self._WL_BLUE ** -1 - self._WL_GREEN ** -1) ** -1
             elif self.green_wavelength is None:
-                self.pump_centre = (self.blue_wavelength.mean() ** -1 - self.red_wavelength.mean() ** -1) ** -1
-                self.signal_wavelength = self.red_wavelength
-                self.idler_wavelength = self.blue_wavelength
-                self.__WL_RED, self.__WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
-                self.__WL_GREEN = (self.__WL_BLUE ** -1 - self.__WL_RED ** -1) ** -1
+                self._pump_centre = (self.blue_wavelength.mean() ** -1 - self.red_wavelength.mean() ** -1) ** -1
+                self._wavelength1 = self.red_wavelength
+                self._wavelength2 = self.blue_wavelength
+                self._WL_RED, self._WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
+                self._WL_GREEN = (self._WL_BLUE ** -1 - self._WL_RED ** -1) ** -1
             elif self.blue_wavelength is None:
-                self.signal_wavelength = self.red_wavelength
-                self.idler_wavelength = self.green_wavelength
-                self.pump_centre = (self.green_wavelength.mean() ** -1 + self.red_wavelength.mean() ** -1) ** -1
-                self.__WL_RED, self.__WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
-                self.__WL_BLUE = (self.__WL_RED ** -1 + self.__WL_GREEN ** -1) ** -1
+                self._wavelength1 = self.red_wavelength
+                self._wavelength2 = self.green_wavelength
+                self._pump_centre = (self.green_wavelength.mean() ** -1 + self.red_wavelength.mean() ** -1) ** -1
+                self._WL_RED, self._WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
+                self._WL_BLUE = (self._WL_RED ** -1 + self._WL_GREEN ** -1) ** -1
             else:
                 logging.info("An error occurred while setting the wavelengths.")
 
-            logging.debug("Wavelength matrices sizes: {0},{1},{2}".format(self.__WL_RED.shape, self.__WL_GREEN.shape,
-                                                                          self.__WL_BLUE.shape))
+            logging.debug("Wavelength matrices sizes: {0},{1},{2}".format(self._WL_RED.shape, self._WL_GREEN.shape,
+                                                                          self._WL_BLUE.shape))
 
     def calculate_phasematching(self, normalized=True):
-        length = self.__waveguide.z.max() - self.__waveguide.z.min()
-        poling_period = self.__waveguide.poling_period
-        self.__set_wavelengths()
-        if self.__backpropagation:
-            deltabeta = 2 * np.pi * (self.__n_blue(self.__WL_BLUE * 1e6) / self.__WL_BLUE -
-                                     self.__n_green(self.__WL_GREEN * 1e6) / self.__WL_GREEN +
-                                     self.__n_red(self.__WL_RED * 1e6) / self.__WL_RED -
+        length = self.waveguide.length
+        poling_period = self.waveguide.poling_period
+        self.set_wavelengths()
+        if self._backpropagation:
+            deltabeta = 2 * np.pi * (self._n_blue(self._WL_BLUE * 1e6) / self._WL_BLUE -
+                                     self._n_green(self._WL_GREEN * 1e6) / self._WL_GREEN +
+                                     self._n_red(self._WL_RED * 1e6) / self._WL_RED -
                                      1 / poling_period)
         else:
-            deltabeta = 2 * np.pi * (self.__n_blue(self.__WL_BLUE * 1e6) / self.__WL_BLUE -
-                                     self.__n_green(self.__WL_GREEN * 1e6) / self.__WL_GREEN -
-                                     self.__n_red(self.__WL_RED * 1e6) / self.__WL_RED -
+            deltabeta = 2 * np.pi * (self._n_blue(self._WL_BLUE * 1e6) / self._WL_BLUE -
+                                     self._n_green(self._WL_GREEN * 1e6) / self._WL_GREEN -
+                                     self._n_red(self._WL_RED * 1e6) / self._WL_RED -
                                      1 / poling_period)
 
-        self.__phi = np.sinc(deltabeta * length / 2 / np.pi) * np.exp(-1j * deltabeta * length / 2)
+        self._phi = np.sinc(deltabeta * length / 2 / np.pi) * np.exp(-1j * deltabeta * length / 2)
         if not normalized:
-            self.__phi /= length
+            self._phi /= length
         return self.phi
 
     def plot(self, **kwargs):
@@ -976,7 +1014,7 @@ class SimplePhasematching2D(object):
         vmin = kwargs.get("vmin", phi.min())
         vmax = kwargs.get("vmax", phi.max())
 
-        im = ax.pcolormesh(self.signal_wavelength * 1e9, self.idler_wavelength * 1e9, phi, cmap=cmap, vmin=vmin,
+        im = ax.pcolormesh(self.wavelength1*1e9, self.wavelength2*1e9, phi, cmap=cmap, vmin=vmin,
                            vmax=vmax)
         if kwargs.get("cbar", True):
             cbar = plt.colorbar(im)
@@ -995,7 +1033,7 @@ class SimplePhasematching2D(object):
         return d
 
 
-class Phasematching2D(object):
+class Phasematching2D(SimplePhasematching2D):
     """
         Class to calculate the 2D-phasematching, i.e. having one fixed wavelength and scanning another one (the third is
         fixed due to energy conservation.
@@ -1039,7 +1077,8 @@ class Phasematching2D(object):
 
         """
 
-    def __init__(self, waveguide, n_red, n_green, n_blue, order=1, backpropagation=False):
+    def __init__(self, waveguide: Waveguide.RealisticWaveguide, n_red: _REF_INDEX_TYPE1, n_green: _REF_INDEX_TYPE1,
+                 n_blue: _REF_INDEX_TYPE1, order: int = 1, backpropagation: bool = False):
         """
         Initialization of the class requires the following parameters:
 
@@ -1052,131 +1091,16 @@ class Phasematching2D(object):
         :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
 
         """
-        self.waveguide = waveguide
-        # these n_xxx functions are function that accept one parameter and provide a lambda function (n = n(wavelength))
-        self.__n_red = n_red
-        self.__n_green = n_green
-        self.__n_blue = n_blue
-        # ====================================================
-        self.order = order
-        # self.process = kwargs.get("process", "PDC").lower()
-        self.__red_wavelength = None
-        self.__green_wavelength = None
-        self.__blue_wavelength = None
-        self.__signal_wavelength = None
-        self.__idler_wavelength = None
-        if backpropagation:
-            self.propagation_type = "backpropagation"
-        else:
-            self.propagation_type = "copropagation"
+        super().__init__(waveguide=waveguide, n_red=n_red, n_green=n_green, n_blue=n_blue,
+                         order=order, backpropagation=backpropagation)
         self.__nonlinear_profile_set = False
         self.__nonlinear_profile = None
-        self.__phi = None
-
-    @property
-    def phi(self):
-        return self.__phi
-
-    @property
-    def signal_wavelength(self):
-        return self.__signal_wavelength
-
-    @signal_wavelength.setter
-    def signal_wavelength(self, value):
-        self.__signal_wavelength = value
+        self.__cumulative_deltabeta = None
+        self.__cumulative_exponential = None
 
     @property
     def nonlinear_profile(self):
         return self.__nonlinear_profile
-
-    @property
-    def idler_wavelength(self):
-        return self.__idler_wavelength
-
-    @idler_wavelength.setter
-    def idler_wavelength(self, value):
-        self.__idler_wavelength = value
-
-    @property
-    def red_wavelength(self):
-        return self.__red_wavelength
-
-    @red_wavelength.setter
-    def red_wavelength(self, value):
-        self.__red_wavelength = value
-
-    @property
-    def green_wavelength(self):
-        return self.__green_wavelength
-
-    @green_wavelength.setter
-    def green_wavelength(self, value):
-        self.__green_wavelength = value
-
-    @property
-    def blue_wavelength(self):
-        return self.__blue_wavelength
-
-    @blue_wavelength.setter
-    def blue_wavelength(self, value):
-        self.__blue_wavelength = value
-
-    @property
-    def n_red(self):
-        return self.__n_red
-
-    @property
-    def n_green(self):
-        return self.__n_green
-
-    @property
-    def n_blue(self):
-        return self.__n_blue
-
-    def load_waveguide(self, waveguide):
-        self.__waveguide = waveguide
-
-    def __set_wavelengths(self):
-        logger = logging.getLogger(__name__)
-        num_of_none = (self.red_wavelength is None) + \
-                      (self.green_wavelength is None) + \
-                      (self.blue_wavelength is None)
-        logger.info("Number of wavelengths set to 'None': " + str(num_of_none))
-        if num_of_none != 1:
-            logger.info(
-                "num_of_none != 1, the user has left more than 1 wavelength ranges unknown. An error will be raised.")
-            logger.debug("Wavelengths set:", self.red_wavelength, self.green_wavelength, self.blue_wavelength,
-                         num_of_none)
-            raise ValueError(
-                "Here you must be more precise. I need exactly 2 wavelength ranges, so only one wavelength can be none")
-        else:
-            for i in [self.red_wavelength, self.green_wavelength, self.blue_wavelength]:
-                if i is not None:
-                    if type(i) != np.ndarray:
-                        raise ValueError("The wavelengths have to be either None or an array.")
-            if self.red_wavelength is None:
-                self.signal_wavelength = self.green_wavelength
-                self.idler_wavelength = self.blue_wavelength
-                self.pump_centre = (self.blue_wavelength.mean() ** -1 - self.green_wavelength.mean() ** -1) ** -1
-                self.__WL_GREEN, self.__WL_BLUE = np.meshgrid(self.green_wavelength, self.blue_wavelength)
-                self.__WL_RED = (self.__WL_BLUE ** -1 - self.__WL_GREEN ** -1) ** -1
-            elif self.green_wavelength is None:
-                self.pump_centre = (self.blue_wavelength.mean() ** -1 - self.red_wavelength.mean() ** -1) ** -1
-                self.signal_wavelength = self.red_wavelength
-                self.idler_wavelength = self.blue_wavelength
-                self.__WL_RED, self.__WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
-                self.__WL_GREEN = (self.__WL_BLUE ** -1 - self.__WL_RED ** -1) ** -1
-            elif self.blue_wavelength is None:
-                self.signal_wavelength = self.red_wavelength
-                self.idler_wavelength = self.green_wavelength
-                self.pump_centre = (self.green_wavelength.mean() ** -1 + self.red_wavelength.mean() ** -1) ** -1
-                self.__WL_RED, self.__WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
-                self.__WL_BLUE = (self.__WL_RED ** -1 + self.__WL_GREEN ** -1) ** -1
-            else:
-                logging.info("An error occurred while setting the wavelengths.")
-
-            logging.debug("Wavelength matrices sizes: {0},{1},{2}".format(self.__WL_RED.shape, self.__WL_GREEN.shape,
-                                                                          self.__WL_BLUE.shape))
 
     def set_nonlinearity_profile(self, profile_type="constant", first_order_coeff=False, **kwargs):
         """
@@ -1244,15 +1168,15 @@ class Phasematching2D(object):
     def __calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
         try:
-            n_red = self.n_red(local_parameter)
+            n_red = self._n_red(local_parameter)
         except:
             raise RuntimeError("Something happened here! 'local parameter' was {0}".format(local_parameter))
         try:
-            n_green = self.n_green(local_parameter)
+            n_green = self._n_green(local_parameter)
         except:
             raise RuntimeError("Something happened here! 'local parameter' was {0}".format(local_parameter))
         try:
-            n_blue = self.n_blue(local_parameter)
+            n_blue = self._n_blue(local_parameter)
         except:
             raise RuntimeError("Something happened here! 'local parameter' was {0}".format(local_parameter))
         return n_red, n_green, n_blue
@@ -1293,8 +1217,8 @@ class Phasematching2D(object):
         if not self.__nonlinear_profile_set:
             self.set_nonlinearity_profile(profile_type="constant", first_order_coefficient=False)
 
-        self.__set_wavelengths()
-        self.__cumulative_deltabeta = np.zeros(shape=(len(self.idler_wavelength), len(self.signal_wavelength)),
+        self.set_wavelengths()
+        self.__cumulative_deltabeta = np.zeros(shape=(len(self.wavelength2), len(self.wavelength1)),
                                                dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
         dz = np.diff(self.waveguide.z)
@@ -1302,7 +1226,7 @@ class Phasematching2D(object):
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.__calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
-            DK = self.__calculate_delta_k(self.__WL_RED, self.__WL_GREEN, self.__WL_BLUE, n_red, n_green, n_blue)
+            DK = self.__calculate_delta_k(self._WL_RED, self._WL_GREEN, self._WL_BLUE, n_red, n_green, n_blue)
             # 4) add the phasemismatch to the past phasemismatches (first summation, over the delta k)
             self.__cumulative_deltabeta += DK
             # 5) evaluate the (cumulative) exponential (second summation, over the exponentials)
@@ -1316,49 +1240,9 @@ class Phasematching2D(object):
                 self.__cumulative_exponential += self.nonlinear_profile(z) * dz[idx] * np.exp(
                     -1j * dz[idx] * self.__cumulative_deltabeta)
         if normalized:
-            self.__phi = 1 / self.waveguide.length * self.__cumulative_exponential
+            self._phi = 1 / self.waveguide.length * self.__cumulative_exponential
         logger.info("Calculation terminated")
-        return self.__phi
-
-    def plot(self, **kwargs):
-        """
-        Function to plot phasematching. Pass ax handle through "ax" to plot in a specified axis environment.
-
-        :param kwargs:
-        :return:
-        """
-
-        plot_intensity = kwargs.get("plot_intensity", True)
-        ax = kwargs.get("ax", None)
-        if ax is None:
-            fig = plt.figure()
-            ax = plt.gca()
-
-        phi = abs(self.phi)
-        if plot_intensity:
-            phi = phi ** 2
-
-        cmap = kwargs.get("cmap", "viridis")
-        vmin = kwargs.get("vmin", phi.min())
-        vmax = kwargs.get("vmax", phi.max())
-
-        im = ax.pcolormesh(self.signal_wavelength * 1e9, self.idler_wavelength * 1e9, phi, cmap=cmap, vmin=vmin,
-                           vmax=vmax)
-        if kwargs.get("cbar", True):
-            cbar = plt.colorbar(im)
-        else:
-            cbar = None
-        ax.set_xlabel("Wavelength [nm]")
-        ax.set_ylabel("Wavelength [nm]")
-        ax.set_title("Phasematching")
-        fig = plt.gcf()
-        d = {"fig": fig,
-             "ax": ax,
-             "im": im,
-             "vmin": vmin,
-             "vmax": vmax,
-             "cbar": cbar}
-        return d
+        return self.phi
 
     def slice_phasematching(self, const_wl):
         """
@@ -1373,15 +1257,15 @@ class Phasematching2D(object):
         """
         # TODO: What happens in case of wavelength degeneracy?
         logger = logging.getLogger(__name__)
-        f_real = interp.interp2d(self.signal_wavelength, self.idler_wavelength, np.real(self.phi), kind='linear')
-        f_imag = interp.interp2d(self.signal_wavelength, self.idler_wavelength, np.imag(self.phi), kind='linear')
+        f_real = interp.interp2d(self.wavelength1, self.output_wavelength, np.real(self.phi), kind='linear')
+        f_imag = interp.interp2d(self.wavelength1, self.output_wavelength, np.imag(self.phi), kind='linear')
         logger.debug("Constant wl: " + str(const_wl))
-        if self.signal_wavelength.min() <= const_wl <= self.signal_wavelength.max():
-            wl = self.idler_wavelength
-            phi = f_real(const_wl, self.idler_wavelength) + 1j * f_imag(const_wl, self.idler_wavelength)
-        elif self.idler_wavelength.min() <= const_wl <= self.idler_wavelength.max():
-            wl = self.signal_wavelength
-            phi = f_real(self.signal_wavelength, const_wl) + 1j * f_imag(self.signal_wavelength, const_wl)
+        if self.wavelength1.min() <= const_wl <= self.wavelength1.max():
+            wl = self.output_wavelength
+            phi = f_real(const_wl, self.output_wavelength) + 1j * f_imag(const_wl, self.output_wavelength)
+        elif self.output_wavelength.min() <= const_wl <= self.output_wavelength.max():
+            wl = self.wavelength1
+            phi = f_real(self.wavelength1, const_wl) + 1j * f_imag(self.wavelength1, const_wl)
         else:
             raise NotImplementedError(
                 "MY dumb programmer hasn't implemented the slice along a line not parallel to the axes...")
@@ -1397,7 +1281,7 @@ class Phasematching2D(object):
         # TODO: this function has been reimplemented. There is an offset sometimes in between the reconstructed peak
         #  and the real curve
 
-        signal = self.signal_wavelength
+        signal = self.wavelength1
         idler = []
 
         for idx, wl in enumerate(signal):

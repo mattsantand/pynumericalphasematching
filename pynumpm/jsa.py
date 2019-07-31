@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import enum
 import warnings
+from typing import Union
+from pynumpm import phasematching
 
 
 class Process(enum.Enum):
@@ -158,7 +160,7 @@ class Pump(object):
     def idler_wavelength2D(self):
         return self.__idler_wavelength2D
 
-    def _hermite_mode(self, x):
+    def _hermite_mode(self, x: float):
         """ A normalised Hermite-Gaussian function """
         # On 22.11.2017, Matteo changed all the self.pump_width to self.__correct_pump_width
         # _result = hermite(self.pump_temporal_mode)((self.pump_center - x) /
@@ -280,7 +282,8 @@ class Pump(object):
 
 
 class JSA(object):
-    def __init__(self, phasematching, pump: Pump):
+    def __init__(self, phasematching: Union[phasematching.SimplePhasematching2D, phasematching.Phasematching2D],
+                 pump: Pump):
         self.__phasematching = phasematching
         self.__pump = None
         self.pump = pump
@@ -331,6 +334,10 @@ class JSA(object):
     def marginal2(self):
         return self.__marginal2
 
+    @property
+    def singular_values(self):
+        return self.__singular_values
+
     def calculate_JSA(self):
         """
         Function to calculate the JSA.
@@ -342,8 +349,8 @@ class JSA(object):
         """
         logger = logging.getLogger(__name__)
         logger.info("Calculating JSA")
-        signal_wl = self.phasematching.signal_wavelength
-        idler_wl = self.phasematching.idler_wavelength
+        signal_wl = self.phasematching.wavelength1
+        idler_wl = self.phasematching.wavelength2
 
         # d_wl_signal = np.diff(signal_wl)[0]
         # d_wl_idler = np.diff(self.phasematching.idler_wavelength)[0]
@@ -399,8 +406,8 @@ class JSA(object):
             fig, ax = plt.subplots(1, 1)
 
         title = kwargs.get("title", "JSI")
-        x = self.phasematching.signal_wavelength * 1e9
-        y = self.phasematching.idler_wavelength * 1e9
+        x = self.phasematching.wavelength1 * 1e9
+        y = self.phasematching.wavelength2 * 1e9
 
         if light_plot:
             im = ax.imshow(self.JSI, origin="lower", extent=[x.min(), x.max(), y.min(), y.max()],
@@ -431,8 +438,8 @@ class JSA(object):
                     "I need two different axes to plot the marginals. ax should be a list of axes handles [ax0, ax1]")
 
         suptitle = kwargs.get("suptitle", "Marginals")
-        print(self.phasematching.signal_wavelength * 1e9)
+        print(self.phasematching.wavelength1 * 1e9)
         print(self.__marginal1)
-        ax[0].plot(self.phasematching.signal_wavelength * 1e9, self.marginal1)
-        ax[1].plot(self.phasematching.idler_wavelength * 1e9, self.marginal2)
+        ax[0].plot(self.phasematching.wavelength1 * 1e9, self.marginal1)
+        ax[1].plot(self.phasematching.wavelength2 * 1e9, self.marginal2)
         plt.suptitle(suptitle)

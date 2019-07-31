@@ -100,13 +100,14 @@ def example_simple_phasematching_deltabeta():
     thisprocess.calculate_phasematching(normalized=False)
     print(thisprocess.calculate_integral())
     thisprocess.plot()
+    plt.show()
 
 
 def example_phasematching_deltabeta():
     from pynumpm import waveguide, phasematching
 
     z = np.linspace(0, 0.02, 1000)
-    thiswaveguide = waveguide.RealisticWaveguide(z=z, nominal_parameter=0, nominal_parameter_name=r"\Delta\beta")
+    thiswaveguide = waveguide.RealisticWaveguide(z=z, nominal_parameter=0, nominal_parameter_name=r"$\Delta\beta$")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
                                          noise_amplitude=500.0)
     thiswaveguide.plot()
@@ -117,6 +118,7 @@ def example_phasematching_deltabeta():
     phi = thisprocess.calculate_phasematching(normalized=True)
     print(thisprocess.noise_length_product)
     thisprocess.plot(verbose=True)
+    plt.show()
 
 
 def example_simple1D_phasematching():
@@ -139,6 +141,7 @@ def example_simple1D_phasematching():
     thisprocess.green_wavelength = 890e-9
     thisprocess.calculate_phasematching()
     thisprocess.plot()
+    plt.show()
 
 
 def example_1D_phasematching():
@@ -172,6 +175,7 @@ def example_1D_phasematching():
     # thisprocess.set_wavelengths()
     phi = thisprocess.calculate_phasematching()
     thisprocess.plot()
+    plt.show()
 
 
 def example_test_1DPM():
@@ -216,6 +220,7 @@ def example_test_1DPM():
     plt.plot(ideal_process.red_wavelength * 1e9, np.imag(phi2), ":", color="tab:orange")
     plt.plot(ideal_process.red_wavelength * 1e9, np.real(phi1), "-", color="tab:blue")
     plt.plot(ideal_process.red_wavelength * 1e9, np.real(phi2), "-", color="tab:orange")
+    plt.show()
 
 
 def example_1D_SFG():
@@ -248,6 +253,32 @@ def example_1D_SFG():
                                          first_order_coefficient=False)
     phi = thisprocess.calculate_phasematching()
     thisprocess.plot()
+    plt.show()
+
+
+def example_simple2D_phasematching():
+    from pynumpm import waveguide, utils, phasematching
+
+    length = 25e-3  # length in m
+
+    nte, ntm = custom_sellmeier()
+    T0 = 25
+
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
+                                                                    nte(T0), 1)
+    print("Poling period: ", poling_period)
+    thiswaveguide = waveguide.Waveguide(length=length,
+                                        poling_period=poling_period)
+    thisprocess = phasematching.SimplePhasematching2D(waveguide=thiswaveguide,
+                                                      n_red=nte(T0),
+                                                      n_green=ntm(T0),
+                                                      n_blue=nte(T0))
+
+    thisprocess.red_wavelength = np.linspace(1.50e-6, 1.6e-6, 100)
+    thisprocess.blue_wavelength = np.linspace(0.549e-6, 0.551e-6, 1000)
+    thisprocess.calculate_phasematching()
+    thisprocess.plot()
+    plt.show()
 
 
 def example_2D_phasematching():
@@ -278,6 +309,7 @@ def example_2D_phasematching():
     thisprocess.blue_wavelength = np.linspace(0.549e-6, 0.551e-6, 1000)
     thisprocess.calculate_phasematching()
     thisprocess.plot()
+    plt.show()
 
 
 def example_jsa1():
@@ -306,8 +338,8 @@ def example_jsa1():
 
     # the process is an SFG process
     thispump = jsa.Pump(process=jsa.Process.SFG)
-    thispump.signal_wavelength = thisprocess.signal_wavelength
-    thispump.idler_wavelength = thisprocess.idler_wavelength
+    thispump.signal_wavelength = thisprocess.wavelength1
+    thispump.idler_wavelength = thisprocess.wavelength2
     # set the bandwidth to 1nm
     thispump.pump_width = 1e-9
     thispump.plot()
@@ -318,6 +350,7 @@ def example_jsa1():
     thisjsa.calculate_JSA()
     thisjsa.calculate_schmidt_number()
     thisjsa.plot()
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -334,7 +367,8 @@ if __name__ == '__main__':
     # example_simple1D_phasematching()
     # example_1D_phasematching()
     # example_test_1DPM()
-    example_1D_SFG()
+    # example_1D_SFG()
+    # example_simple2D_phasematching()
     # example_2D_phasematching()
-    # example_jsa1()
+    example_jsa1()
     plt.show()
