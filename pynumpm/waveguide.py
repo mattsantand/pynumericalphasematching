@@ -11,6 +11,7 @@ class Waveguide(object):
     Base class for the description of a waveguide object
 
     """
+
     def __init__(self, length: float, poling_period: float = +np.infty):
         """
 
@@ -24,8 +25,11 @@ class Waveguide(object):
             warnings.warn("The user has not provided a poling period. The default value of +np.infty will be used.",
                           UserWarning)
         self.__poling_period = poling_period
-        self.__poling_structure_set = False
         self.__length = length
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\tpoling period:{self.poling_period_um}um"
+        return text
 
     @property
     def poling_period(self):
@@ -96,6 +100,14 @@ class RealisticWaveguide(Waveguide):
                 "That's really not a great name..",
                 UserWarning)
         self.__poling_structure = None
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object.\n\tLength: {self.length}m" \
+               f"\n\tPoling: {self.poling_period_um} um." \
+               f"\n\t{self.nominal_parameter_name}: {self.nominal_parameter}" \
+               f"\n\tDiscretization: {self.dz}" \
+               f"\n\tPoling structure set: {self.poling_structure_set}"
+        return text
 
     @property
     def z(self):

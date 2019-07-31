@@ -48,6 +48,12 @@ def custom_sellmeier():
 
     return no, ne
 
+def example_simple_waveguide():
+    import pynumpm.waveguide as WG
+    length = 1e-2
+    wg = WG.Waveguide(length = length,
+                      poling_period=10e-6)
+    print(wg)
 
 def example_waveguide():
     """
@@ -64,6 +70,7 @@ def example_waveguide():
                                             poling_period=np.infty)
     noisy_waveguide.create_noisy_waveguide(noise_profile="awgn",
                                            noise_amplitude=0.1)
+    print(noisy_waveguide)
     noisy_waveguide.plot()
     noisy_waveguide = WG.RealisticWaveguide(z=z, nominal_parameter=7., nominal_parameter_name=r"Width [$\mu$m]",
                                             poling_period=np.infty)
@@ -268,6 +275,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
+    example_simple_waveguide()
     example_waveguide()
     # example_noise()
     # example_phasematching_deltabeta()
