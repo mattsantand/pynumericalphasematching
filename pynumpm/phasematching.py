@@ -23,17 +23,20 @@ _REF_INDEX_TYPE0 = Callable[[float], float]
 _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 
 
+# TODO: Use module to print the calculation progress bar.
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
 # TODO: Use class inheritance for the 1D and 2D phasematching
 # TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile.
 # TODO: the __calculate_delta_k functions can access the wavelength through their internal self.xxx_wavelength
+# TODO: modify the setters for the waveguide to accept separately only Waveguide or RealisticWaveguide objects,
+#  depending where they are called
 class SimplePhasematchingDeltaBeta(object):
     """
     Class used for the calculation of phasematching as a function of :math:`\Delta\beta` for uniform waveguides.
 
     """
 
-    def __init__(self, waveguide: Waveguide.Waveguide):
+    def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]):
         """
 
         :param waveguide: Waveguide object describing the properties of a uniform waveguide.
@@ -41,28 +44,36 @@ class SimplePhasematchingDeltaBeta(object):
 
         """
 
-        self._waveguide = waveguide
+        self._waveguide = None
+        self.waveguide = waveguide
         self._deltabeta = None
         self._phi = None
 
     def __repr__(self):
-        text = f"{self.__class__.__name__}"
+        text = f"{self.__class__.__name__} object.\n\tWaveguide: {self.waveguide}."
         return text
 
     @property
     def waveguide(self):
         """
-        The waveguide object
+        :return: The waveguide object used in the calculation.
 
-        :return:
         """
         return self._waveguide
 
+    @waveguide.setter
+    def waveguide(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]):
+        if isinstance(waveguide, (Waveguide.Waveguide, Waveguide.RealisticWaveguide)):
+            self._waveguide = waveguide
+        else:
+            raise TypeError("You need to pass an object from the pynumpm.waveguide.Waveguide or "
+                            "pynumpm.waveguide.RealisticWaveguide class.")
+
     @property
-    def deltabeta(self):
+    def deltabeta(self) -> np.ndarray:
         """
-        Return the :math:`\Delta\beta` vector used for the phasematching calculation.
-        :return:
+        :return: The :math:`\Delta\beta` vector used for the phasematching calculation.
+
         """
         return self._deltabeta
 
@@ -81,9 +92,8 @@ class SimplePhasematchingDeltaBeta(object):
     @property
     def phi(self):
         """
-        The phasematching complex amplitude
+        :return: The phasematching complex amplitude
 
-        :return:
         """
         return self._phi
 
@@ -104,7 +114,7 @@ class SimplePhasematchingDeltaBeta(object):
         if self.deltabeta is None:
             raise ValueError("You need to define a delta beta range.")
 
-        db = self.deltabeta
+        db = self.deltabeta - 2 * np.pi / self.waveguide.poling_period
         length = self.waveguide.length
         self._phi = np.sinc(db * length / 2 / np.pi) * np.exp(1j * db * length / 2)
         if not normalized:
@@ -171,9 +181,6 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
     @property
     def noise_length_product(self):
         return self._noise_length_product
-
-    def load_waveguide(self, waveguide):
-        self._waveguide = waveguide
 
     def calculate_phasematching(self, normalized=False):
         """
@@ -260,8 +267,11 @@ class SimplePhasematching1D(object):
 
         """
 
-    def __init__(self, waveguide: Waveguide.Waveguide, n_red: _REF_INDEX_TYPE0, n_green: _REF_INDEX_TYPE0,
-                 n_blue: _REF_INDEX_TYPE0, order: int = 1, backpropagation: bool = False):
+    def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide],
+                 n_red: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
+                 n_green: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
+                 n_blue: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
+                 order: int = 1, backpropagation: bool = False):
         """
         Initialization of the class requires the following parameters:
 
@@ -277,7 +287,8 @@ class SimplePhasematching1D(object):
         :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
 
         """
-        self._waveguide = waveguide
+        self._waveguide = None
+        self.waveguide = waveguide
         self._phi = None
         self._wavelengths_set = False
         self._n_red = n_red
@@ -308,6 +319,20 @@ class SimplePhasematching1D(object):
     def waveguide(self):
         return self._waveguide
 
+    @waveguide.setter
+    def waveguide(self, waveguide):
+        """
+        Method to load a waveguide object.
+
+        :param waveguide:
+        :return:
+        """
+        if isinstance(waveguide, (Waveguide.Waveguide, Waveguide.RealisticWaveguide)):
+            self._waveguide = waveguide
+        else:
+            raise TypeError("You need to pass an object from the pynumpm.waveguide.Waveguide or "
+                            "pynumpm.waveguide.RealisticWaveguide class.")
+
     @property
     def phi(self):
         """
@@ -333,7 +358,7 @@ class SimplePhasematching1D(object):
         return self._red_wavelength
 
     @red_wavelength.setter
-    def red_wavelength(self, value):
+    def red_wavelength(self, value: Union[None, float, np.ndarray]):
         """
         Red wavelength of the process.
 
@@ -348,7 +373,7 @@ class SimplePhasematching1D(object):
         return self._green_wavelength
 
     @green_wavelength.setter
-    def green_wavelength(self, value):
+    def green_wavelength(self, value: Union[None, float, np.ndarray]):
         """
         Green wavelength of the process.
 
@@ -363,7 +388,7 @@ class SimplePhasematching1D(object):
         return self._blue_wavelength
 
     @blue_wavelength.setter
-    def blue_wavelength(self, value):
+    def blue_wavelength(self, value: Union[None, float, np.ndarray]):
         """
         Blue wavelength of the process.
 
@@ -388,15 +413,6 @@ class SimplePhasematching1D(object):
 
         """
         return self._output_wavelength
-
-    def load_waveguide(self, waveguide):
-        """
-        Method to load a waveguide object.
-
-        :param waveguide:
-        :return:
-        """
-        self._waveguide = waveguide
 
     @property
     def wavelengths_set(self):
@@ -851,9 +867,10 @@ class Phasematching1D(SimplePhasematching1D):
 
 
 class SimplePhasematching2D(object):
-    def __init__(self, waveguide: Waveguide.Waveguide, n_red: _REF_INDEX_TYPE0, n_green: _REF_INDEX_TYPE0,
-                 n_blue: _REF_INDEX_TYPE0, order: int = 1, backpropagation: bool = False):
-        self._waveguide = waveguide
+    def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide], n_red: _REF_INDEX_TYPE0,
+                 n_green: _REF_INDEX_TYPE0, n_blue: _REF_INDEX_TYPE0, order: int = 1, backpropagation: bool = False):
+        self._waveguide = None
+        self.waveguide = waveguide
         self._n_red = n_red
         self._n_green = n_green
         self._n_blue = n_blue
@@ -879,8 +896,12 @@ class SimplePhasematching2D(object):
         return self._waveguide
 
     @waveguide.setter
-    def waveguide(self, value):
-        self._waveguide = value
+    def waveguide(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]):
+        if isinstance(waveguide, (Waveguide.Waveguide, Waveguide.RealisticWaveguide)):
+            self._waveguide = waveguide
+        else:
+            raise TypeError("You need to pass an object from the pynumpm.waveguide.Waveguide or "
+                            "pynumpm.waveguide.RealisticWaveguide class.")
 
     @property
     def order(self):
@@ -1014,7 +1035,7 @@ class SimplePhasematching2D(object):
         vmin = kwargs.get("vmin", phi.min())
         vmax = kwargs.get("vmax", phi.max())
 
-        im = ax.pcolormesh(self.wavelength1*1e9, self.wavelength2*1e9, phi, cmap=cmap, vmin=vmin,
+        im = ax.pcolormesh(self.wavelength1 * 1e9, self.wavelength2 * 1e9, phi, cmap=cmap, vmin=vmin,
                            vmax=vmax)
         if kwargs.get("cbar", True):
             cbar = plt.colorbar(im)
