@@ -18,12 +18,12 @@ import scipy.interpolate as interp
 from scipy.integrate import simps
 from pynumpm import waveguide as Waveguide
 from typing import Union, Callable
+from tqdm import tqdm
 
 _REF_INDEX_TYPE0 = Callable[[float], float]
 _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 
 
-# TODO: Use module to print the calculation progress bar.
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
 # TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
 #  (introduce in version 1.1).
@@ -212,7 +212,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
         self._cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
         self._cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
         self._cumulative_sinc = np.zeros(shape=len(self.deltabeta), dtype=complex)
-        for i in range(len(self.waveguide.z) - 1):
+        for i in tqdm(range(len(self.waveguide.z) - 1)):
             dz = self.waveguide.z[i + 1] - self.waveguide.z[i]
             this_deltabeta = self.deltabeta + self.waveguide.profile[i] - 2 * np.pi / self.waveguide.poling_period
             x = this_deltabeta * dz / 2
@@ -857,7 +857,9 @@ class Phasematching1D(SimplePhasematching1D):
         logger.debug("Shape cum_exp:" + str(self._cumulative_exponential.shape))
         self._delta_beta0_profile = np.nan * np.ones(shape=self.waveguide.z.shape)
         dz = np.diff(self.waveguide.z)
-        for idx, z in enumerate(self.waveguide.z[:-1]):
+        # for idx, z in enumerate(self.waveguide.z[:-1]):
+        for idx in tqdm(range(1, len(self.waveguide.z) - 1), ncols = 100):
+            z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self._calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch
@@ -1285,7 +1287,8 @@ class Phasematching2D(SimplePhasematching2D):
                                                dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
         dz = np.diff(self.waveguide.z)
-        for idx, z in enumerate(self.waveguide.z[:-1]):
+        for idx in tqdm(range(1, len(self.waveguide.z) - 1), ncols=100):
+            z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.__calculate_local_neff(idx)
             # 2) evaluate the current phasemismatch

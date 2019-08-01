@@ -54,7 +54,8 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     install_requires=[
-        'numpy', 'matplotlib', 'scipy', "warnings;python_version<'3.4'", "logging;python_version<'3.4'"
+        'numpy', 'matplotlib', 'scipy', "warnings;python_version<'3.4'", "logging;python_version<'3.4'",
+        'tqdm'
     ],
     packages=find_packages(),
 )

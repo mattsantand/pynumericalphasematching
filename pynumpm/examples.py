@@ -115,9 +115,9 @@ def example_phasematching_deltabeta():
     deltabeta = np.linspace(-5000, 5000, 1000)
     thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
     thisprocess.deltabeta = deltabeta
-    print(thisprocess)
+    # print(thisprocess)
     phi = thisprocess.calculate_phasematching(normalized=True)
-    print(thisprocess.noise_length_product)
+    # print(thisprocess.noise_length_product)
     thisprocess.plot(verbose=True)
     plt.show()
 
@@ -149,7 +149,7 @@ def example_1D_phasematching():
     from pynumpm import waveguide, phasematching, utils
 
     length = 30e-3  # length in m
-    dz = 50e-6  # discretization in m
+    dz = 1e-6  # discretization in m
     z = np.arange(0, length + dz, dz)
 
     nte, ntm = custom_sellmeier()
@@ -379,9 +379,9 @@ if __name__ == '__main__':
     # example_simple1D_phasematching()
     # example_1D_phasematching()
     # example_test_1DPM()
-    example_test_load_wg()
+    # example_test_load_wg()
     # example_1D_SFG()
     # example_simple2D_phasematching()
-    # example_2D_phasematching()
+    example_2D_phasematching()
     # example_jsa1()
     plt.show()
