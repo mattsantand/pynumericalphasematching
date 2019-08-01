@@ -858,7 +858,7 @@ class Phasematching1D(SimplePhasematching1D):
         self._delta_beta0_profile = np.nan * np.ones(shape=self.waveguide.z.shape)
         dz = np.diff(self.waveguide.z)
         # for idx, z in enumerate(self.waveguide.z[:-1]):
-        for idx in tqdm(range(1, len(self.waveguide.z) - 1), ncols = 100):
+        for idx in tqdm(range(1, len(self.waveguide.z) - 1), ncols=100):
             z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self._calculate_local_neff(idx)
@@ -899,8 +899,11 @@ class Phasematching1D(SimplePhasematching1D):
 
 
 class SimplePhasematching2D(object):
-    def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide], n_red: _REF_INDEX_TYPE0,
-                 n_green: _REF_INDEX_TYPE0, n_blue: _REF_INDEX_TYPE0, order: int = 1, backpropagation: bool = False):
+    def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide],
+                 n_red: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
+                 n_green: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
+                 n_blue: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
+                 order: int = 1, backpropagation: bool = False):
         self._waveguide = None
         self.waveguide = waveguide
         self._n_red = n_red
