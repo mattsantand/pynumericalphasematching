@@ -128,7 +128,7 @@ def example_simple1D_phasematching():
     nte, ntm = custom_sellmeier()
 
     length = 10e-3
-    poling = utils.calculate_poling_period(1550e-9, 890e-9, 0,
+    poling = utils.calculate_poling_period(0, 890e-9, 1550e-9,
                                            ntm(20),
                                            ntm(20),
                                            ntm(20))[-1]
@@ -154,7 +154,7 @@ def example_1D_phasematching():
 
     nte, ntm = custom_sellmeier()
 
-    poling_period = utils.calculate_poling_period(1.55e-6, 890e-9, 0, nte(40), ntm(40), nte(40), 1)[-1]
+    poling_period = utils.calculate_poling_period(0, 890e-9, 1.55e-6, nte(40), ntm(40), nte(40), 1)[-1]
     print("Poling period: ", poling_period)
 
     thiswaveguide = waveguide.RealisticWaveguide(z=z,
@@ -190,6 +190,7 @@ def example_test_load_wg():
     # realpm = phasematching.PhasematchingDeltaBeta(waveguide=simplewg)
     realpm2 = phasematching.PhasematchingDeltaBeta(waveguide=realwg)
 
+
 def example_test_1DPM():
     # TODO: put this function in a test module
     from pynumpm import waveguide, phasematching, utils
@@ -197,7 +198,7 @@ def example_test_1DPM():
     nte, ntm = custom_sellmeier()
 
     length = 20e-3
-    poling = utils.calculate_poling_period(1550e-9, 890e-9, 0,
+    poling = utils.calculate_poling_period(0, 890e-9, 1550e-9,
                                            nte(20),
                                            ntm(20),
                                            nte(20))[-1]
@@ -244,7 +245,7 @@ def example_1D_SFG():
 
     nte, ntm = custom_sellmeier()
 
-    poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(20), ntm(20), nte(20), 1)[-1]
+    poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6, nte(20), ntm(20), nte(20), 1)[-1]
     print("Poling period: ", poling_period)
 
     thiswaveguide = waveguide.RealisticWaveguide(z=z,
@@ -276,8 +277,9 @@ def example_simple2D_phasematching():
     nte, ntm = custom_sellmeier()
     T0 = 25
 
-    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
-                                                                    nte(T0), 1)
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6
+    nte(T0), ntm(T0),
+    nte(T0), 1)
     print("Poling period: ", poling_period)
     thiswaveguide = waveguide.Waveguide(length=length,
                                         poling_period=poling_period)
@@ -302,7 +304,7 @@ def example_2D_phasematching():
     nte, ntm = custom_sellmeier()
     T0 = 25
 
-    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6, nte(T0), ntm(T0),
                                                                     nte(T0), 1)
     print("Poling period: ", poling_period)
     z = np.arange(0, length + dz, dz)
@@ -332,7 +334,7 @@ def example_jsa1():
     nte, ntm = custom_sellmeier()
     T0 = 25
 
-    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6, nte(T0), ntm(T0),
                                                                     nte(T0), 1)
     print("Poling period: ", poling_period)
     z = np.array([0, length])
