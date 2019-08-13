@@ -80,10 +80,11 @@ For more example, consult the Tutorials.
 
 * Update the calculation method in the Phasematching1D and Phasematching2D classes. Instead using a rectangular 
 approximation, it is possible to use the correct integration using a sinc().
-
 * Modify the Phasematching classes such that the `SimplePhasematching1D` and 
 `SimplePhasematching2D` are used as parent classes and the other classes are their children. 
-
+* Enable the user to set the phasematching and the pump for a 2D process to enable easy calculation of the JSA
+* In the JSA section, add a tool to show the Schmidt decomposition of the JSA. 
+ 
 ## Author
 
 * [Matteo Santandrea](mailto:mattsantand@gmail.com), University of Paderborn.
