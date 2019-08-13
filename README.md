@@ -82,9 +82,14 @@ For more example, consult the Tutorials.
 approximation, it is possible to use the correct integration using a sinc().
 * Modify the Phasematching classes such that the `SimplePhasematching1D` and 
 `SimplePhasematching2D` are used as parent classes and the other classes are their children. 
-* Enable the user to set the phasematching and the pump for a 2D process to enable easy calculation of the JSA
-* In the JSA section, add a tool to show the Schmidt decomposition of the JSA. 
- 
+* Use module to print the calculation progress bar.
+* replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
+* Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
+  (introduce in version 1.1).
+* Insert testing module
+* Insert calculation of phasematched processes
+* Insert bandwidth estimation (for 1D functions)
+
 ## Author
 
 * [Matteo Santandrea](mailto:mattsantand@gmail.com), University of Paderborn.
