@@ -899,10 +899,10 @@ class Phasematching1D(SimplePhasematching1D):
 
 
 class SimplePhasematching2D(object):
-    def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide],
-                 n_red: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
-                 n_green: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
-                 n_blue: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
+    def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide] = None,
+                 n_red: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1] = None,
+                 n_green: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1] = None,
+                 n_blue: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1] = None,
                  order: int = 1, backpropagation: bool = False):
         self._waveguide = None
         self.waveguide = waveguide
@@ -985,6 +985,22 @@ class SimplePhasematching2D(object):
     @property
     def wavelength2(self):
         return self._wavelength2
+
+    def load_phasematching(self, wavelength1, wavelength2, phasematching):
+        """
+        Function used to load externally the phasematching spectrum
+
+        :param wavelength1:
+        :param wavelength2:
+        :param phasematching:
+        :return:
+        """
+        logger = logging.getLogger(__name__)
+        logger.debug("Loading externally the phasematching spectrum")
+        self._wavelength1 = wavelength1
+        self._wavelength2 = wavelength2
+        self._phi = phasematching
+        logger.info("User-provided phasematching has been loaded the phasematching spectrum")
 
     def set_wavelengths(self):
         logger = logging.getLogger(__name__)
