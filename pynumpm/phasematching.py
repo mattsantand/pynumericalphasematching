@@ -25,7 +25,8 @@ _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 
 
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
-# TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
+# TODO: Use FFT to calculate Simple 1D and 2D phasematching with user
+#  defined nonlinear profile
 #  (introduce in version 1.1).
 
 class SimplePhasematchingDeltaBeta(object):
