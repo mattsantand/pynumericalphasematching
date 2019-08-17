@@ -27,9 +27,6 @@ _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 # TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
 # TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
 #  (introduce in version 1.1).
-# TODO: the __calculate_delta_k functions can access the wavelength through their internal self.xxx_wavelength
-# TODO: modify the setters for the waveguide to accept separately only Waveguide or RealisticWaveguide objects,
-#  depending where they are called
 
 class SimplePhasematchingDeltaBeta(object):
     """
