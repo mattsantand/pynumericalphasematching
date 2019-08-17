@@ -8,6 +8,7 @@ import logging
 from scipy.special import hermite, factorial
 from scipy.constants import c as _sol
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import enum
 import warnings
@@ -372,7 +373,7 @@ class JSA(object):
         self.__JSI = JSI
         return self.__JSA, self.__JSI
 
-    def calculate_schmidt_number(self, verbose=False):
+    def calculate_schmidt_decomposition(self, verbose=False):
         """
         Function to calculate the Schidt decomposition.
 
@@ -391,7 +392,26 @@ class JSA(object):
             print(text)
         logger.info(text)
         logger.debug("Check normalization: sum of s^2 = " + str((abs(self.__singular_values) ** 2).sum()))
-        return self.__K
+        return self.__K, U, self.__singular_values
+
+    def plot_schmidt_coefficients(self, ncoeff: int = 20, ax: plt.Axes = None):
+        """
+        Function to plot the first n distribution of the Schmidt coefficients.
+
+        :param ncoeff: Number of coefficients to plot. Default: 20
+        :type ncoeff: int
+        :param ax: Handles to the axis object where to plot.
+        :param ax: `matplotlib.axes.Axes`
+        :return:
+        """
+        if self.__singular_values is None:
+            self.calculate_schmidt_decomposition()
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+        plt.sca(ax)
+        plt.bar(range(ncoeff), self.__singular_values[:ncoeff], 0.8)
+        return ax
 
     def plot(self, ax=None, light_plot=False, **kwargs):
         """

@@ -277,9 +277,7 @@ def example_simple2D_phasematching():
     nte, ntm = custom_sellmeier()
     T0 = 25
 
-    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6
-    nte(T0), ntm(T0),
-    nte(T0), 1)
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6, nte(T0), ntm(T0), nte(T0), 1)
     print("Poling period: ", poling_period)
     thiswaveguide = waveguide.Waveguide(length=length,
                                         poling_period=poling_period)
@@ -329,7 +327,7 @@ def example_2D_phasematching():
 def example_jsa1():
     from pynumpm import waveguide, utils, phasematching, jsa
 
-    length = 25e-3  # length in m
+    length = 5e-3  # length in m
 
     nte, ntm = custom_sellmeier()
     T0 = 25
@@ -362,7 +360,8 @@ def example_jsa1():
     thisjsa = jsa.JSA(phasematching=thisprocess,
                       pump=thispump)
     thisjsa.calculate_JSA()
-    thisjsa.calculate_schmidt_number()
+    thisjsa.calculate_schmidt_decomposition()
+    thisjsa.plot_schmidt_coefficients()
     thisjsa.plot()
     plt.show()
 
@@ -384,6 +383,6 @@ if __name__ == '__main__':
     # example_test_load_wg()
     # example_1D_SFG()
     # example_simple2D_phasematching()
-    example_2D_phasematching()
-    # example_jsa1()
+    # example_2D_phasematching()
+    example_jsa1()
     plt.show()
