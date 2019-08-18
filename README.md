@@ -46,17 +46,16 @@ The next code creates an ideal waveguide with length L = 10mm and a poling perio
 import numpy as np
 from pynumpm import waveguide
 
-z = np.array([0, 0.01])
-thiswaveguide = waveguide.Waveguide(z = z,
-                                          poling_period = 4.4e-6)                                          
+thiswaveguide = waveguide.Waveguide(length = 1e-2,
+                                    poling_period = 4.4e-6)                                          
 ``` 
-A `RealisticWaveguide` object does contains only information about the geometry of the waveguide under consideration, namely its 
-length, its poling period (can be set to `np.infinity` if not used) and its profile (e.g., the width variation along the 
-propagation axis). 
-Therefore, a `RealisticWaveguide` object does not contain information to evaluate the nonlinear process of interest. 
+A `Waveguide` object does contains only information about the geometry of the waveguide under consideration, namely its 
+length, its poling period (can be set to `np.infinity` if not used) and, for a `RealisticWaveguide` object, its profile 
+(e.g., the width variation along the propagation axis). 
+Therefore, a `Waveguide` object does not contain information to evaluate the nonlinear process of interest. 
 These information must be provided using a `Phasematching` object.
 
-The following lines load the `RealisticWaveguide` object created in the previous step into a `Phasematching` object and calculate
+The following lines load the `Waveguide` object created in the previous step into a `Phasematching` object and calculate
 the phasematching spectrum as a function of \Delta\beta
 ```python
 import numpy as np
@@ -64,8 +63,8 @@ from pynumpm import phasematching
 from pynumpm import waveguide
 
 z = np.array([0, 0.01])
-thiswaveguide = waveguide.Waveguide(z = z,
-                                          poling_period = 4.4e-6)   
+thiswaveguide = waveguide.Waveguide(length = 1e-2,
+                                    poling_period = 4.4e-6)   
 deltabeta = np.linspace(-5000, 5000, 1000)
 thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
 thisprocess.deltabeta = deltabeta
@@ -78,21 +77,12 @@ For more example, consult the Tutorials.
 
 ## In development/ToDo list
 
-* Update the calculation method in the Phasematching1D and Phasematching2D classes. Instead using a rectangular 
-approximation, it is possible to use the correct integration using a sinc().
-
-* Modify the Phasematching classes such that the `SimplePhasematching1D` and 
-`SimplePhasematching2D` are used as parent classes and the other classes are their children. 
-
-## TODOs
-
-* TODO: Use module to print the calculation progress bar.
 * TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
-* TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
-  (introduce in version 1.1).
 * Insert testing module
 * Insert calculation of phasematched processes
 * Insert bandwidth estimation (for 1D functions)
+* TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
+  (introduce in version 1.1).
 
 ## Author
 
