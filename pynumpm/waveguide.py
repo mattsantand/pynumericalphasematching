@@ -224,7 +224,7 @@ class RealisticWaveguide(Waveguide):
         Function to load the poling structure of the waveguide. This function can be used to create custom poling
         structures, such as apodized poling, e.g. `[1] <https://arxiv.org/abs/1410.7714>`_ and
         `[2] <https://arxiv.org/abs/1704.03683>`_
-        If the poling structure is set via this function, the poling period of the waveguide is set to +numpy.inftz
+        If the poling structure is set via this function, the poling period of the waveguide is set to +numpy.infty
         .. warning:: The effectiveness of this function in the calculation of the phasematching spectra is untested.
 
         :param poling_structure: Array containing the orientation of the poling.
