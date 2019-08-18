@@ -238,7 +238,7 @@ class RealisticWaveguide(Waveguide):
         self.__poling_period = +np.infty
         return self.__poling_structure
 
-    def plot(self, ax: matplotlib.axes.Axes = None):
+    def plot(self, ax: matplotlib.pyplot.Axes = None):
         """
         Function to plot the waveguide profile.
 
