@@ -45,9 +45,9 @@ setup(
     long_description_content_type='text/markdown',
     url='None',
     author='Matteo Santandrea',
-    author_email='matteo.santandrea@upb.de',
+    author_email='mattsantand@gmail.com',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
