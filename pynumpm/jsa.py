@@ -413,30 +413,44 @@ class JSA(object):
         plt.bar(range(ncoeff), self.__singular_values[:ncoeff], 0.8)
         return ax
 
-    def plot(self, ax=None, light_plot=False, **kwargs):
+    def plot(self, ax=None, light_plot=False, normalized=True, title="JSI", plot_pump=False):
         """
         Function to plot JSI. Pass ax handle through "ax" to plot in a specified axis environment.
 
+        :param ax: Axes handles
+        :type ax: matplotlib.pyplot.axes
+        :param light_plot: Flag to allow plotting in the *light* mode. The light_plot mode is compatible only with
+        linear meshes of the signal/idler wavelengths. Default is False.
+        :type light_plot: bool
+        :param normalized: Flag to plot the JSI normalized or unnormalized. Default is True.
+        :type normalized: bool
+        :param plot_pump: Flag to plot the pump spectrum overlayed as contour plot. Default is False.
+        :type plot_pump: bool.
         :param kwargs:
         :return:
         """
         if self.JSA is None:
-            raise ValueError("You need to calculate the JSA first, use the command calculate_jsa()")
+            self.calculate_JSA()
+            # raise ValueError("You need to calculate the JSA first, use the command calculate_jsa()")
         if ax is None:
             fig, ax = plt.subplots(1, 1)
 
-        title = kwargs.get("title", "JSI")
+        title = title
         x = self.phasematching.wavelength1 * 1e9
         y = self.phasematching.wavelength2 * 1e9
 
+        jsi_to_plot = self.JSI
+        if normalized:
+            jsi_to_plot /= jsi_to_plot.max()
+
         if light_plot:
-            im = ax.imshow(self.JSI, origin="lower", extent=[x.min(), x.max(), y.min(), y.max()],
+            im = ax.imshow(jsi_to_plot, origin="lower", extent=[x.min(), x.max(), y.min(), y.max()],
                            aspect="auto")
             warnings.warn("The light_plot mode is compatible only with linear meshes of the signal/idler wavelengths.")
         else:
-            im = ax.pcolormesh(x, y, self.JSI)
+            im = ax.pcolormesh(x, y, jsi_to_plot)
 
-        if kwargs.get("plot_pump", False):
+        if plot_pump:
             print("Plot Pump")
             X, Y = np.meshgrid(x, y)
             Z = abs(self.pump.pump_spectrum) ** 2
