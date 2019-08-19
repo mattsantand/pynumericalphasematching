@@ -411,6 +411,8 @@ class JSA(object):
             ax = plt.gca()
         plt.sca(ax)
         plt.bar(range(ncoeff), self.__singular_values[:ncoeff], 0.8)
+        plt.xlabel("Mode number $i$")
+        plt.ylabel(r"$\sqrt{\lambda_i}$")
         return ax
 
     def plot(self, ax=None, light_plot=False, normalized=True, title="JSI", plot_pump=False):
