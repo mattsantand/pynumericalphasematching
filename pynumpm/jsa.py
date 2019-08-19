@@ -431,7 +431,9 @@ class JSA(object):
         :param kwargs:
         :return:
         """
+        logger = logging.getLogger(__name__)
         if self.JSA is None:
+            logger.info("The JSA was not calculated. I'll try to calculate it right away.")
             self.calculate_JSA()
             # raise ValueError("You need to calculate the JSA first, use the command calculate_jsa()")
         if ax is None:
@@ -443,6 +445,7 @@ class JSA(object):
 
         jsi_to_plot = self.JSI
         if normalized:
+            logger.debug("The user wants the normalised JSI.")
             jsi_to_plot /= jsi_to_plot.max()
 
         if light_plot:
@@ -453,7 +456,7 @@ class JSA(object):
             im = ax.pcolormesh(x, y, jsi_to_plot)
 
         if plot_pump:
-            print("Plot Pump")
+            logger.debug("The user wants the pump contours on the JSI plot.")
             X, Y = np.meshgrid(x, y)
             Z = abs(self.pump.pump_spectrum) ** 2
             CS = ax.contour(X, Y, Z / Z.max(), 4, colors="w", ls=":", lw=0.5)
