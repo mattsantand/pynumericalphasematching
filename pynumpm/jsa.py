@@ -462,6 +462,7 @@ class JSA(object):
         ax.set_ylabel(r"$\lambda_{idler}$ [nm]")
         ax.set_title(title)
         plt.tight_layout()
+        return ax
 
     def plot_marginals(self, ax=None, **kwargs):
         if ax is None:
@@ -477,3 +478,4 @@ class JSA(object):
         ax[0].plot(self.phasematching.wavelength1 * 1e9, self.marginal1)
         ax[1].plot(self.phasematching.wavelength2 * 1e9, self.marginal2)
         plt.suptitle(suptitle)
+        return ax
