@@ -459,8 +459,14 @@ class JSA(object):
             logger.debug("The user wants the pump contours on the JSI plot.")
             X, Y = np.meshgrid(x, y)
             Z = abs(self.pump.pump_spectrum) ** 2
-            CS = ax.contour(X, Y, Z / Z.max(), 4, colors="w", ls=":", lw=0.5)
-            ax.clabel(CS, fontsize=9, inline=1)
+            sigmas = np.arange(0, 4, 1)[::-1]
+            levels = np.exp(-sigmas)
+            warnings.warn("The sigmas indicated in the JSI plot refer to the intensity of the pump. "
+                          "If you want the field information, you need to convert them accordingly.")
+            labels_dict = {level: str(len(levels) - i - 1) + r"$\sigma$" for i, level in enumerate(levels)}
+            CS = ax.contour(X, Y, Z / Z.max(), levels, colors="w", linestyles="-",
+                            linewidths=levels * 6)
+            ax.clabel(CS, fmt=labels_dict, fontsize=9, inline=1)
 
         plt.gcf().colorbar(im)
         ax.set_xlabel(r"$\lambda_{signal}$ [nm]")
