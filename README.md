@@ -72,7 +72,7 @@ thisprocess.calculate_phasematching()
 thisprocess.plot()
 ```
 
-For more example, consult the Tutorials.
+For more example, consult the Tutorials in the documentation
 
 
 ## In development/ToDo list
@@ -84,9 +84,14 @@ For more example, consult the Tutorials.
 * TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
   (introduce in version 1.1).
 
+
+## Documentation
+The complete documentation of this package can be found [here](https://pynumericalphasematching.readthedocs.io/en/latest/)
+
+
 ## Author
 
-* [Matteo Santandrea](mailto:mattsantand@gmail.com), University of Paderborn.
+* [Matteo Santandrea](mailto:mattsantand@gmail.com), University of Paderborn, [Integrated Quantum Optics](https://physik.uni-paderborn.de/silberhorn/) group
 
 ## License 
 
