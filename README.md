@@ -72,12 +72,12 @@ thisprocess.calculate_phasematching()
 thisprocess.plot()
 ```
 
-For more example, consult the Tutorials in the documentation
+For more example, consult the Tutorials in the documentation.
 
 
 ## In development/ToDo list
 
-* TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
+* TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the correct integration)
 * Insert testing module
 * Insert calculation of phasematched processes
 * Insert bandwidth estimation (for 1D functions)
@@ -86,7 +86,7 @@ For more example, consult the Tutorials in the documentation
 
 
 ## Documentation
-The complete documentation of this package can be found [here](https://pynumericalphasematching.readthedocs.io/en/latest/)
+The complete documentation of this package can be found [here](https://pynumericalphasematching.readthedocs.io/en/latest/).
 
 
 ## Author
