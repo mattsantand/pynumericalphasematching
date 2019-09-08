@@ -4,7 +4,7 @@ from scipy.signal import savgol_filter
 import scipy.optimize as opt
 import logging
 import enum
-from typing import Callable
+from typing import Callable, List
 
 
 class Propagation(enum.Enum):
@@ -35,8 +35,7 @@ def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
     :type nb: Function
     :param order: Order of the process. Default: 1
     :type order: int
-    :param kwargs:
-    :return:
+    :return: List of red wavelength, green wavelength, blue wavelength and poling period.
     """
 
     if not isinstance(propagation_type, Propagation):
@@ -53,43 +52,41 @@ def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
     return lamr, lamg, lamb, Lambda
 
 
-def deltabeta(lamr=None, lamg=None, lamb=None, nr=None, ng=None, nb=None, poling=np.infty, order=1,
-              propagation=Propagation.COPROPAGATION):
+def calculate_phasematching_point(fixed_wl: List[float, str], poling_period: float, nr: Callable[[float], float],
+                                  ng: Callable[[float], float], nb: Callable[[float], float], hint: List[float, float],
+                                  order: int = 1, verbose: bool = False):
     """
-    Function to calculate the delta
-    :param lamr:
-    :param lamg:
-    :param lamb:
-    :param nr:
-    :param ng:
-    :param nb:
-    :param poling:
-    :param order:
-    :return:
+    Function to calculate the phasematching point, given a wavelength and the poling period of the structure.
+
+    :param fixed_wl: Wavelength to be kept constant during the calculation.
+    :type fixed_wl: typing.List
+    :param poling_period: Poling period of the structure
+    :type poling_period: float
+    :param nr: Function returning the refractive index for the red field.
+    :type nr: Function
+    :param ng: Function returning the refractive index for the green field.
+    :type ng: Function
+    :param nb: Function returning the refractive index for the blue field.
+    :type nb: Function
+    :param hint: List of the two wavelengths to be used as first hints to find the solution.
+    :type hint: typing.List
+    :param order: Order of the process. Default: 1
+    :type order: int
+    :param verbose: Set the calculation to be verbose or not. Default: False
+    :type verbose: bool
+    :return: List of red wavelength, green wavelength, blue wavelength and poling period.
+
+    This function tries to minimise the energy and momentum conservation equations to find the possible phasematched
+    processes, given a fixed wavelength and the poling period, using the `fsolve`routine from `scipy`.
+
+    The `fixed_wl` variable is a list (or tuple) containing the value and the field name ("r", "g" or "b" for red,
+    green and blue). For example, if one wants to define the green field as fixed at 800nm, the `fixed_wl` must be in
+    the form [800e-9, "g"].
     """
-    importError = True
-    if lamr is None and lamg is not None and lamb is not None:
-        importError = False
-        lamr = (lamb ** -1 - lamg ** -1) ** -1
-    if lamg is None and lamr is not None and lamb is not None:
-        importError = False
-        lamg = (lamb ** -1 - lamr ** -1) ** -1
-    if lamb is None and lamr is not None and lamg is not None:
-        importError = False
-        lamb = (lamr ** -1 + lamg ** -1) ** -1
-
-    if importError:
-        raise ValueError("Only one of the input wavelengths can be 'None'")
-
-    return 2 * np.pi * (nb(lamb * 1e6) / lamb - ng(lamg * 1e6) / lamg +
-                        propagation.value * nr(lamr * 1e6) / lamr - order / poling)
-
-
-def calculate_phasematching_point(fixed_wl, poling_period, nb, ng, nr, hint, order=1, verbose=False):
     lam, constlam = fixed_wl
     lam *= 1e6
     poling_period_um = poling_period * 1e6
-    hint = [i * 1e6 for i in hint]
+    hint = np.array([i * 1e6 for i in hint])
 
     def zb(w):
         wb = lam
@@ -127,6 +124,7 @@ def calculate_phasematching_point(fixed_wl, poling_period, nb, ng, nr, hint, ord
             return False, np.array([np.nan, np.nan, np.nan, np.nan])
 
     else:
+        out = [False, False, False]
         if constlam == 'b':
             out = opt.fsolve(zb, hint, full_output=True)
         if constlam == 'g':
@@ -134,7 +132,7 @@ def calculate_phasematching_point(fixed_wl, poling_period, nb, ng, nr, hint, ord
         if constlam == 'r':
             out = opt.fsolve(zr, hint, full_output=True)
 
-        if (out[2] == 1):
+        if out[2] == 1:
             # arr = np.sort(np.array([lam, out[0][0], out[0][1]]))
             arr = np.array([lam, out[0][0], out[0][1]])
             return True, np.array([arr[0], arr[1], arr[2], poling_period_um]) * 1e-6
@@ -146,7 +144,8 @@ def calculate_phasematching_point(fixed_wl, poling_period, nb, ng, nr, hint, ord
 
 def bandwidth(wl, phi, **kwargs):
     """
-    Calculates the bandwidth of a given phasematching phi on axis wl from a fitting with savgol_filter
+    Calculates the bandwidth of a given phasematching spectrum fitting it with savgol_filter and then approximating it
+    with a UnivariateSpline.
 
     :param wl: Wavelengths
     :type wl: Array
@@ -156,9 +155,9 @@ def bandwidth(wl, phi, **kwargs):
 
     Additional parameters
 
-    :param window_size: Savgol_filter parameter
+    :param window_size: Savgol_filter  window_size parameter
     :type window_size: int
-    :param polynomial_order: Savgol_filter parameter
+    :param polynomial_order: Savgol_filter polynomial_order parameter
     :type polynomial_order: int
     """
 
