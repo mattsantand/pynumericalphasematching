@@ -12,12 +12,15 @@ class Propagation(enum.Enum):
     COUNTEPROPAGATION = +1
     """Sign of signal in counterpropagation"""
 
-def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, order=1, **kwargs):
+
+def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
+                            nr=None, ng=None, nb=None, order=1, **kwargs):
     """
     Function to calculate the poling period of a specific process. To ensure energy conservation, specify only 2
     wavelengths (in meter) and leave the free one to 0
 
-    :param lamr:
+    :param lamr: Wavelength of the red field.
+    :type lamr: float
     :param lamg:
     :param lamb:
     :param nr:

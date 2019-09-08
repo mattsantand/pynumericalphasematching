@@ -2,16 +2,26 @@
 
 Welcome to pynumpm, short for PyNumericalPhasematching! 
 
-This package is meant to help you with the simulation of the phasematching spectrum of nonlinear processes, in particular of collinear three wave mixing processes.
+This package is meant to help you with the simulation of the phasematching spectrum of nonlinear processes, in 
+particular of collinear three wave mixing processes. It can numerically calculate the phasematching of ideal waveguides
+and of waveguides with variable profile along their propagation axes. Moreover, it can calculate the phasematching
+as a function of the wavevector mismatch $\Delta\beta$, of one scanning wavelength or of two scanning wavelength. 
+This last functionality can be used for the calculation of *joint spectral amplitude* and *intensity* spectra and 
+properties.
 
-**Note**: all physical quantities in this package are expressed in SI units (m, s, Hz).
+**Notes**
+* All physical quantities in this package are expressed in SI units (m, s, Hz).
+* In this package, the wavelengths are usually denoted as *red*, *green* and *blue* (or *r*, *g*, *b*). This implies 
+that the blue field has shortest wavelength and the red has the longest wavelength. In case two fields have the same
+wavelength, then the names are interchangeable.    
 
 ## Getting started
 
 ### Prerequisites
-pynumpm has been written for Python3, but this release should still work with Python2. Support for Python2 is not provided.
+pynumpm has been written for Python3, but this release should still work with Python2. 
+Support for Python2 is not provided.
 
-Pynumpm requires the following python packages:
+pynumpm requires the following python packages:
     
 * pip
 * [numpy](http://www.numpy.org/)    
@@ -27,7 +37,8 @@ To install the package, simply run
 
 `pip install pynumpm`
 
-Alternatively, it is possible to install the package by downloading the package from _____ and, in the folder *pynumericalphasematching*, run
+Alternatively, it is possible to install the package by downloading the package from [GitHub](https://github.com/mattsantand/pynumericalphasematching)
+and, in the folder *pynumericalphasematching*, run
 
 `python setup.py install`
 
@@ -40,8 +51,11 @@ The basic steps to run a simulation, are:
 object into such object.
 3. Run the `calculate_phasematching()` method of the phasematching object to calculate the phasematching spectrum.
 
+Here, the first steps for setting up a simple simulation are described. For more information and tutorial, check the 
+[documentation](https://pynumericalphasematching.readthedocs.io/en/latest/). 
+
 ### First steps
-The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4$\mu$ um.
+The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4&mu m.
 ```python
 import numpy as np
 from pynumpm import waveguide
@@ -49,22 +63,11 @@ from pynumpm import waveguide
 thiswaveguide = waveguide.Waveguide(length = 1e-2,
                                     poling_period = 4.4e-6)                                          
 ``` 
-A `Waveguide` object does contains only information about the geometry of the waveguide under consideration, namely its 
-length, its poling period (can be set to `np.infinity` if not used) and, for a `RealisticWaveguide` object, its profile 
-(e.g., the width variation along the propagation axis). 
-Therefore, a `Waveguide` object does not contain information to evaluate the nonlinear process of interest. 
-These information must be provided using a `Phasematching` object.
 
-The following lines load the `Waveguide` object created in the previous step into a `Phasematching` object and calculate
-the phasematching spectrum as a function of \Delta\beta
-```python
-import numpy as np
-from pynumpm import phasematching
-from pynumpm import waveguide
+The following lines load the `Waveguide` object created in the previous step into a `PhasematchingDeltaBeta` object and 
+calculate the phasematching spectrum as a function of \Delta\beta
+```python  
 
-z = np.array([0, 0.01])
-thiswaveguide = waveguide.Waveguide(length = 1e-2,
-                                    poling_period = 4.4e-6)   
 deltabeta = np.linspace(-5000, 5000, 1000)
 thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
 thisprocess.deltabeta = deltabeta
