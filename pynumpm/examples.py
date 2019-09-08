@@ -48,12 +48,14 @@ def custom_sellmeier():
 
     return no, ne
 
+
 def example_simple_waveguide():
     import pynumpm.waveguide as WG
     length = 1e-2
-    wg = WG.Waveguide(length = length,
+    wg = WG.Waveguide(length=length,
                       poling_period=10e-6)
     print(wg)
+
 
 def example_waveguide():
     """
@@ -366,7 +368,7 @@ def example_jsa1():
     thisjsa.calculate_JSA()
     thisjsa.calculate_schmidt_decomposition()
     thisjsa.plot_schmidt_coefficients()
-    thisjsa.plot()
+    thisjsa.plot(plot_pump=True)
     plt.show()
 
 
@@ -390,4 +392,3 @@ if __name__ == '__main__':
     example_simple2D_phasematching()
     example_2D_phasematching()
     example_jsa1()
-
