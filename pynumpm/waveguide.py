@@ -11,6 +11,7 @@ class Waveguide(object):
     Base class for the description of a waveguide object
 
     """
+
     def __init__(self, length: float, poling_period: float = +np.infty):
         """
 
@@ -24,8 +25,14 @@ class Waveguide(object):
             warnings.warn("The user has not provided a poling period. The default value of +np.infty will be used.",
                           UserWarning)
         self.__poling_period = poling_period
-        self.__poling_structure_set = False
         self.__length = length
+        self.__z = None
+        self.__dz = None
+        self.__waveguide_profile = None
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\tpoling period:{self.poling_period_um}um"
+        return text
 
     @property
     def poling_period(self):
@@ -50,6 +57,23 @@ class Waveguide(object):
 
         """
         return self.__length
+
+    @property
+    def z(self):
+        warnings.warn("No z mesh defined for the Waveguide class")
+        return self.__z
+
+    @property
+    def dz(self):
+        warnings.warn("No z mesh defined for the Waveguide class")
+        return self.__dz
+
+    @property
+    def profile(self):
+        warnings.warn("No profile mesh defined for the Waveguide class")
+        return self.__waveguide_profile
+
+
 
 
 class RealisticWaveguide(Waveguide):
@@ -96,6 +120,14 @@ class RealisticWaveguide(Waveguide):
                 "That's really not a great name..",
                 UserWarning)
         self.__poling_structure = None
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object.\n\tLength: {self.length}m" \
+               f"\n\tPoling: {self.poling_period_um} um." \
+               f"\n\t{self.nominal_parameter_name}: {self.nominal_parameter}" \
+               f"\n\tDiscretization: {self.dz}" \
+               f"\n\tPoling structure set: {self.poling_structure_set}"
+        return text
 
     @property
     def z(self):
@@ -212,7 +244,7 @@ class RealisticWaveguide(Waveguide):
         Function to load the poling structure of the waveguide. This function can be used to create custom poling
         structures, such as apodized poling, e.g. `[1] <https://arxiv.org/abs/1410.7714>`_ and
         `[2] <https://arxiv.org/abs/1704.03683>`_
-        If the poling structure is set via this function, the poling period of the waveguide is set to +numpy.inftz
+        If the poling structure is set via this function, the poling period of the waveguide is set to +numpy.infty
         .. warning:: The effectiveness of this function in the calculation of the phasematching spectra is untested.
 
         :param poling_structure: Array containing the orientation of the poling.
@@ -226,7 +258,7 @@ class RealisticWaveguide(Waveguide):
         self.__poling_period = +np.infty
         return self.__poling_structure
 
-    def plot(self, ax: matplotlib.axes.Axes = None):
+    def plot(self, ax: matplotlib.pyplot.Axes = None):
         """
         Function to plot the waveguide profile.
 

@@ -9,7 +9,7 @@ from typing import Callable, List
 
 class Propagation(enum.Enum):
     COPROPAGATION = -1
-    """Sign of the signal in copropagatio"""
+    """Sign of the signal in copropagation"""
     COUNTEPROPAGATION = +1
     """Sign of signal in counterpropagation"""
 
