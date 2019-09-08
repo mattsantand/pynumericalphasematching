@@ -1,4 +1,4 @@
-utilities
+Utils
 *********
 
 Contents of the module

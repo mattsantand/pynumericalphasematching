@@ -52,14 +52,14 @@ def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
     return lamr, lamg, lamb, Lambda
 
 
-def calculate_phasematching_point(fixed_wl: List[float, str], poling_period: float, nr: Callable[[float], float],
-                                  ng: Callable[[float], float], nb: Callable[[float], float], hint: List[float, float],
-                                  order: int = 1, verbose: bool = False):
+def calculate_phasematching_point(fixed_wl, poling_period: float, nr: Callable[[float], float],
+                                  ng: Callable[[float], float], nb: Callable[[float], float],
+                                  hint, order: int = 1, verbose: bool = False):
     """
     Function to calculate the phasematching point, given a wavelength and the poling period of the structure.
 
     :param fixed_wl: Wavelength to be kept constant during the calculation.
-    :type fixed_wl: typing.List
+    :type fixed_wl: list
     :param poling_period: Poling period of the structure
     :type poling_period: float
     :param nr: Function returning the refractive index for the red field.
@@ -69,7 +69,7 @@ def calculate_phasematching_point(fixed_wl: List[float, str], poling_period: flo
     :param nb: Function returning the refractive index for the blue field.
     :type nb: Function
     :param hint: List of the two wavelengths to be used as first hints to find the solution.
-    :type hint: typing.List
+    :type hint: list
     :param order: Order of the process. Default: 1
     :type order: int
     :param verbose: Set the calculation to be verbose or not. Default: False
