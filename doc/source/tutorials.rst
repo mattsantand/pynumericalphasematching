@@ -94,7 +94,7 @@ Given this definition, this object is suitable to simulate any general phasematc
 
 
 Phasematching simulation: 1D, wavelength-dependent, three-wave mixing phasematching
-####################################################################
+###################################################################################
 
 The following snippet loads the previous waveguide into a phasematching object and calculates the 1D phasematching
 spectrum for an SHG process pumped between 1540 and 1560nm and finally plots it.
@@ -135,7 +135,7 @@ The definition of `input_wavelength` and `output_wavelength` is important to def
 routine.
 
 Phasematching simulation: 2D, wavelength-dependent, three-wave mixing phasematching
-####################################################################
+###################################################################################
 
 The following snippet loads the previous waveguide into a phasematching object and calculates the 1D phasematching
 spectrum for a PDC process with signal and idler in the range (1540nm,1560nm) and (1200nm,1400nm) respectively.
