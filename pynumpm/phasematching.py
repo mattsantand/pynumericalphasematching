@@ -31,7 +31,7 @@ _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 
 class SimplePhasematchingDeltaBeta(object):
     """
-    Class used for the calculation of phasematching as a function of :math:`\Delta\beta` for uniform waveguides.
+    Class used for the calculation of phasematching as a function of :math:`\Delta\\beta` for uniform waveguides.
 
     """
 
@@ -71,7 +71,7 @@ class SimplePhasematchingDeltaBeta(object):
     @property
     def deltabeta(self) -> np.ndarray:
         """
-        :return: The :math:`\Delta\beta` vector used for the phasematching calculation.
+        :return: The :math:`\Delta\\beta` vector used for the phasematching calculation.
 
         """
         return self._deltabeta
@@ -79,9 +79,9 @@ class SimplePhasematchingDeltaBeta(object):
     @deltabeta.setter
     def deltabeta(self, value: np.ndarray):
         """
-        Define the :math:`\Delta\beta` vector used for the phasematching calculation.
+        Define the :math:`\Delta\\beta` vector used for the phasematching calculation.
 
-        :param value: Array of :math:`\Delta\beta` [*1/m*]
+        :param value: Array of :math:`\Delta\\beta` [*1/m*]
         :type value: numpy.ndarray
         """
         if not isinstance(value, np.ndarray):
@@ -143,7 +143,7 @@ class SimplePhasematchingDeltaBeta(object):
             y = abs(self.phi) ** 2 / y.max()
         ax.plot(self.deltabeta, y)
         plt.title("Phasematching")
-        plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
+        plt.xlabel(r"$\Delta\\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
         return ax
 
@@ -159,7 +159,7 @@ class SimplePhasematchingDeltaBeta(object):
 class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
     """
     This class is used to simulate phasematching of systems considering only the wavevector mismatch
-    (:math:`\Delta\beta`).
+    (:math:`\Delta\\beta`).
 
     """
 
@@ -248,7 +248,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
             y = abs(self.phi) ** 2 / y.max()
         ax.plot(self.deltabeta, y)
         plt.title("Phasematching")
-        plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
+        plt.xlabel(r"$\Delta\\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
         if verbose:
             integral = self.calculate_integral()
@@ -686,7 +686,7 @@ class Phasematching1D(SimplePhasematching1D):
     @property
     def noise_length_product(self):
         """
-        Product between the sample length and the maximum :math:`\Delta\beta\` variation for the process. If this value
+        Product between the sample length and the maximum :math:`\Delta\\beta\` variation for the process. If this value
         is above 10, the phasematching is likely to be noisy.
 
         """
