@@ -4,6 +4,7 @@ from scipy.signal import savgol_filter
 import scipy.optimize as opt
 import logging
 import enum
+from typing import Callable
 
 
 class Propagation(enum.Enum):
@@ -14,35 +15,41 @@ class Propagation(enum.Enum):
 
 
 def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
-                            nr=None, ng=None, nb=None, order=1, **kwargs):
+                            nr: Callable[[float], float] = None, ng: Callable[[float], float] = None,
+                            nb: Callable[[float], float] = None, order=1, propagation_type=Propagation.COPROPAGATION):
     """
-    Function to calculate the poling period of a specific process. To ensure energy conservation, specify only 2
+    Function to calculate the poling period of a specific process. To ensure energy conservation, specify only two
     wavelengths (in meter) and leave the free one to 0
 
-    :param lamr: Wavelength of the red field.
+    :param lamr: Wavelength of the red field [m].
     :type lamr: float
-    :param lamg:
-    :param lamb:
-    :param nr:
-    :param ng:
-    :param nb:
-    :param order:
+    :param lamg: Wavelength of the green field [m].
+    :type lamg: float
+    :param lamb: Wavelength of the blue field [m].
+    :type lamb: float
+    :param nr: Function returning the refractive index for the red field.
+    :type nr: Function
+    :param ng: Function returning the refractive index for the green field.
+    :type ng: Function
+    :param nb: Function returning the refractive index for the blue field.
+    :type nb: Function
+    :param order: Order of the process. Default: 1
+    :type order: int
     :param kwargs:
     :return:
     """
-    propagation_type = kwargs.get("propagation_type", "copropagation")
-    if (lamb == 0):
+
+    if not isinstance(propagation_type, Propagation):
+        raise TypeError("propagation_type must be of the type pynumpm.utils.Propagation")
+    if lamb == 0:
         lamb = 1. / (1. / abs(lamg) + 1. / abs(lamr))
-    if (lamg == 0):
+    if lamg == 0:
         lamg = 1. / (1. / abs(lamb) - 1. / abs(lamr))
-    if (lamr == 0):
+    if lamr == 0:
         lamr = 1. / (1. / abs(lamb) - 1. / abs(lamg))
-    if propagation_type.lower() == "copropagation":
-        Lambda = order / (nb(abs(lamb) * 1e6) / lamb - ng(abs(lamg) * 1e6) / lamg - nr(abs(lamr) * 1e6) / lamr)
-    elif propagation_type.lower() == "counterpropagation":
-        Lambda = order / (nb(abs(lamb) * 1e6) / lamb - ng(abs(lamg) * 1e6) / lamg + nr(abs(lamr) * 1e6) / lamr)
-    else:
-        raise ValueError("Don't know " + propagation_type)
+    Lambda = order / (nb(abs(lamb) * 1e6) / lamb -
+                      ng(abs(lamg) * 1e6) / lamg +
+                      propagation_type.value * nr(abs(lamr) * 1e6) / lamr)
     return lamr, lamg, lamb, Lambda
 
 

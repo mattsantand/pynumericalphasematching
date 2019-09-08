@@ -13,7 +13,9 @@ properties.
 * All physical quantities in this package are expressed in SI units (m, s, Hz).
 * In this package, the wavelengths are usually denoted as *red*, *green* and *blue* (or *r*, *g*, *b*). This implies 
 that the blue field has shortest wavelength and the red has the longest wavelength. In case two fields have the same
-wavelength, then the names are interchangeable.    
+wavelength, then the names are interchangeable.
+* The functions describing the refractive indices, when used, must follow the convention of the standard Sellmeier's 
+equation, i.e. they **must** accept the wavelength in $\mu$ m    
 
 ## Getting started
 
@@ -55,7 +57,7 @@ Here, the first steps for setting up a simple simulation are described. For more
 [documentation](https://pynumericalphasematching.readthedocs.io/en/latest/). 
 
 ### First steps
-The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4&mu m.
+The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4$\mu$ m.
 ```python
 import numpy as np
 from pynumpm import waveguide
@@ -65,7 +67,7 @@ thiswaveguide = waveguide.Waveguide(length = 1e-2,
 ``` 
 
 The following lines load the `Waveguide` object created in the previous step into a `PhasematchingDeltaBeta` object and 
-calculate the phasematching spectrum as a function of \Delta\beta
+calculate the phasematching spectrum as a function of $\Delta\beta$
 ```python  
 
 deltabeta = np.linspace(-5000, 5000, 1000)
