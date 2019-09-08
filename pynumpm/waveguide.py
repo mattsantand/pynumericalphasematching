@@ -26,6 +26,9 @@ class Waveguide(object):
                           UserWarning)
         self.__poling_period = poling_period
         self.__length = length
+        self.__z = None
+        self.__dz = None
+        self.__waveguide_profile = None
 
     def __repr__(self):
         text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\tpoling period:{self.poling_period_um}um"
@@ -54,6 +57,23 @@ class Waveguide(object):
 
         """
         return self.__length
+
+    @property
+    def z(self):
+        warnings.warn("No z mesh defined for the Waveguide class")
+        return self.__z
+
+    @property
+    def dz(self):
+        warnings.warn("No z mesh defined for the Waveguide class")
+        return self.__dz
+
+    @property
+    def profile(self):
+        warnings.warn("No profile mesh defined for the Waveguide class")
+        return self.__waveguide_profile
+
+
 
 
 class RealisticWaveguide(Waveguide):

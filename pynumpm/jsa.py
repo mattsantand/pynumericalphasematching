@@ -8,9 +8,12 @@ import logging
 from scipy.special import hermite, factorial
 from scipy.constants import c as _sol
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import enum
 import warnings
+from typing import Union
+from pynumpm import phasematching
 
 
 class Process(enum.Enum):
@@ -158,7 +161,7 @@ class Pump(object):
     def idler_wavelength2D(self):
         return self.__idler_wavelength2D
 
-    def _hermite_mode(self, x):
+    def _hermite_mode(self, x: float):
         """ A normalised Hermite-Gaussian function """
         # On 22.11.2017, Matteo changed all the self.pump_width to self.__correct_pump_width
         # _result = hermite(self.pump_temporal_mode)((self.pump_center - x) /
@@ -280,7 +283,8 @@ class Pump(object):
 
 
 class JSA(object):
-    def __init__(self, phasematching, pump: Pump):
+    def __init__(self, phasematching: Union[phasematching.SimplePhasematching2D, phasematching.Phasematching2D],
+                 pump: Pump):
         self.__phasematching = phasematching
         self.__pump = None
         self.pump = pump
@@ -331,6 +335,10 @@ class JSA(object):
     def marginal2(self):
         return self.__marginal2
 
+    @property
+    def singular_values(self):
+        return self.__singular_values
+
     def calculate_JSA(self):
         """
         Function to calculate the JSA.
@@ -342,8 +350,8 @@ class JSA(object):
         """
         logger = logging.getLogger(__name__)
         logger.info("Calculating JSA")
-        signal_wl = self.phasematching.signal_wavelength
-        idler_wl = self.phasematching.idler_wavelength
+        signal_wl = self.phasematching.wavelength1
+        idler_wl = self.phasematching.wavelength2
 
         # d_wl_signal = np.diff(signal_wl)[0]
         # d_wl_idler = np.diff(self.phasematching.idler_wavelength)[0]
@@ -365,7 +373,7 @@ class JSA(object):
         self.__JSI = JSI
         return self.__JSA, self.__JSI
 
-    def calculate_schmidt_number(self, verbose=False):
+    def calculate_schmidt_decomposition(self, verbose=False):
         """
         Function to calculate the Schidt decomposition.
 
@@ -384,43 +392,88 @@ class JSA(object):
             print(text)
         logger.info(text)
         logger.debug("Check normalization: sum of s^2 = " + str((abs(self.__singular_values) ** 2).sum()))
-        return self.__K
+        return self.__K, U, self.__singular_values
 
-    def plot(self, ax=None, light_plot=False, **kwargs):
+    def plot_schmidt_coefficients(self, ncoeff: int = 20, ax: plt.Axes = None):
+        """
+        Function to plot the first n distribution of the Schmidt coefficients.
+
+        :param ncoeff: Number of coefficients to plot. Default: 20
+        :type ncoeff: int
+        :param ax: Handles to the axis object where to plot.
+        :param ax: `matplotlib.axes.Axes`
+        :return:
+        """
+        if self.__singular_values is None:
+            self.calculate_schmidt_decomposition()
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+        plt.sca(ax)
+        plt.bar(range(ncoeff), self.__singular_values[:ncoeff], 0.8)
+        plt.xlabel("Mode number $i$")
+        plt.ylabel(r"$\sqrt{\lambda_i}$")
+        return ax
+
+    def plot(self, ax=None, light_plot=False, normalized=True, title="JSI", plot_pump=False):
         """
         Function to plot JSI. Pass ax handle through "ax" to plot in a specified axis environment.
 
+        :param ax: Axes handles
+        :type ax: matplotlib.pyplot.axes
+        :param light_plot: Flag to allow plotting in the *light* mode. The light_plot mode is compatible only with
+        linear meshes of the signal/idler wavelengths. Default is False.
+        :type light_plot: bool
+        :param normalized: Flag to plot the JSI normalized or unnormalized. Default is True.
+        :type normalized: bool
+        :param plot_pump: Flag to plot the pump spectrum overlayed as contour plot. Default is False.
+        :type plot_pump: bool.
         :param kwargs:
         :return:
         """
+        logger = logging.getLogger(__name__)
         if self.JSA is None:
-            raise ValueError("You need to calculate the JSA first, use the command calculate_jsa()")
+            logger.info("The JSA was not calculated. I'll try to calculate it right away.")
+            self.calculate_JSA()
+            # raise ValueError("You need to calculate the JSA first, use the command calculate_jsa()")
         if ax is None:
             fig, ax = plt.subplots(1, 1)
 
-        title = kwargs.get("title", "JSI")
-        x = self.phasematching.signal_wavelength * 1e9
-        y = self.phasematching.idler_wavelength * 1e9
+        title = title
+        x = self.phasematching.wavelength1 * 1e9
+        y = self.phasematching.wavelength2 * 1e9
+
+        jsi_to_plot = self.JSI
+        if normalized:
+            logger.debug("The user wants the normalised JSI.")
+            jsi_to_plot /= jsi_to_plot.max()
 
         if light_plot:
-            im = ax.imshow(self.JSI, origin="lower", extent=[x.min(), x.max(), y.min(), y.max()],
+            im = ax.imshow(jsi_to_plot, origin="lower", extent=[x.min(), x.max(), y.min(), y.max()],
                            aspect="auto")
             warnings.warn("The light_plot mode is compatible only with linear meshes of the signal/idler wavelengths.")
         else:
-            im = ax.pcolormesh(x, y, self.JSI)
+            im = ax.pcolormesh(x, y, jsi_to_plot)
 
-        if kwargs.get("plot_pump", False):
-            print("Plot Pump")
+        if plot_pump:
+            logger.debug("The user wants the pump contours on the JSI plot.")
             X, Y = np.meshgrid(x, y)
             Z = abs(self.pump.pump_spectrum) ** 2
-            CS = ax.contour(X, Y, Z / Z.max(), 4, colors="w", ls=":", lw=0.5)
-            ax.clabel(CS, fontsize=9, inline=1)
+            sigmas = np.arange(0, 4, 1)[::-1]
+            levels = np.exp(-sigmas)
+            warnings.warn("The sigmas indicated in the JSI plot refer to the intensity of the pump. "
+                          "If you want the field information, you need to convert them accordingly.")
+            labels_dict = {level: str(len(levels) - i - 1) + r"$\sigma$" for i, level in enumerate(levels)}
+            CS = ax.contour(X, Y, Z / Z.max(), levels, colors="w", linestyles="-",
+                            linewidths=levels * 6)
+            ax.clabel(CS, fmt=labels_dict, fontsize=9, inline=1)
 
         plt.gcf().colorbar(im)
         ax.set_xlabel(r"$\lambda_{signal}$ [nm]")
         ax.set_ylabel(r"$\lambda_{idler}$ [nm]")
         ax.set_title(title)
         plt.tight_layout()
+        return ax
 
     def plot_marginals(self, ax=None, **kwargs):
         if ax is None:
@@ -431,8 +484,9 @@ class JSA(object):
                     "I need two different axes to plot the marginals. ax should be a list of axes handles [ax0, ax1]")
 
         suptitle = kwargs.get("suptitle", "Marginals")
-        print(self.phasematching.signal_wavelength * 1e9)
+        print(self.phasematching.wavelength1 * 1e9)
         print(self.__marginal1)
-        ax[0].plot(self.phasematching.signal_wavelength * 1e9, self.marginal1)
-        ax[1].plot(self.phasematching.idler_wavelength * 1e9, self.marginal2)
+        ax[0].plot(self.phasematching.wavelength1 * 1e9, self.marginal1)
+        ax[1].plot(self.phasematching.wavelength2 * 1e9, self.marginal2)
         plt.suptitle(suptitle)
+        return ax

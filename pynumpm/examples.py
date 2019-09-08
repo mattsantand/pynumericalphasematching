@@ -70,7 +70,6 @@ def example_waveguide():
                                             poling_period=np.infty)
     noisy_waveguide.create_noisy_waveguide(noise_profile="awgn",
                                            noise_amplitude=0.1)
-    print(noisy_waveguide)
     noisy_waveguide.plot()
     noisy_waveguide = WG.RealisticWaveguide(z=z, nominal_parameter=7., nominal_parameter_name=r"Width [$\mu$m]",
                                             poling_period=np.infty)
@@ -97,11 +96,24 @@ def example_noise():
     plt.show()
 
 
+def example_simple_phasematching_deltabeta():
+    from pynumpm import waveguide, phasematching
+
+    thiswaveguide = waveguide.Waveguide(length=25e-3)
+    deltabeta = np.linspace(-5000, 5000, 1000)
+    thisprocess = phasematching.SimplePhasematchingDeltaBeta(waveguide=thiswaveguide)
+    thisprocess.deltabeta = deltabeta
+    thisprocess.calculate_phasematching(normalized=False)
+    print(thisprocess.calculate_integral())
+    thisprocess.plot()
+    plt.show()
+
+
 def example_phasematching_deltabeta():
     from pynumpm import waveguide, phasematching
 
     z = np.linspace(0, 0.02, 1000)
-    thiswaveguide = waveguide.RealisticWaveguide(z=z, nominal_parameter=0, nominal_parameter_name=r"\Delta\beta")
+    thiswaveguide = waveguide.RealisticWaveguide(z=z, nominal_parameter=0, nominal_parameter_name=r"$\Delta\beta$")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
                                          noise_amplitude=500.0)
     thiswaveguide.plot()
@@ -111,6 +123,7 @@ def example_phasematching_deltabeta():
     thisprocess.deltabeta = deltabeta
     thisprocess.calculate_phasematching(normalized=True)
     thisprocess.plot(verbose=True)
+    plt.show()
 
 
 def example_simple1D_phasematching():
@@ -119,12 +132,11 @@ def example_simple1D_phasematching():
     nte, ntm = custom_sellmeier()
 
     length = 10e-3
-    poling = utils.calculate_poling_period(1550e-9, 890e-9, 0,
+    poling = utils.calculate_poling_period(0, 890e-9, 1550e-9,
                                            ntm(20),
                                            ntm(20),
                                            ntm(20))[-1]
-    z = np.array([0, length])
-    thissimplewaveguide = waveguide.Waveguide(z=z,
+    thissimplewaveguide = waveguide.Waveguide(length=length,
                                               poling_period=poling)
     thisprocess = phasematching.SimplePhasematching1D(waveguide=thissimplewaveguide,
                                                       n_red=ntm(20),
@@ -134,17 +146,19 @@ def example_simple1D_phasematching():
     thisprocess.green_wavelength = 890e-9
     thisprocess.calculate_phasematching()
     thisprocess.plot()
+    plt.show()
+
 
 def example_1D_phasematching():
     from pynumpm import waveguide, phasematching, utils
 
     length = 30e-3  # length in m
-    dz = 50e-6  # discretization in m
+    dz = 1e-6  # discretization in m
     z = np.arange(0, length + dz, dz)
 
     nte, ntm = custom_sellmeier()
 
-    poling_period = utils.calculate_poling_period(1.55e-6, 1.55e-6, 0, ntm(40), ntm(40), ntm(40), 1)[-1]
+    poling_period = utils.calculate_poling_period(0, 890e-9, 1.55e-6, nte(40), ntm(40), nte(40), 1)[-1]
     print("Poling period: ", poling_period)
 
     thiswaveguide = waveguide.RealisticWaveguide(z=z,
@@ -155,16 +169,75 @@ def example_1D_phasematching():
                                          noise_amplitude=3)
     thiswaveguide.plot_waveguide_properties()
     thisprocess = phasematching.Phasematching1D(waveguide=thiswaveguide,
-                                                n_red=ntm,
+                                                n_red=nte,
                                                 n_green=ntm,
-                                                n_blue=ntm)
+                                                n_blue=nte)
     wl_red = np.linspace(1.540, 1.560, 1000) * 1e-6
     thisprocess.red_wavelength = wl_red
-    # thisprocess.__set_wavelengths(wl_red, wl_red, 0, constlam="shg")
+    thisprocess.green_wavelength = 890e-9
     thisprocess.set_nonlinearity_profile(profile_type="constant",
                                          first_order_coefficient=False)
+    # thisprocess.set_wavelengths()
     phi = thisprocess.calculate_phasematching()
     thisprocess.plot()
+    plt.show()
+
+
+def example_test_load_wg():
+    # TODO: put this function in a test module
+    from pynumpm import waveguide, phasematching, utils
+
+    simplewg = waveguide.Waveguide(length=1, poling_period=1)
+    realwg = waveguide.RealisticWaveguide(z=np.array([0, 1]))
+    simplepm = phasematching.SimplePhasematchingDeltaBeta(waveguide=simplewg)
+    simplepm2 = phasematching.SimplePhasematchingDeltaBeta(waveguide=realwg)
+    # realpm = phasematching.PhasematchingDeltaBeta(waveguide=simplewg)
+    realpm2 = phasematching.PhasematchingDeltaBeta(waveguide=realwg)
+
+
+def example_test_1DPM():
+    # TODO: put this function in a test module
+    from pynumpm import waveguide, phasematching, utils
+
+    nte, ntm = custom_sellmeier()
+
+    length = 20e-3
+    poling = utils.calculate_poling_period(0, 890e-9, 1550e-9,
+                                           nte(20),
+                                           ntm(20),
+                                           nte(20))[-1]
+    thissimplewaveguide = waveguide.Waveguide(length=length,
+                                              poling_period=poling)
+    ideal_process = phasematching.SimplePhasematching1D(waveguide=thissimplewaveguide,
+                                                        n_red=nte(20),
+                                                        n_green=ntm(20),
+                                                        n_blue=nte(20))
+    ideal_process.red_wavelength = np.linspace(1530, 1580, 1000) * 1e-9
+    ideal_process.green_wavelength = 890e-9
+    phi1 = ideal_process.calculate_phasematching()
+
+    dz = 50e-6  # discretization in m
+    z = np.arange(0, length + dz, dz)
+
+    thiswaveguide = waveguide.RealisticWaveguide(z=z,
+                                                 poling_period=poling,
+                                                 nominal_parameter=20,
+                                                 nominal_parameter_name=r"Temperature")
+    thisprocess = phasematching.Phasematching1D(waveguide=thiswaveguide,
+                                                n_red=nte,
+                                                n_green=ntm,
+                                                n_blue=nte)
+
+    thisprocess.red_wavelength = ideal_process.red_wavelength
+    thisprocess.green_wavelength = ideal_process.green_wavelength
+    phi2 = thisprocess.calculate_phasematching()
+    plt.plot(ideal_process.red_wavelength * 1e9, abs(phi1) ** 2 - abs(phi2) ** 2, ":")
+    plt.figure()
+    plt.plot(ideal_process.red_wavelength * 1e9, np.imag(phi1), ":", color="tab:blue")
+    plt.plot(ideal_process.red_wavelength * 1e9, np.imag(phi2), ":", color="tab:orange")
+    plt.plot(ideal_process.red_wavelength * 1e9, np.real(phi1), "-", color="tab:blue")
+    plt.plot(ideal_process.red_wavelength * 1e9, np.real(phi2), "-", color="tab:orange")
+    plt.show()
 
 
 def example_1D_SFG():
@@ -176,15 +249,15 @@ def example_1D_SFG():
 
     nte, ntm = custom_sellmeier()
 
-    poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(40), ntm(40), nte(40), 1)[-1]
+    poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6, nte(20), ntm(20), nte(20), 1)[-1]
     print("Poling period: ", poling_period)
 
     thiswaveguide = waveguide.RealisticWaveguide(z=z,
                                                  poling_period=poling_period,
-                                                 nominal_parameter=40,
-                                                 nominal_parameter_name=r"Wg width [$\mu$m]")
+                                                 nominal_parameter=20,
+                                                 nominal_parameter_name=r"Temperature [deg]")
     thiswaveguide.create_noisy_waveguide(noise_profile="1/f",
-                                         noise_amplitude=0.5)
+                                         noise_amplitude=0.1)
     thiswaveguide.plot_waveguide_properties()
     thisprocess = phasematching.Phasematching1D(waveguide=thiswaveguide,
                                                 n_red=nte,
@@ -197,6 +270,31 @@ def example_1D_SFG():
                                          first_order_coefficient=False)
     phi = thisprocess.calculate_phasematching()
     thisprocess.plot()
+    plt.show()
+
+
+def example_simple2D_phasematching():
+    from pynumpm import waveguide, utils, phasematching
+
+    length = 25e-3  # length in m
+
+    nte, ntm = custom_sellmeier()
+    T0 = 25
+
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6, nte(T0), ntm(T0), nte(T0), 1)
+    print("Poling period: ", poling_period)
+    thiswaveguide = waveguide.Waveguide(length=length,
+                                        poling_period=poling_period)
+    thisprocess = phasematching.SimplePhasematching2D(waveguide=thiswaveguide,
+                                                      n_red=nte(T0),
+                                                      n_green=ntm(T0),
+                                                      n_blue=nte(T0))
+
+    thisprocess.red_wavelength = np.linspace(1.50e-6, 1.6e-6, 100)
+    thisprocess.blue_wavelength = np.linspace(0.549e-6, 0.551e-6, 1000)
+    thisprocess.calculate_phasematching()
+    thisprocess.plot()
+    plt.show()
 
 
 def example_2D_phasematching():
@@ -208,7 +306,7 @@ def example_2D_phasematching():
     nte, ntm = custom_sellmeier()
     T0 = 25
 
-    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6, nte(T0), ntm(T0),
                                                                     nte(T0), 1)
     print("Poling period: ", poling_period)
     z = np.arange(0, length + dz, dz)
@@ -227,21 +325,22 @@ def example_2D_phasematching():
     thisprocess.blue_wavelength = np.linspace(0.549e-6, 0.551e-6, 1000)
     thisprocess.calculate_phasematching()
     thisprocess.plot()
+    plt.show()
 
 
 def example_jsa1():
     from pynumpm import waveguide, utils, phasematching, jsa
 
-    length = 25e-3  # length in m
+    length = 5e-3  # length in m
 
     nte, ntm = custom_sellmeier()
     T0 = 25
 
-    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
+    lamr, lamg, lamb, poling_period = utils.calculate_poling_period(0.55e-6, 0, 1.55e-6, nte(T0), ntm(T0),
                                                                     nte(T0), 1)
     print("Poling period: ", poling_period)
     z = np.array([0, length])
-    thiswaveguide = waveguide.Waveguide(z=z,
+    thiswaveguide = waveguide.Waveguide(length=length,
                                         poling_period=poling_period)
     thisprocess = phasematching.SimplePhasematching2D(waveguide=thiswaveguide,
                                                       n_red=nte(T0),
@@ -255,8 +354,8 @@ def example_jsa1():
 
     # the process is an SFG process
     thispump = jsa.Pump(process=jsa.Process.SFG)
-    thispump.signal_wavelength = thisprocess.signal_wavelength
-    thispump.idler_wavelength = thisprocess.idler_wavelength
+    thispump.signal_wavelength = thisprocess.wavelength1
+    thispump.idler_wavelength = thisprocess.wavelength2
     # set the bandwidth to 1nm
     thispump.pump_width = 1e-9
     thispump.plot()
@@ -265,23 +364,30 @@ def example_jsa1():
     thisjsa = jsa.JSA(phasematching=thisprocess,
                       pump=thispump)
     thisjsa.calculate_JSA()
-    thisjsa.calculate_schmidt_number()
+    thisjsa.calculate_schmidt_decomposition()
+    thisjsa.plot_schmidt_coefficients()
     thisjsa.plot()
+    plt.show()
 
 
 if __name__ == '__main__':
     import logging
 
+    FORMAT = "%(asctime)s.%(msecs)03d -- %(filename)s:%(lineno)s - %(funcName)20s() :>> %(message)s"
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
     example_simple_waveguide()
     example_waveguide()
-    # example_noise()
-    # example_phasematching_deltabeta()
-    # example_simple1D_phasematching()
-    # example_1D_phasematching()
-    # example_1D_SFG()
-    # example_2D_phasematching()
-    # example_jsa1()
-    plt.show()
+    example_noise()
+    example_simple_phasematching_deltabeta()
+    example_phasematching_deltabeta()
+    example_simple1D_phasematching()
+    example_1D_phasematching()
+    example_test_1DPM()
+    example_test_load_wg()
+    example_1D_SFG()
+    example_simple2D_phasematching()
+    example_2D_phasematching()
+    example_jsa1()
+

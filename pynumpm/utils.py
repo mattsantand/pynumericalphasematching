@@ -8,11 +8,12 @@ import enum
 
 class Propagation(enum.Enum):
     COPROPAGATION = -1
-    """Sign of the signal in copropagatio"""
+    """Sign of the signal in copropagation"""
     COUNTEPROPAGATION = +1
     """Sign of signal in counterpropagation"""
 
-def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, order=1, **kwargs):
+
+def calculate_poling_period(lamb=0, lamg=0, lamr=0, nb=None, ng=None, nr=None, order=1, **kwargs):
     """
     Function to calculate the poling period of a specific process. To ensure energy conservation, specify only 2
     wavelengths (in meter) and leave the free one to 0
