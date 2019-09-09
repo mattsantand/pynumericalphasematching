@@ -143,7 +143,7 @@ class SimplePhasematchingDeltaBeta(object):
             y = abs(self.phi) ** 2 / y.max()
         ax.plot(self.deltabeta, y)
         plt.title("Phasematching")
-        plt.xlabel(r"$\Delta\\beta$ [m$^{-1}$]")
+        plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
         return ax
 
@@ -248,7 +248,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
             y = abs(self.phi) ** 2 / y.max()
         ax.plot(self.deltabeta, y)
         plt.title("Phasematching")
-        plt.xlabel(r"$\Delta\\beta$ [m$^{-1}$]")
+        plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
         if verbose:
             integral = self.calculate_integral()

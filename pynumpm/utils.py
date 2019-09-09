@@ -35,7 +35,7 @@ def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
     :type nb: Function
     :param order: Order of the process. Default: 1
     :type order: int
-    :return: List of red wavelength, green wavelength, blue wavelength and poling period.
+    :return: The poling period.
     """
 
     if not isinstance(propagation_type, Propagation):
@@ -49,7 +49,7 @@ def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
     Lambda = order / (nb(abs(lamb) * 1e6) / lamb -
                       ng(abs(lamg) * 1e6) / lamg +
                       propagation_type.value * nr(abs(lamr) * 1e6) / lamr)
-    return lamr, lamg, lamb, Lambda
+    return Lambda
 
 
 def calculate_phasematching_point(fixed_wl, poling_period: float, nr: Callable[[float], float],
