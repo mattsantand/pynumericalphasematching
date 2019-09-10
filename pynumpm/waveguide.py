@@ -279,6 +279,7 @@ class RealisticWaveguide(Waveguide):
         ax.set_ylabel(self.nominal_parameter_name)
         ax.set_title("Waveguide profile")
         ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+        plt.tight_layout()
         return fig, ax
 
     def plot_waveguide_properties(self, fig: matplotlib.figure.Figure = None):
