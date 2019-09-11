@@ -11,7 +11,7 @@ This Python package is an API for the analysis of classical optical,
 `nonlinear optical processes <https://en.wikipedia.org/wiki/Nonlinear_optics#Frequency-mixing_processes>`_
 (mainly three wave mixing) in guiding structures.
 
-This package has been developed by `M. Santandrea <mailto: mattsantand@gmail.com>`_, `Integrated Quantum Optics
+This package has been developed by M. Santandrea (`email <mailto: mattsantand@gmail.com>`_), `Integrated Quantum Optics
 <https://physik.uni-paderborn.de/en/silberhorn/>`_ group, University of Paderborn, Germany.
 
 
