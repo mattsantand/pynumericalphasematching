@@ -1,5 +1,6 @@
+=========
 Tutorials
-*********
+=========
 
 If the dispersion functions (as a function of the wavelength) `n_red`, `n_green` and `n_blue` are available, it is
 possible to calculate the phasematching as a function of one or two wavelength(s).

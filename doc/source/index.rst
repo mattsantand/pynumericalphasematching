@@ -3,18 +3,25 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+===================================
 Welcome to PyNumPy's documentation!
-====================================================
+===================================
 Greetings! Welcome to PyNumericalPhasematching, aka pynumpy.
-This Python package is an API for the analysis of classical optical, frequency-mixing,
-`nonlinear processes <https://en.wikipedia.org/wiki/Nonlinear_optics#Frequency-mixing_processes>`_ (mainly three wave mixing) in
-guiding structures.
+This Python package is an API for the analysis of classical optical,
+`nonlinear optical processes <https://en.wikipedia.org/wiki/Nonlinear_optics#Frequency-mixing_processes>`_
+(mainly three wave mixing) in guiding structures.
 
+This package has been developed by `M. Santandrea <mailto: mattsantand@gmail.com>`_, `Integrated Quantum Optics
+<https://physik.uni-paderborn.de/en/silberhorn/>`_ group, University of Paderborn, Germany.
+
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 1
-   :caption: Resources:
 
+   gettingstarted
    tutorials
    how-to
    apiguide
