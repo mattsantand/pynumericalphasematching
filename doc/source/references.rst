@@ -9,8 +9,8 @@ length :math:`L` can be calculated using the equation
 
 .. math::
 
-    \phi &= \frac{1}{L}\int_0^L \exp\left\lbrace i\Delta\beta z\right\rbrace dz\\
-    &= sinc\left(\frac{\Delta\beta L}{2}\right)\exp\left\lbrace\frac{\Delta\beta L}{2}\right\rbrace,
+    \phi &= \frac{1}{L}\int_0^L \exp\left\lbrace \mathrm{i}\Delta\beta z\right\rbrace dz\\
+    &= sinc\left(\frac{\Delta\beta L}{2}\right)\exp\left\lbrace \mathrm{i}\frac{\Delta\beta L}{2}\right\rbrace,
 
 
 where :math:`\Delta\beta` is the phase mismatch of the process, :math:`z` is the optical axis of the system and
@@ -29,7 +29,7 @@ In this case, the phasematching spectrum is given by
 
 .. math::
 
-    \phi = \frac{1}{L}\int_0^L \exp\left\lbrace i \int_0^z\Delta\beta(\xi)d\xi \right\rbrace dz.
+    \phi = \frac{1}{L}\int_0^L \exp\left\lbrace \mathrm{i} \int_0^z\Delta\beta(\xi)d\xi \right\rbrace dz.
 
 The integral :math:`\int_0^z\Delta\beta(\xi)d\xi` is necessary to correctly keep track of the phase acquired by the
 fields as they travel along an inhomogeneous medium.
