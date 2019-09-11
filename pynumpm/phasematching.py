@@ -145,6 +145,7 @@ class SimplePhasematchingDeltaBeta(object):
         plt.title("Phasematching")
         plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
+        plt.tight_layout()
         return ax
 
     def calculate_integral(self):
@@ -261,6 +262,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
             y = .7 * y1
             props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
             plt.text(x, y, text, bbox=props)
+        plt.tight_layout()
         return ax
 
 
@@ -608,6 +610,7 @@ class SimplePhasematching1D(object):
         ax.set_ylabel(ylabel)
         ax.set_title("Phasematching")
         fig = plt.gcf()
+        plt.tight_layout()
         return fig, ax
 
 
@@ -1100,6 +1103,7 @@ class SimplePhasematching2D(object):
              "vmin": vmin,
              "vmax": vmax,
              "cbar": cbar}
+        plt.tight_layout()
         return d
 
 
@@ -1377,4 +1381,5 @@ class Phasematching2D(SimplePhasematching2D):
             fig, ax = plt.subplots(1, 1)
         self.plot(ax=ax)
         ax.plot(signal * 1e9, idler * 1e9, "k", lw=3)
+        plt.tight_layout()
         return signal, idler
