@@ -1,4 +1,4 @@
-# Welcome to pynumpm v0.2
+# Welcome to pynumpm v1.0
 
 Welcome to pynumpm, short for PyNumericalPhasematching! 
 
