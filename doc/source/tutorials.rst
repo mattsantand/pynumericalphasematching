@@ -1,6 +1,7 @@
 =========
 Tutorials
 =========
+.. warning:: This section is under rework
 
 In the following, most of the capabilities of this API are showcased.
 

@@ -7,6 +7,6 @@ API references
 
    waveguide
    noise
-   jsa
    phasematching
+   jsa
    utils
