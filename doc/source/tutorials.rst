@@ -1,9 +1,47 @@
 =========
 Tutorials
 =========
+
+Here you can find some tutorials to understand the capabilities of this API.
+
 .. warning:: This section is under rework
 
-In the following, most of the capabilities of this API are showcased.
+Effect of a parabolic gradient of the phase mismatch
+****************************************************
+
+Let's study the effect of a parabolic gradient of the phase mismatch for waveguides with different lengths.
+Let's approximate :math:`\Delta\beta(z) = \Delta\beta_0 + \delta\beta(z)`, where :math:`\delta\beta(z)` is a parabolic
+function.
+
+::
+    from pynumpm import waveguide, phasematching
+
+    fig1, ax1 = plt.subplots(1, 1)
+    fig2, ax2 = plt.subplots(1, 1)
+
+    lengths = [1, 5, 10, 50]
+    for length in lengths:
+        z = np.linspace(0, length * 1e-3, 1000)
+        thiswaveguide = waveguide.RealisticWaveguide(z=z,
+                                                     nominal_parameter_name=r"$\Delta\beta$ [1/m]",
+                                                     nominal_parameter=0)
+        profile = 200 * (2 * z / z.max() - 1) ** 2
+        thiswaveguide.load_waveguide_profile(profile)
+        thiswaveguide.plot(ax=ax1)
+        thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
+        thisprocess.deltabeta = np.linspace(-2000, 2000, 1000)
+        thisprocess.calculate_phasematching(normalized=True)
+        thisprocess.plot(ax=ax2)
+
+    plt.figure(fig1.number)
+    plt.legend(lengths)
+    plt.figure(fig2.number)
+    plt.legend(lengths)
+    plt.show()
+
+
+
+
 
 If the dispersion functions (as a function of the wavelength) `n_red`, `n_green` and `n_blue` are available, it is
 possible to calculate the phasematching as a function of one or two wavelength(s).

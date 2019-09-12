@@ -440,7 +440,35 @@ def tutorial_calculate_wavelengths():
     from pynumpm import utils
 
     nte, ntm = custom_sellmeier()
-    success, res = utils.calculate_phasematching_point([549.5e-9, "b"], 4.55e-6, nte(20), ntm(20), nte(20), hint=[900e-9, 1550e-9])
+    success, res = utils.calculate_phasematching_point([549.5e-9, "b"], 4.55e-6, nte(20), ntm(20), nte(20),
+                                                       hint=[900e-9, 1550e-9])
+
+
+def tutorial_study_parabolic_gradient():
+    from pynumpm import waveguide, phasematching
+
+    fig1, ax1 = plt.subplots(1, 1)
+    fig2, ax2 = plt.subplots(1, 1)
+
+    lengths = [1, 5, 10, 50]
+    for length in lengths:
+        z = np.linspace(0, length * 1e-3, 1000)
+        thiswaveguide = waveguide.RealisticWaveguide(z=z,
+                                                     nominal_parameter_name=r"$\Delta\beta$ [1/m]",
+                                                     nominal_parameter=0)
+        profile = 200 * (2 * z / z.max() - 1) ** 2
+        thiswaveguide.load_waveguide_profile(profile)
+        thiswaveguide.plot(ax=ax1)
+        thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
+        thisprocess.deltabeta = np.linspace(-2000, 2000, 1000)
+        thisprocess.calculate_phasematching(normalized=True)
+        thisprocess.plot(ax=ax2)
+
+    plt.figure(fig1.number)
+    plt.legend(lengths)
+    plt.figure(fig2.number)
+    plt.legend(lengths)
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -463,4 +491,5 @@ if __name__ == '__main__':
     # tutorial_example_1Dphasematching()
     # tutorial_example_2Dphasematching()
     # example_jsa1()
-    tutorial_calculate_wavelengths()
+    # tutorial_calculate_wavelengths()
+    tutorial_study_parabolic_gradient()
