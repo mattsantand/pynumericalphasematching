@@ -39,41 +39,6 @@ The basic steps to run a simulation, are:
 object into such object.
 3. Run the `calculate_phasematching()` method of the phasematching object to calculate the phasematching spectrum.
 
-### First steps
-The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4$\mu$ um.
-```python
-import numpy as np
-from pynumpm import waveguide
-
-z = np.array([0, 0.01])
-thiswaveguide = waveguide.Waveguide(z = z,
-                                          poling_period = 4.4e-6)                                          
-``` 
-A `RealisticWaveguide` object does contains only information about the geometry of the waveguide under consideration, namely its 
-length, its poling period (can be set to `np.infinity` if not used) and its profile (e.g., the width variation along the 
-propagation axis). 
-Therefore, a `RealisticWaveguide` object does not contain information to evaluate the nonlinear process of interest. 
-These information must be provided using a `Phasematching` object.
-
-The following lines load the `RealisticWaveguide` object created in the previous step into a `Phasematching` object and calculate
-the phasematching spectrum as a function of \Delta\beta
-```python
-import numpy as np
-from pynumpm import phasematching
-from pynumpm import waveguide
-
-z = np.array([0, 0.01])
-thiswaveguide = waveguide.Waveguide(z = z,
-                                          poling_period = 4.4e-6)   
-deltabeta = np.linspace(-5000, 5000, 1000)
-thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
-thisprocess.deltabeta = deltabeta
-thisprocess.calculate_phasematching()
-thisprocess.plot()
-```
-
-For more example, consult the Tutorials.
-
 ### Additional tools
 
 * `utility.??`
