@@ -50,10 +50,10 @@ class Pump(object):
         self.__pump_chirp = 0
         self.__pump_temporal_mode = 0
         self.__pump_filter_width = None
-        self.__signal_wavelength = None
-        self.__idler_wavelength = None
-        self.__signal_wavelength2D = None
-        self.__idler_wavelength2D = None
+        self.__wavelength1 = None
+        self.__wavelength2 = None
+        self.__wavelength1_2D = None
+        self.__wavelength2_2D = None
         self.__pump_spectrum = None
         self.__correct_pump_width = None
 
@@ -65,29 +65,29 @@ class Pump(object):
     def pump_spectrum(self, value: np.ndarray):
         if not isinstance(value, np.ndarray):
             raise TypeError("The 'pump_spectrum' must be a numpy.ndarray object.")
-        if value.shape[0] != len(self.signal_wavelength):
+        if value.shape[0] != len(self.wavelength1):
             raise ValueError("The input pump spectrum is not compatible with the signal wavelength set. "
-                             "Make sure pump_spectrum.shape[0] == len(signal_wavelength)")
-        if value.shape[1] != len(self.idler_wavelength):
+                             "Make sure pump_spectrum.shape[0] == len(wavelength1)")
+        if value.shape[1] != len(self.wavelength2):
             raise ValueError("The input pump spectrum is not compatible with the idler wavelength set. "
-                             "Make sure pump_spectrum.shape[1] == len(idler_wavelength)")
+                             "Make sure pump_spectrum.shape[1] == len(wavelength2)")
         self.__pump_spectrum = value
 
     @property
-    def signal_wavelength(self):
-        return self.__signal_wavelength
+    def wavelength1(self):
+        return self.__wavelength1
 
-    @signal_wavelength.setter
-    def signal_wavelength(self, value):
-        self.__signal_wavelength = value
+    @wavelength1.setter
+    def wavelength1(self, value):
+        self.__wavelength1 = value
 
     @property
-    def idler_wavelength(self):
-        return self.__idler_wavelength
+    def wavelength2(self):
+        return self.__wavelength2
 
-    @idler_wavelength.setter
-    def idler_wavelength(self, value):
-        self.__idler_wavelength = value
+    @wavelength2.setter
+    def wavelength2(self, value):
+        self.__wavelength2 = value
 
     @property
     def process(self):
@@ -154,12 +154,12 @@ class Pump(object):
         self.__pump_temporal_mode = value
 
     @property
-    def signal_wavelength2D(self):
-        return self.__signal_wavelength2D
+    def wavelength1_2D(self):
+        return self.__wavelength1_2D
 
     @property
-    def idler_wavelength2D(self):
-        return self.__idler_wavelength2D
+    def wavelength2_2D(self):
+        return self.__wavelength2_2D
 
     def _hermite_mode(self, x: float):
         """ A normalised Hermite-Gaussian function """
@@ -180,38 +180,38 @@ class Pump(object):
     def __set_wavelengths(self):
         text = ""
         error = False
-        if self.signal_wavelength is None:
+        if self.wavelength1 is None:
             error = True
-            text += "You need to set the signal wavelength. "
-        if self.idler_wavelength is None:
+            text += "You need to set wavelength1. "
+        if self.wavelength2 is None:
             error = True
-            text += "You need to set the idler wavelength."
+            text += "You need to set wavelength2."
         if error:
             raise ValueError(text.rstrip())
 
-        self.__signal_wavelength2D, self.__idler_wavelength2D = np.meshgrid(self.signal_wavelength,
-                                                                            self.idler_wavelength)
-        message = "The pump central wavelength hasn't been set. Inferring its value from the signal/idler arrays"
+        self.__wavelength1_2D, self.__wavelength2_2D = np.meshgrid(self.wavelength1,
+                                                                   self.wavelength2)
+        message = "The pump central wavelength hasn't been set. Inferring its value from the wavelength1/wavelength2 arrays"
         if self.process == Process.PDC or self.process == Process.BWPDC:
-            self.pump_wavelength = 1.0 / (1.0 / self.__signal_wavelength2D +
-                                          1.0 / self.__idler_wavelength2D)
+            self.pump_wavelength = 1.0 / (1.0 / self.__wavelength1_2D +
+                                          1.0 / self.__wavelength2_2D)
             if self.pump_centre is None:
                 warnings.warn(message, UserWarning)
-                self.pump_centre = (self.signal_wavelength.mean() ** -1 + self.idler_wavelength.mean() ** -1) ** -1
+                self.pump_centre = (self.wavelength1.mean() ** -1 + self.wavelength2.mean() ** -1) ** -1
 
         elif self.process == Process.SFG:
-            self.pump_wavelength = 1.0 / (1.0 / self.__idler_wavelength2D -
-                                          1.0 / self.__signal_wavelength2D)
+            self.pump_wavelength = 1.0 / (1.0 / self.__wavelength2_2D -
+                                          1.0 / self.__wavelength1_2D)
             if self.pump_centre is None:
                 warnings.warn(message, UserWarning)
-                self.pump_centre = (self.idler_wavelength.mean() ** -1 - self.signal_wavelength.mean() ** -1) ** -1
+                self.pump_centre = (self.wavelength2.mean() ** -1 - self.wavelength1.mean() ** -1) ** -1
 
         elif self.process == Process.DFG:
-            self.pump_wavelength = 1.0 / (1.0 / self.__signal_wavelength2D -
-                                          1.0 / self.__idler_wavelength2D)
+            self.pump_wavelength = 1.0 / (1.0 / self.__wavelength1_2D -
+                                          1.0 / self.__wavelength2_2D)
             if self.pump_centre is None:
                 warnings.warn(message, UserWarning)
-                self.pump_centre = (self.signal_wavelength.mean() ** -1 - self.idler_wavelength.mean() ** -1) ** -1
+                self.pump_centre = (self.wavelength1.mean() ** -1 - self.wavelength2.mean() ** -1) ** -1
         else:
             raise NotImplementedError("The process {0} has not been implemented yet.".format(self.process))
 
@@ -220,7 +220,7 @@ class Pump(object):
 
         === Returns ===
         _pump_function -- matrix containing the pump function in
-                          signal and idler frequecy plane
+                          wavelength1 and wavelength2 frequecy plane
         """
         logger = logging.getLogger(__name__)
         self.__set_wavelengths()
@@ -232,9 +232,9 @@ class Pump(object):
             self.filter_width *= np.sqrt(2)
             _filter = np.zeros(np.shape(self.pump_wavelength), float)
             logger.debug("Pump wavelength: %f", np.shape(self.pump_wavelength))
-            for i in range(len(self.signal_wavelength)):
+            for i in range(len(self.wavelength1)):
                 logger.debug("Loop index: %d", i)
-                for j in range(len(self.idler_wavelength)):
+                for j in range(len(self.wavelength2)):
                     if self.pump_wavelength[j, i] < self.pump_centre - \
                             0.5 * self.filter_width:
                         pass
@@ -265,12 +265,12 @@ class Pump(object):
             self.calculate_pump_spectrum()
 
         if light_plot:
-            x, y = self.signal_wavelength * 1e9, self.idler_wavelength * 1e9,
+            x, y = self.wavelength1 * 1e9, self.wavelength2 * 1e9,
             ax.imshow(abs(self.pump_spectrum) ** 2, origin="lower", extent=[x.min(), x.max(), y.min(), y.max()],
                       aspect="auto")
             warnings.warn("The light_plot mode is compatible only with linear meshes of the signal/idler wavelengths.")
         else:
-            ax.pcolormesh(self.signal_wavelength * 1e9, self.idler_wavelength * 1e9, abs(self.pump_spectrum) ** 2)
+            ax.pcolormesh(self.wavelength1 * 1e9, self.wavelength2 * 1e9, abs(self.pump_spectrum) ** 2)
 
         ax.set_title("Pump intensity")
         if self.process == Process.SFG or self.process == Process.DFG:
@@ -354,11 +354,11 @@ class JSA(object):
         idler_wl = self.phasematching.wavelength2
 
         # d_wl_signal = np.diff(signal_wl)[0]
-        # d_wl_idler = np.diff(self.phasematching.idler_wavelength)[0]
+        # d_wl_idler = np.diff(self.phasematching.wavelength2)[0]
 
         WL_SIGNAL, WL_IDLER = np.meshgrid(signal_wl, idler_wl)
-        self.pump.signal_wavelength = WL_SIGNAL
-        self.pump.idler_wavelength = WL_IDLER
+        self.pump.wavelength1 = WL_SIGNAL
+        self.pump.wavelength2 = WL_IDLER
 
         JSA = self.pump.pump_spectrum * self.phasematching.phi
 

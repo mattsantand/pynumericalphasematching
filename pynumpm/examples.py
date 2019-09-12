@@ -218,10 +218,10 @@ def tutorial_example_simple1dphasematching():
 
     # Define the phasematching process
     thisprocess = phasematching.SimplePhasematching1D(waveguide=thiswaveguide,
-                                                            n_red=nTE,
-                                                            n_green=nTM,
-                                                            n_blue=nTE,
-                                                            order=1)
+                                                      n_red=nTE,
+                                                      n_green=nTM,
+                                                      n_blue=nTE,
+                                                      order=1)
     # Define the range for the scanning wavelength
     thisprocess.red_wavelength = np.linspace(red_wl0 - red_span / 2, red_wl0 + red_span / 2, 1000)
     thisprocess.green_wavelength = green_wl0
@@ -255,10 +255,10 @@ def tutorial_example_simple2dphasematching():
 
     # Define the phasematching process
     thisprocess = phasematching.SimplePhasematching2D(waveguide=thiswaveguide,
-                                                            n_red=nTE,
-                                                            n_green=nTM,
-                                                            n_blue=nTE,
-                                                            order=1)
+                                                      n_red=nTE,
+                                                      n_green=nTM,
+                                                      n_blue=nTE,
+                                                      order=1)
     # Define the range for the scanning wavelength
     thisprocess.red_wavelength = np.linspace(red_wl0 - red_span / 2, red_wl0 + red_span / 2, 1000)
     thisprocess.green_wavelength = np.linspace(green_wl0 - green_span / 2, green_wl0 + green_span / 2, 1000)
@@ -322,7 +322,7 @@ def tutorial_example_1Dphasematching():
                                                 n_red=nte,
                                                 n_green=ntm,
                                                 n_blue=nte)
-    thisprocess.red_wavelength = np.linspace(red_wl0-red_span/2, red_wl0+red_span/2, 1000)
+    thisprocess.red_wavelength = np.linspace(red_wl0 - red_span / 2, red_wl0 + red_span / 2, 1000)
     thisprocess.green_wavelength = green_wl0
     phi = thisprocess.calculate_phasematching()
     thisprocess.plot()
@@ -420,8 +420,8 @@ def example_jsa1():
 
     # the process is an SFG process
     thispump = jsa.Pump(process=jsa.Process.SFG)
-    thispump.signal_wavelength = thisprocess.wavelength1
-    thispump.idler_wavelength = thisprocess.wavelength2
+    thispump.wavelength1 = thisprocess.wavelength1
+    thispump.wavelength2 = thisprocess.wavelength2
     # set the bandwidth to 1nm
     thispump.pump_width = 1e-9
     thispump.plot()
@@ -431,9 +431,16 @@ def example_jsa1():
                       pump=thispump)
     thisjsa.calculate_JSA()
     thisjsa.calculate_schmidt_decomposition()
-    thisjsa.plot_schmidt_coefficients()
+    thisjsa.plot_schmidt_coefficients(ncoeff=20)
     thisjsa.plot(plot_pump=True)
     plt.show()
+
+
+def tutorial_calculate_wavelengths():
+    from pynumpm import utils
+
+    nte, ntm = custom_sellmeier()
+    success, res = utils.calculate_phasematching_point([549.5e-9, "b"], 4.55e-6, nte(20), ntm(20), nte(20), hint=[900e-9, 1550e-9])
 
 
 if __name__ == '__main__':
@@ -454,5 +461,6 @@ if __name__ == '__main__':
     # tutorial_example_simple2dphasematching()
     # tutorial_example_phasematching_deltabeta_realistic_wg()
     # tutorial_example_1Dphasematching()
-    tutorial_example_2Dphasematching()
+    # tutorial_example_2Dphasematching()
     # example_jsa1()
+    tutorial_calculate_wavelengths()

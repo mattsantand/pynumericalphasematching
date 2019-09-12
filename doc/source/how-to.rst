@@ -14,7 +14,7 @@ Ideal waveguide
 ---------------
 An ideal waveguide is defined using the class :class:`pynumpm.waveguide.Waveguide`.
 To define an ideal waveguide, only its `length` and, if necessary, its `poling_period` are required.
-The following block of code creates a 10mm-long, ideal waveguide with poling period :math:`\Lambda = 16\mu\mathrm{m}`.
+The following code creates a 10mm-long, ideal waveguide with poling period :math:`\Lambda = 16\mu\mathrm{m}`.
 
 ::
 
@@ -28,7 +28,7 @@ The following block of code creates a 10mm-long, ideal waveguide with poling per
 Inhomogeneous waveguide
 -----------------------
 A real, inhomogeneous waveguide is defined using the class :class:`pynumpm.waveguide.RealisticWaveguide`.
-The following block of code creates a 15mm-long waveguide, with a 10 :math:`\mu\mathrm{m}` poling, and a with a
+The following code creates a 15mm-long waveguide, with a 10 :math:`\mu\mathrm{m}` poling, and a with a
 parabolic width profile ranging between 7 and 7.5 :math:`\mu\mathrm{m}`.
 
 ::
@@ -136,7 +136,7 @@ depend also on the parameter describing the waveguide profile.
 :math:`\Delta\beta` dependent
 -----------------------------
 
-The following block of code creates a 2cm-long ideal waveguide and calculate its spectrum as a function of :math:`\Delta\beta`,
+The following code creates a 2cm-long ideal waveguide and calculate its spectrum as a function of :math:`\Delta\beta`,
 for :math:`\Delta\beta\in [-1000, 1000] \mathrm{m}^{-1}`.
 
 ::
@@ -164,7 +164,7 @@ for :math:`\Delta\beta\in [-1000, 1000] \mathrm{m}^{-1}`.
 
 Wavelength dependent: 1D
 ------------------------
-The following block of code creates a 2cm-long, ideal waveguide and calculates its phasematching spectrum for the sum-frequency
+The following code creates a 2cm-long, ideal waveguide and calculates its phasematching spectrum for the sum-frequency
 generation process 1550nm(TE) + 890nm(TM) -> 565.4nm(TE), with polarisation defined in parentheses. The spectrum is
 calculated with the field at 890 fixed and the one at 1550nm scanned within 10nm.
 The function :func:`pynumpm.utils.calculate_poling_period` is used to compute the correct poling period for the central
@@ -205,8 +205,8 @@ wavelengths of the process.
 Wavelength dependent: 2D
 ------------------------
 
-The following block of code creates a 4cm-long, ideal waveguide and calculates its phasematching spectrum for the parametric
-down conversion (PDC) process 775nm (TE) -> 1550nm(TE) + 1550nm(TM), with polarisation defined in parentheses.
+The following code creates a 4cm-long, ideal waveguide and calculates its phasematching spectrum for the parametric
+down conversion (PDC) process 775nm (TE) :math:`\rightarrow` 1550nm(TE) + 1550nm(TM), with polarisation defined in parentheses.
 The spectrum is calculated scannning the signal and idler fields at 1550nm within 10nm.
 The function :func:`pynumpm.utils.calculate_poling_period` is used to compute the correct poling period for the central
 wavelengths of the process.
@@ -266,7 +266,7 @@ the phasematching spectrum of a custom-defined waveguide.
 
 :math:`\Delta\beta` dependent
 -----------------------------
-The following block of code creates a 2cm-long waveguide with a 1/f2 noise on the :math:`\Delta\beta` having a maximum amplitude
+The following code creates a 2cm-long waveguide with a 1/f2 noise on the :math:`\Delta\beta` having a maximum amplitude
 of :math:`\delta\beta_{max} = 100\mathrm{m}^{-1}` and calculates its spectrum in the range :math:`\Delta\beta\in[-5000, 5000] \mathrm{m}^{-1}`.
 
 .. note::
@@ -305,7 +305,7 @@ of :math:`\delta\beta_{max} = 100\mathrm{m}^{-1}` and calculates its spectrum in
 
 Wavelength dependent: 1D
 ------------------------
-The following block of code creates a 3cm-long waveguide and simulates the effects of a temperature inhomogeneity during the operation
+The following code creates a 3cm-long waveguide and simulates the effects of a temperature inhomogeneity during the operation
 of the system. The waveguide has an average temperature of :math:`40^\circ\mathrm{C}` and a 1/f noise with maximum amplitude
 of :math:`3^\circ\mathrm{C}`.
 
@@ -359,6 +359,11 @@ The process is analogous to the one seen in section 2.
 Wavelength dependent: 2D
 ------------------------
 
+The following code creates a 25mm-long waveguide and simulates a type II sum frequency generation
+1550nm (TE) + 890nm(TM) :math:`\rightarrow` 550nm (TE) for a waveguide having inhomogeneous temperature profile with an
+average temperature of 25 :math:`^\circ\mathrm{C}` and 1/f noise having amplitude of 1 :math:`^\circ\mathrm{C}`.
+It calculates the phasematching spectrum as a function of the input (1550nm) and output (550nm) wavelengths.
+
 ::
 
     from pynumpm import waveguide, utils, phasematching
@@ -367,7 +372,6 @@ Wavelength dependent: 2D
     length = 25e-3  # length in m
     dz = 100e-6  # discretization in m
 
-    nte, ntm = custom_sellmeier()
     T0 = 25
 
     poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
@@ -395,15 +399,70 @@ Wavelength dependent: 2D
 4. Definition of a pump spectrum
 ================================
 
+This API allows the simulation of a 2D pump spectrum using the class :class:`pynumpm.jsa.Pump`.
+The next code is used to calculate the pump of an SFG process. Therefore, the input and output wavelengths
+are provided.
+The bandwidth of the pump is set to 1nm.
+
+::
+    from pynumpm import jsa
+
+    # The pump is the pump for a SFG process.
+    thispump = jsa.Pump(process=jsa.Process.SFG)
+    thispump.wavelength1 = np.linspace(1550-20, 1550+20, 1000)*1e-9
+    thispump.wavelength2 = np.linspace(400-2, 400+2,500)*1e-9
+    # set the bandwidth to 1nm
+    thispump.pump_width = 1e-9
+    thispump.plot()
+
+
+
+
 5. JSA calculations
 ===================
 
+It is possible to perform JSA calculations with the help of the :class:`pynumpm.jsa.JSA` class.
+The following code loads the a 2D phasematching object and a pump object and calculates the JSA and its Schmidt
+decomposition. At the end, it plots the weights of the first ten Schmidt modes and the JSI with the pump overlayed.
+
+::
+    from pynumpm import jsa
+
+    thisjsa = jsa.JSA(phasematching=thisphasematching,
+                      pump=thispump)
+    thisjsa.calculate_JSA()
+    thisjsa.calculate_schmidt_decomposition()
+    thisjsa.plot_schmidt_coefficients(ncoeff = 10)
+    thisjsa.plot(plot_pump=True)
 
 6. Utilities
 ============
+Finally, the :mod:`pynumpm.utils` module provides additional functions to study phasematching processes.
+
+Poling period calculation
+-------------------------
+
+The function :func:`pynumpm.utils.calculate_poling_period` can be used to calculate the poling period for a given process.
+The following code calculates the poling period of a type 0 difference frequency generation with input wavelengths
+550nm and 1200nm.
+
+.. warning:: The refractive index functions that need to be provided to this function must be wavelength-dependent, i.e.
+:math:`n=n(\lambda)`.
+
+::
+
+    from pynumpm import utils
+    poling_period = utils.calculate_poling_period(1200e-9, 0, 550e-9, nte, nte, nte)
 
 Phasematching point calculation
 -------------------------------
+The function :func:`pynumpm.utils.calculate_phasematching_point` can be used to calculate the phasematching wavelengths
+for a given process and a given `poling_period`.
+The following code calculates the phasematching wavelengths of a type II parametric down conversion process pumped at
+549.5nm with a poling period of :math:`\Lambda = 4.55\mu\mathrm{m}`.
 
-Bandwidth calculation
----------------------
+::
+
+    poling = 4.55e-6
+    const_wl = [549.5e-9, "b"]
+    success, res = utils.calculate_phasematching_point(const_wl, poling, nte, ntm, nte, hint=[900e-9, 1550e-9])
