@@ -96,7 +96,7 @@ class SimplePhasematchingDeltaBeta(object):
         """
         return self._phi
 
-    def calculate_phasematching(self, normalized=False):
+    def calculate_phasematching(self, normalized=True):
         """
         Function that calculates the phasematching.
         Prior to the evaluation of the phasematching, it is necessary to set the :math:`\Delta\\beta` vector by
@@ -193,7 +193,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
     def noise_length_product(self):
         return self._noise_length_product
 
-    def calculate_phasematching(self, normalized=False):
+    def calculate_phasematching(self, normalized=True):
         """
         Function that calculates the phasematching in case of inhomogeneous waveguide.
         Prior to the evaluation of the phasematching, it is necessary to set the :math:`\Delta\\beta` vector by
