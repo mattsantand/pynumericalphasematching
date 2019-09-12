@@ -19,6 +19,7 @@ from scipy.integrate import simps
 from pynumpm import waveguide as Waveguide
 from typing import Union, Callable
 from tqdm import tqdm
+import warnings
 
 _REF_INDEX_TYPE0 = Callable[[float], float]
 _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
@@ -932,9 +933,12 @@ class SimplePhasematching2D(object):
         return self._waveguide
 
     @waveguide.setter
-    def waveguide(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]):
+    def waveguide(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide, None]):
         if isinstance(waveguide, (Waveguide.Waveguide, Waveguide.RealisticWaveguide)):
             self._waveguide = waveguide
+        elif waveguide is None:
+            warnings.warn("You have not provided any waveguide object to calculate the phasematching. If you don't "
+                          "load  an external phasematching, nothing will work.")
         else:
             raise TypeError("You need to pass an object from the pynumpm.waveguide.Waveguide or "
                             "pynumpm.waveguide.RealisticWaveguide class.")
