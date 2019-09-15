@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pynumpm.phasematching &mdash; PyNumericalPhasematching 0.2 documentation</title>
+  <title>pynumpm.phasematching &mdash; PyNumericalPhasematching 1.0b documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.2
+                1.0
               </div>
             
           
@@ -173,6 +173,7 @@
 <span class="kn">from</span> <span class="nn">pynumpm</span> <span class="k">import</span> <span class="n">waveguide</span> <span class="k">as</span> <span class="n">Waveguide</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="n">_REF_INDEX_TYPE0</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span>
 <span class="n">_REF_INDEX_TYPE1</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">]]</span>
@@ -1086,9 +1087,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_waveguide</span>
 
     <span class="nd">@waveguide</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">waveguide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waveguide</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Waveguide</span><span class="o">.</span><span class="n">Waveguide</span><span class="p">,</span> <span class="n">Waveguide</span><span class="o">.</span><span class="n">RealisticWaveguide</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">waveguide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waveguide</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Waveguide</span><span class="o">.</span><span class="n">Waveguide</span><span class="p">,</span> <span class="n">Waveguide</span><span class="o">.</span><span class="n">RealisticWaveguide</span><span class="p">,</span> <span class="kc">None</span><span class="p">]):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">waveguide</span><span class="p">,</span> <span class="p">(</span><span class="n">Waveguide</span><span class="o">.</span><span class="n">Waveguide</span><span class="p">,</span> <span class="n">Waveguide</span><span class="o">.</span><span class="n">RealisticWaveguide</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_waveguide</span> <span class="o">=</span> <span class="n">waveguide</span>
+        <span class="k">elif</span> <span class="n">waveguide</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;You have not provided any waveguide object to calculate the phasematching. If you don&#39;t &quot;</span>
+                          <span class="s2">&quot;load  an external phasematching, nothing will work.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;You need to pass an object from the pynumpm.waveguide.Waveguide or &quot;</span>
                             <span class="s2">&quot;pynumpm.waveguide.RealisticWaveguide class.&quot;</span><span class="p">)</span>

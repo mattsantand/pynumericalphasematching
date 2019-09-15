@@ -8,12 +8,13 @@ import logging
 
 class Waveguide(object):
     """
-    Base class for the description of a waveguide object
+    Base class for the description of a waveguide object.
 
     """
 
     def __init__(self, length: float, poling_period: float = +np.infty):
         """
+        Initialises the object providing its length (in meter) and, if necessary, its poling period.
 
         :param length: Length of the waveguide [*meter*].
         :type length: float
@@ -60,11 +61,20 @@ class Waveguide(object):
 
     @property
     def z(self):
+        """
+        Discretization mesh along z.
+
+        :return:
+        """
         warnings.warn("No z mesh defined for the Waveguide class")
         return self.__z
 
     @property
     def dz(self):
+        """
+        Cell size of the mesh along z.
+
+        """
         warnings.warn("No z mesh defined for the Waveguide class")
         return self.__dz
 
