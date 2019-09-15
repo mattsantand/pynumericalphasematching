@@ -10,11 +10,18 @@ class Waveguide(object):
     """
     Base class for the description of a waveguide object.
 
+    Read-only attributes:
+    :var length:
+    :var
+    :var poling_period:
+    :var poling_period_um:
+
+
     """
 
     def __init__(self, length: float, poling_period: float = +np.infty):
         """
-        Initialises the object providing its length (in meter) and, if necessary, its poling period.
+        Initialize the object providing its length (in meter) and, if necessary, its poling period.
 
         :param length: Length of the waveguide [*meter*].
         :type length: float
@@ -59,55 +66,28 @@ class Waveguide(object):
         """
         return self.__length
 
-    @property
-    def z(self):
-        """
-        Discretization mesh along z.
-
-        :return:
-        """
-        warnings.warn("No z mesh defined for the Waveguide class")
-        return self.__z
-
-    @property
-    def dz(self):
-        """
-        Cell size of the mesh along z.
-
-        """
-        warnings.warn("No z mesh defined for the Waveguide class")
-        return self.__dz
-
-
-
-
-
 class RealisticWaveguide(Waveguide):
     """
-    RealisticWaveguide class.
+    Class for the description of varaible waveguide profiles.
 
-    It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :mod:`noise`
-    module), it can load user-defined profiles (they must be consistent with the user specified mesh).
-    Moreover, the user can specify a poling structure (functionality unused in the CalculatePhasematching at the
-    moment).
+    It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :mod:`pynumpm.noise`
+    module) and it can load user-defined profiles (they must be consistent with the user specified mesh).
 
     """
 
     def __init__(self, z: np.ndarray, poling_period: float = np.infty, nominal_parameter: float = 1.,
                  nominal_parameter_name: str = ""):
         """
-        Initialize the waveguide by providing a z-mesh and the nominal parameter of the profile. This will automatically
+        Initialize the waveguide by providing a z-mesh,a poling and the nominal parameter of the profile. This will automatically
         generate a uniform profile with the specified nominal parameter.
 
         :param z: linearly spaced space mesh [*meter*].
         :type z: numpy.ndarray
         :param poling_period: poling period of the structure [*meter*].
         :type poling_period: float
-        :param nominal_parameter: nominal parameter of the structure [variable units, depend on the Sellmeier used].
-        Default: None.
+        :param nominal_parameter: nominal parameter of the structure [variable units depending on the Sellmeier used]. Default: None.
         :type nominal_parameter: float
-        :param nominal_parameter_name: name of the nominal parameter (used for the axes). LaTeX syntax is allowed.
-        Default: empty string.
+        :param nominal_parameter_name: name of the nominal parameter (used for the axes). LaTeX syntax is allowed. Default: empty string.
         :type nominal_parameter_name: string
 
         """
@@ -115,7 +95,7 @@ class RealisticWaveguide(Waveguide):
         self.__z = z
         self.__dz = np.diff(self.z)[0]
         self.__nominal_parameter = nominal_parameter
-        # when an object of this class is initialized, this call creates a uniform waveguide
+        # when an object of this class is initialized, the following call creates a uniform waveguide
         self.__waveguide_profile = self.load_waveguide_profile()
         self.__nominal_parameter_name = nominal_parameter_name
         length = self.z[-1] - self.z[0]
@@ -123,7 +103,7 @@ class RealisticWaveguide(Waveguide):
         if self.__nominal_parameter_name == "":
             warnings.warn(
                 "The name of the variable parameter was left empty. "
-                "That's really not a great name..",
+                "That's really not a great name...",
                 UserWarning)
         self.__poling_structure = None
 
@@ -206,8 +186,9 @@ class RealisticWaveguide(Waveguide):
         Function to load a user-defined waveguide profile.
 
         :param waveguide_profile: Array with the waveguide profile, with respect to the parameter under investigation,
-        or *None*. If *None*, it will create a uniform waveguide with the a constant `waveguide.nominal_parameter`.
-        If an array, it *must* have the same shape as the z-mesh. Default: None
+                                  or *None*. If *None*, it will create a uniform waveguide with the a constant
+                                  `waveguide.nominal_parameter`. If an array, it *must* have the same shape as the
+                                  z-mesh. Default: None
         :type waveguide_profile: numpy.ndarray
         :return: The numpy.ndarray containing the waveguide profile.
 
