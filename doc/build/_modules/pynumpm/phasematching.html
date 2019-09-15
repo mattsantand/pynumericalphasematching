@@ -1054,7 +1054,7 @@
         <span class="k">return</span> <span class="n">ax</span></div>
 
 
-<span class="k">class</span> <span class="nc">SimplePhasematching2D</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="SimplePhasematching2D"><a class="viewcode-back" href="../../phasematching.html#pynumpm.phasematching.SimplePhasematching2D">[docs]</a><span class="k">class</span> <span class="nc">SimplePhasematching2D</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waveguide</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Waveguide</span><span class="o">.</span><span class="n">Waveguide</span><span class="p">,</span> <span class="n">Waveguide</span><span class="o">.</span><span class="n">RealisticWaveguide</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">n_red</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">_REF_INDEX_TYPE0</span><span class="p">,</span> <span class="n">_REF_INDEX_TYPE1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">n_green</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">_REF_INDEX_TYPE0</span><span class="p">,</span> <span class="n">_REF_INDEX_TYPE1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1145,7 +1145,7 @@
     <span class="k">def</span> <span class="nf">wavelength2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wavelength2</span>
 
-    <span class="k">def</span> <span class="nf">load_phasematching</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength1</span><span class="p">,</span> <span class="n">wavelength2</span><span class="p">,</span> <span class="n">phasematching</span><span class="p">):</span>
+<div class="viewcode-block" id="SimplePhasematching2D.load_phasematching"><a class="viewcode-back" href="../../phasematching.html#pynumpm.phasematching.SimplePhasematching2D.load_phasematching">[docs]</a>    <span class="k">def</span> <span class="nf">load_phasematching</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength1</span><span class="p">,</span> <span class="n">wavelength2</span><span class="p">,</span> <span class="n">phasematching</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function used to load externally the phasematching spectrum</span>
 
@@ -1159,7 +1159,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_wavelength1</span> <span class="o">=</span> <span class="n">wavelength1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wavelength2</span> <span class="o">=</span> <span class="n">wavelength2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_phi</span> <span class="o">=</span> <span class="n">phasematching</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;User-provided phasematching has been loaded the phasematching spectrum&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;User-provided phasematching has been loaded the phasematching spectrum&quot;</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">set_wavelengths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -1223,7 +1223,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_phi</span> <span class="o">/=</span> <span class="n">length</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span>
 
-    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="SimplePhasematching2D.plot"><a class="viewcode-back" href="../../phasematching.html#pynumpm.phasematching.SimplePhasematching2D.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function to plot phasematching. Pass ax handle through &quot;ax&quot; to plot in a specified axis environment.</span>
 
@@ -1262,7 +1262,7 @@
              <span class="s2">&quot;vmax&quot;</span><span class="p">:</span> <span class="n">vmax</span><span class="p">,</span>
              <span class="s2">&quot;cbar&quot;</span><span class="p">:</span> <span class="n">cbar</span><span class="p">}</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">d</span>
+        <span class="k">return</span> <span class="n">d</span></div></div>
 
 
 <div class="viewcode-block" id="Phasematching2D"><a class="viewcode-back" href="../../phasematching.html#pynumpm.phasematching.Phasematching2D">[docs]</a><span class="k">class</span> <span class="nc">Phasematching2D</span><span class="p">(</span><span class="n">SimplePhasematching2D</span><span class="p">):</span>
