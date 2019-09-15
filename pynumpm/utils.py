@@ -8,6 +8,11 @@ from typing import Callable, List
 
 
 class Propagation(enum.Enum):
+    """
+    Enum class containing the two possible propagation configurations, *copropagation* and *counterpropagation*. It is
+    used to change the sign of the red_wavelength in the calculations of the deltabeta in this module.
+
+    """
     COPROPAGATION = -1
     """Sign of the signal in copropagation"""
     COUNTEPROPAGATION = +1
@@ -35,6 +40,8 @@ def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
     :type nb: Function
     :param order: Order of the process. Default: 1
     :type order: int
+    :param propagation_type: Type of the propagation (co- or counter-propagation). Default is coprop.
+    :type propagation_type: :class:`pynumpm.utils.Propagation`
     :return: The poling period.
     """
 
@@ -58,6 +65,19 @@ def calculate_phasematching_point(fixed_wl, poling_period: float, nr: Callable[[
     """
     Function to calculate the phasematching point, given a wavelength and the poling period of the structure.
 
+    This function tries to minimise the energy and momentum conservation equations to find the possible phasematched
+    processes, given a fixed wavelength and the poling period, using the `fsolve`routine from `scipy`.
+
+    The `fixed_wl` variable is a list (or tuple) containing the value and the field name ("r", "g" or "b" for red,
+    green and blue). For example, if one wants to define the green field as fixed at 800nm, the `fixed_wl` must be in
+    the form [800e-9, "g"].
+
+    In case of an SHG calculation, `fixed_wl` can receive as second parameter the string "shg".
+
+    .. note:: In case of an SHG calculation, the value of the constant wavelength is not used.
+
+
+
     :param fixed_wl: Wavelength to be kept constant during the calculation.
     :type fixed_wl: list
     :param poling_period: Poling period of the structure
@@ -76,18 +96,14 @@ def calculate_phasematching_point(fixed_wl, poling_period: float, nr: Callable[[
     :type verbose: bool
     :return: List of red wavelength, green wavelength, blue wavelength and poling period.
 
-    This function tries to minimise the energy and momentum conservation equations to find the possible phasematched
-    processes, given a fixed wavelength and the poling period, using the `fsolve`routine from `scipy`.
-
-    The `fixed_wl` variable is a list (or tuple) containing the value and the field name ("r", "g" or "b" for red,
-    green and blue). For example, if one wants to define the green field as fixed at 800nm, the `fixed_wl` must be in
-    the form [800e-9, "g"].
     """
     lam, constlam = fixed_wl
+    # convert all the units in um
     lam *= 1e6
     poling_period_um = poling_period * 1e6
     hint = np.array([i * 1e6 for i in hint])
 
+    # List of functions describing energy and momentum conservation, to be minimised.
     def zb(w):
         wb = lam
         wg, wr = w
@@ -144,8 +160,10 @@ def calculate_phasematching_point(fixed_wl, poling_period: float, nr: Callable[[
 
 def bandwidth(wl, phi, **kwargs):
     """
-    Calculates the bandwidth of a given phasematching spectrum fitting it with savgol_filter and then approximating it
+    Function to calculate the bandwidth of a given phasematching spectrum fitting it with savgol_filter and then approximating it
     with a UnivariateSpline.
+
+    .. warning:: This function has not been tested thoroughly.
 
     :param wl: Wavelengths
     :type wl: Array
@@ -173,30 +191,4 @@ def bandwidth(wl, phi, **kwargs):
     return bw
 
 
-def calculate_profile_properties(z=None, profile=None):
-    """
-    Function to calculate the noise properties (autocorrelation and power density spectrum) of the noise on the
-    waveguide profile
-    :param z: z mesh of the system
-    :type z: `numpy:numpy.ndarray`
-    :param profile: Profile of the varying variable of the waveguide.
-    :type profile: `numpy:numpy.ndarray`
 
-    :return z_autocorr, autocorrelation, f, power_spectrum: Returns the autocorrelation profile (z axis included)
-    and the power spectrum (frequency and power)
-    """
-    logger = logging.getLogger(__name__)
-    logger.info("Calculating profile properties")
-    if z is None:
-        raise IOError("The z mesh is missing. Please, can you be so kind to provide me the discretization of the axis?")
-    if profile is None:
-        raise IOError("Oh dear! It looks like you have an empty profile! What do you want me to calculate about THAT? "
-                      "Please provide a non-empty profile...")
-
-    f = np.fft.fftshift(np.fft.fftfreq(len(z), np.diff(z)[0]))
-    noise_spectrum = np.fft.fft(profile)
-    power_spectrum = noise_spectrum * np.conj(noise_spectrum)
-    autocorrelation = np.fft.ifftshift(np.fft.ifft(power_spectrum))
-    power_spectrum = np.fft.fftshift(power_spectrum)
-    z_autocorr = np.fft.fftshift(np.fft.fftfreq(len(f), np.diff(f)[0]))
-    return z_autocorr, autocorrelation, f, power_spectrum

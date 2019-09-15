@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import warnings
-from pynumpm import noise, utils
+from pynumpm import noise
 import logging
 
 
@@ -276,7 +276,7 @@ class RealisticWaveguide(Waveguide):
             fig = plt.figure()
 
         # Calculates the profile properties.
-        z_autocorr, autocorr, f, power_spectrum = utils.calculate_profile_properties(self.z, self.profile)
+        z_autocorr, autocorr, f, power_spectrum = noise.calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
         else:

@@ -180,3 +180,31 @@ class CorrelatedNoise(NoiseProfile):
             y[i] = r * y[i - 1] + sigma * np.sqrt(1 - r ** 2) * np.random.randn()
         # y += self.offset
         return y + self.offset
+
+def calculate_profile_properties(z=None, profile=None):
+    """
+    Function to calculate the noise properties (autocorrelation and power density spectrum) of the noise on the
+    waveguide profile
+    :param z: z mesh of the system
+    :type z: `numpy:numpy.ndarray`
+    :param profile: Profile of the varying variable of the waveguide.
+    :type profile: `numpy:numpy.ndarray`
+
+    :return z_autocorr, autocorrelation, f, power_spectrum: Returns the autocorrelation profile (z axis included)
+    and the power spectrum (frequency and power)
+    """
+    logger = logging.getLogger(__name__)
+    logger.info("Calculating profile properties")
+    if z is None:
+        raise IOError("The z mesh is missing. Please, can you be so kind to provide me the discretization of the axis?")
+    if profile is None:
+        raise IOError("Oh dear! It looks like you have an empty profile! What do you want me to calculate about THAT? "
+                      "Please provide a non-empty profile...")
+
+    f = np.fft.fftshift(np.fft.fftfreq(len(z), np.diff(z)[0]))
+    noise_spectrum = np.fft.fft(profile)
+    power_spectrum = noise_spectrum * np.conj(noise_spectrum)
+    autocorrelation = np.fft.ifftshift(np.fft.ifft(power_spectrum))
+    power_spectrum = np.fft.fftshift(power_spectrum)
+    z_autocorr = np.fft.fftshift(np.fft.fftfreq(len(f), np.diff(f)[0]))
+    return z_autocorr, autocorrelation, f, power_spectrum
