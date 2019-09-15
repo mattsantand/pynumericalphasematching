@@ -12,8 +12,50 @@ import warnings
 from pynumpm import utils
 
 
+def calculate_profile_properties(z=None, profile=None):
+    """
+    Function to calculate the noise properties (autocorrelation and power density spectrum) of the noise on the
+    waveguide profile
+    :param z: z mesh of the system
+    :type z: `numpy:numpy.ndarray`
+    :param profile: Profile of the varying variable of the waveguide.
+    :type profile: `numpy:numpy.ndarray`
+
+    :return z_autocorr, autocorrelation, f, power_spectrum: Returns the autocorrelation profile (z axis included)
+    and the power spectrum (frequency and power)
+    """
+    logger = logging.getLogger(__name__)
+    logger.info("Calculating profile properties")
+    if z is None:
+        raise IOError("The z mesh is missing. Please, can you be so kind to provide me the discretization of the axis?")
+    if profile is None:
+        raise IOError("Oh dear! It looks like you have an empty profile! What do you want me to calculate about THAT? "
+                      "Please provide a non-empty profile...")
+
+    f = np.fft.fftshift(np.fft.fftfreq(len(z), np.diff(z)[0]))
+    noise_spectrum = np.fft.fft(profile)
+    power_spectrum = noise_spectrum * np.conj(noise_spectrum)
+    autocorrelation = np.fft.ifftshift(np.fft.ifft(power_spectrum))
+    power_spectrum = np.fft.fftshift(power_spectrum)
+    z_autocorr = np.fft.fftshift(np.fft.fftfreq(len(f), np.diff(f)[0]))
+    return z_autocorr, autocorrelation, f, power_spectrum
+
+
 class NoiseProfile(object):
+    """
+    Class to define a generic noise profile.
+
+    .. warning:: The method :func:`pynumpm.noise.NoiseProfile.concatenate` has not been tested completely.
+
+    """
     def __init__(self, z=None, noise_amplitude=0., offset=0.):
+        """
+        Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude and an offset.
+
+        :param z:
+        :param noise_amplitude:
+        :param offset:
+        """
         if z is None:
             raise ValueError("z cannot be None")
         if noise_amplitude < 0:
@@ -57,7 +99,14 @@ class NoiseProfile(object):
         return newnoise
 
     def plot_noise_properties(self, fig=None, **kwargs):
-        z_autocorr, autocorr, f, power_spectrum = utils.calculate_profile_properties(self.z, self.profile)
+        """
+        Function to plot the nois properties.
+
+        :param fig:
+        :param kwargs:
+        :return:
+        """
+        z_autocorr, autocorr, f, power_spectrum = calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
         else:
@@ -87,20 +136,32 @@ class NoiseProfile(object):
 
 
 class NoiseFromSpectrum(NoiseProfile):
+    """
+    Class to create a noise profile given a specific noise power spectrum. It can create
+
+    * awgn noise
+    * 1/f noise
+    * 1/f2 noise
+
+    """
     def __init__(self, z=None, offset=0, noise_amplitude=0., profile_spectrum=None):
+        """
+        Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude, an offset
+        and a string describing the power spectrum of the noise.
+
+        :param z:
+        :param offset:
+        :param noise_amplitude:
+        :param profile_spectrum: Can be one of "awgn", "1/f", "1/f2".
+        """
         NoiseProfile.__init__(self, z, offset=offset, noise_amplitude=noise_amplitude)
         if profile_spectrum is None:
             raise ValueError("profile_spectrum must be set")
-        if profile_spectrum.lower() in ["awgn", "1/f", "1/f2", "pink"]:
-            if profile_spectrum.lower() == "pink":
-                profile_spectrum = "1/f"
+        if profile_spectrum.lower() in ["awgn", "1/f", "1/f2"]:
             self.__profile_spectrum = profile_spectrum.lower()
         else:
             raise ValueError("profile_spectrum has to be 'awgn', '1/f' or '1/f2'")
-
-        # print "I am going to calculate the profile"
         self.__profile = self.generate_noise()
-        # print "Profile calculated"
 
     @property
     def profile_spectrum(self):
@@ -111,6 +172,8 @@ class NoiseFromSpectrum(NoiseProfile):
         return self.__profile
 
     def generate_noise(self):
+        # This function generates the noise.
+
         logger = logging.getLogger(__name__)
         logger.info("Generating {s} spectrum.".format(s=self.profile_spectrum))
         length = self.z[-1] - self.z[0]
@@ -147,6 +210,11 @@ class NoiseFromSpectrum(NoiseProfile):
 
 
 class CorrelatedNoise(NoiseProfile):
+    """
+    Class to describe correlated noise.
+
+    ..warning:: This class hasn't been tested completely. It might be buggy.
+    """
     def __init__(self, z=None, offset=0, noise_amplitude=0., correlation_length=0.):
         NoiseProfile.__init__(self, z=z, offset=offset, noise_amplitude=noise_amplitude)
         if correlation_length < 0:
@@ -180,31 +248,3 @@ class CorrelatedNoise(NoiseProfile):
             y[i] = r * y[i - 1] + sigma * np.sqrt(1 - r ** 2) * np.random.randn()
         # y += self.offset
         return y + self.offset
-
-def calculate_profile_properties(z=None, profile=None):
-    """
-    Function to calculate the noise properties (autocorrelation and power density spectrum) of the noise on the
-    waveguide profile
-    :param z: z mesh of the system
-    :type z: `numpy:numpy.ndarray`
-    :param profile: Profile of the varying variable of the waveguide.
-    :type profile: `numpy:numpy.ndarray`
-
-    :return z_autocorr, autocorrelation, f, power_spectrum: Returns the autocorrelation profile (z axis included)
-    and the power spectrum (frequency and power)
-    """
-    logger = logging.getLogger(__name__)
-    logger.info("Calculating profile properties")
-    if z is None:
-        raise IOError("The z mesh is missing. Please, can you be so kind to provide me the discretization of the axis?")
-    if profile is None:
-        raise IOError("Oh dear! It looks like you have an empty profile! What do you want me to calculate about THAT? "
-                      "Please provide a non-empty profile...")
-
-    f = np.fft.fftshift(np.fft.fftfreq(len(z), np.diff(z)[0]))
-    noise_spectrum = np.fft.fft(profile)
-    power_spectrum = noise_spectrum * np.conj(noise_spectrum)
-    autocorrelation = np.fft.ifftshift(np.fft.ifft(power_spectrum))
-    power_spectrum = np.fft.fftshift(power_spectrum)
-    z_autocorr = np.fft.fftshift(np.fft.fftfreq(len(f), np.diff(f)[0]))
-    return z_autocorr, autocorrelation, f, power_spectrum
