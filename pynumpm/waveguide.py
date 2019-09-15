@@ -78,10 +78,6 @@ class Waveguide(object):
         warnings.warn("No z mesh defined for the Waveguide class")
         return self.__dz
 
-    @property
-    def profile(self):
-        warnings.warn("No profile mesh defined for the Waveguide class")
-        return self.__waveguide_profile
 
 
 
