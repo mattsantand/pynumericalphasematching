@@ -1,5 +1,5 @@
-Noise
-*****
+`Noise` module
+**************
 
 Contents of the module
 ======================

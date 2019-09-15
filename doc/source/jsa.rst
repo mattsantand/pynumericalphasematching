@@ -1,5 +1,5 @@
-JSA
-****
+`JSA` module
+************
 
 Classes
 =======

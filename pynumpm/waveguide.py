@@ -11,11 +11,10 @@ class Waveguide(object):
     Base class for the description of a waveguide object.
 
     Read-only attributes:
-    :var length:
-    :var
-    :var poling_period:
-    :var poling_period_um:
 
+    :var length: Length of the sample in meters;
+    :var poling_period: Poling period in meters;
+    :var poling_period_um: poling period in um.
 
     """
 
@@ -34,8 +33,6 @@ class Waveguide(object):
                           UserWarning)
         self.__poling_period = poling_period
         self.__length = length
-        self.__z = None
-        self.__dz = None
         self.__waveguide_profile = None
 
     def __repr__(self):
@@ -44,34 +41,34 @@ class Waveguide(object):
 
     @property
     def poling_period(self):
-        """
-        Poling period [*meter*].
-
-        """
         return self.__poling_period
 
     @property
     def poling_period_um(self):
-        """
-        Poling period [*micrometer*].
-
-        """
         return self.__poling_period * 1e6
 
     @property
     def length(self):
-        """
-        Crystal length [*meter*].
-
-        """
         return self.__length
+
 
 class RealisticWaveguide(Waveguide):
     """
-    Class for the description of varaible waveguide profiles.
+    Class for the description of variable waveguide profiles.
 
     It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :mod:`pynumpm.noise`
     module) and it can load user-defined profiles (they must be consistent with the user specified mesh).
+
+    Read-only attributes:
+
+    :var z: Spatial mesh of the simulation [in meters].
+    :var dz: Unit cell of the mesh (automatically calculated) [in meters].
+    :var length: length of the sample [in meters].
+    :var profile: Vector with the waveguide profile.
+    :var nominal_parameter: Nominal parameter of the waveguide.
+    :var nominal_parameter_name: Name of the nominal parameter (used when plotting)
+    :var poling_structure: Vector containing the poling structure of the system.
+    :var poling_structure_set: Boolean value returning True if the poling structure has been set.
 
     """
 
@@ -93,7 +90,6 @@ class RealisticWaveguide(Waveguide):
         """
 
         self.__z = z
-        self.__dz = np.diff(self.z)[0]
         self.__nominal_parameter = nominal_parameter
         # when an object of this class is initialized, the following call creates a uniform waveguide
         self.__waveguide_profile = self.load_waveguide_profile()
@@ -117,19 +113,12 @@ class RealisticWaveguide(Waveguide):
 
     @property
     def z(self):
-        """
-        Uniformly spaced mesh [*meter*]
-
-        """
         return self.__z
 
     @property
     def dz(self):
-        """
-        Space discretization [*meter*]. It is automatically calculated from the input z.
-
-        """
-        return self.__dz
+        dz = np.diff(self.z)[0]
+        return dz
 
     @property
     def profile(self):
@@ -230,9 +219,11 @@ class RealisticWaveguide(Waveguide):
         """
         Function to load the poling structure of the waveguide. This function can be used to create custom poling
         structures, such as apodized poling, e.g. `[1] <https://arxiv.org/abs/1410.7714>`_ and
-        `[2] <https://arxiv.org/abs/1704.03683>`_
-        If the poling structure is set via this function, the poling period of the waveguide is set to +numpy.infty
-        .. warning:: The effectiveness of this function in the calculation of the phasematching spectra is untested.
+        `[2] <https://arxiv.org/abs/1704.03683>`_.
+        If the poling structure is set via this function, the poling period of the waveguide is *automatically* set to
+        +`numpy.infty`.
+
+        .. warning:: This function is untested.
 
         :param poling_structure: Array containing the orientation of the poling.
         :type poling_structure: numpy.ndarray
@@ -247,7 +238,7 @@ class RealisticWaveguide(Waveguide):
 
     def plot(self, ax: matplotlib.pyplot.Axes = None):
         """
-        Function to plot the waveguide profile.
+        Function to plot the waveguide profile. If an axis handle is passed, it will plot in those axes.
 
         :param ax: handle to axis, if you want to plot in specific axes.
         :type ax: matplotlib.axes.Axes
@@ -273,6 +264,7 @@ class RealisticWaveguide(Waveguide):
         """
         Function to plot the waveguide properties in a figure. This function plots the waveguide profile,
         the power spectrum, autocorrelation and histogram distribution of the noise.
+        If a Figure handle is passed, it plots in said Figure.
 
         :param fig: Handle of the figure where the plots should be displayed. If *None*, then opens a new figure. Default
         is None.
@@ -283,12 +275,14 @@ class RealisticWaveguide(Waveguide):
         if fig is None:
             fig = plt.figure()
 
+        # Calculates the profile properties.
         z_autocorr, autocorr, f, power_spectrum = utils.calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
         else:
             fig = plt.figure(fig.number)
 
+        # Plot the waveguide profile
         plt.subplot(211)
         ax0 = plt.gca()
         l1, = plt.plot(self.z, self.profile)
@@ -297,6 +291,7 @@ class RealisticWaveguide(Waveguide):
         ax0.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
         plt.ylabel(self.nominal_parameter_name)
 
+        # Plot the autocorrelation profile
         plt.subplot(234)
         ax1 = plt.gca()
         l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation")
@@ -305,6 +300,7 @@ class RealisticWaveguide(Waveguide):
         ax0.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
         plt.grid(axis="both")
 
+        # Plot the spectral distribution
         plt.subplot(235)
         ax2 = plt.gca()
         l3, = plt.loglog(f, abs(power_spectrum) ** 2)
@@ -312,6 +308,7 @@ class RealisticWaveguide(Waveguide):
         plt.title("|S(f)|^2")
         plt.xlabel("f")
 
+        # Plot the histogram of the profile.
         plt.subplot(236)
         ax3 = plt.gca()
         plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))), density=True)

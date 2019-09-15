@@ -1,5 +1,5 @@
-Phasematching
-*************
+`Phasematching` module
+**********************
 
 With this module you can easily calculate the phasematching of a non-ideal waveguide.
 

@@ -1,5 +1,5 @@
-Utils
-*********
+`Utils` module
+**************
 
 Contents of the module
 ======================
