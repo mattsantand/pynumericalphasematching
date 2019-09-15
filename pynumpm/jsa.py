@@ -17,8 +17,13 @@ from pynumpm import phasematching
 
 
 class Process(enum.Enum):
-    SFG = "SFG. Signal is the input, Idler is the output."
-    DFG = "DFG. Signal is the input, Idler is the output."
+    """
+    Enum class used to describe the nonlinear processes. It is used to change the way the pump spectrum is calculated.
+
+    """
+
+    SFG = "SFG. Input is the wavelength1, Output is the wavelength2."
+    DFG = "DFG. Input is the wavelength1, Output is the wavelength2."
     PDC = "PDC."
     BWPDC = "BWPDC. Signal is the for the backward propagating field."  # TODO: Check this
 
@@ -26,14 +31,31 @@ class Process(enum.Enum):
 class Pump(object):
     """
     Pump class. It is used to describe 2D pump functions for the calculation of JSA.
+    The pump is modelled as
+
+    .. math::
+        \\alpha(\omega_1, \omega_2) = \mathrm{HG}_n(\omega_1, \omega_2)\cdot
+        \mathrm{exp}\\left\\lbrace -\\frac{(\omega_p - \omega_{p,0})^2}{2\\sigma^2}\\right\\rbrace
+        \cdot \mathrm{Chirp}
+        \cdot \mathrm{filter}
 
     Initialize the pump object calling the class and passing a suitable `Process` element.
+
+    The parameters of the pump must be assigned by the user. The following attributes can be modified:
+
+    :var pump_spectrum:
+    :var wavelength1:
+    :var pump_centre:
+    :var pump_width:
+    :var pump_temporal_mode:
+    :var pump_chirp:
+    :var pump_delay:
+    :var filter_width:
+
     """
 
     def __init__(self, process: Process):
         """
-        Initialize the pump object.
-
 
         :param process: Process under investigation. An element of the class `pynumpm.jsa.Process`.
         :type process: Process
@@ -375,7 +397,7 @@ class JSA(object):
 
     def calculate_schmidt_decomposition(self, verbose=False):
         """
-        Function to calculate the Schidt decomposition.
+        Function to calculate the Schmidt decomposition.
 
         :param bool verbose: Print to screen the Schmidt number and the purity of the state.
 
