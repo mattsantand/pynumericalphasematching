@@ -48,6 +48,7 @@ class NoiseProfile(object):
     .. warning:: The method :func:`pynumpm.noise.NoiseProfile.concatenate` has not been tested completely.
 
     """
+
     def __init__(self, z=None, noise_amplitude=0., offset=0.):
         """
         Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude and an offset.
@@ -56,6 +57,9 @@ class NoiseProfile(object):
         :param noise_amplitude:
         :param offset:
         """
+        logger = logging.getLogger(__name__)
+        logger.debug("Creating NoiseProfile object. "
+                     "z.shape={0}; noise_amplitude={1}; offset={2}.".format(z.shape, noise_amplitude, offset))
         if z is None:
             raise ValueError("z cannot be None")
         if noise_amplitude < 0:
@@ -64,10 +68,21 @@ class NoiseProfile(object):
 
         self.__z = z
         self.__offset = offset
+        self.__length = self.z.max() - self.z.min()
         self.__dz = np.diff(self.z)[0]
         self.__profile = self.__noise_amplitude * np.ones(shape=self.z.shape) + self.__offset
         self.__autocorrelation_is_calculated = False
         self.f = None
+        logger.debug("NoiseProfile object creates successfully.")
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\t" \
+               f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset}"
+        return text
+
+    @property
+    def length(self):
+        return self.__length
 
     @property
     def z(self):
@@ -90,12 +105,16 @@ class NoiseProfile(object):
         return self.__offset
 
     def concatenate(self, other):
+        logger = logging.getLogger(__name__)
+        logger.debug("Concatenating two objects"
+                     "other={0}".format(other))
         if self.dz != other.dz:
             raise ValueError("The resolution of the two noise spectra are different. Set them to equal.")
         new_z = np.append(self.z, other.z + self.z[-1])
         newprofile = np.append(self.profile, other.profile)
         newnoise = NoiseProfile(z=new_z)
         newnoise.__profile = newprofile
+        logger.debug("Concatenation successful.")
         return newnoise
 
     def plot_noise_properties(self, fig=None, **kwargs):
@@ -106,6 +125,8 @@ class NoiseProfile(object):
         :param kwargs:
         :return:
         """
+        logger = logging.getLogger(__name__)
+        logger.debug("Plotting noise properties.")
         z_autocorr, autocorr, f, power_spectrum = calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
@@ -144,6 +165,7 @@ class NoiseFromSpectrum(NoiseProfile):
     * 1/f2 noise
 
     """
+
     def __init__(self, z=None, offset=0, noise_amplitude=0., profile_spectrum=None):
         """
         Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude, an offset
@@ -154,6 +176,13 @@ class NoiseFromSpectrum(NoiseProfile):
         :param noise_amplitude:
         :param profile_spectrum: Can be one of "awgn", "1/f", "1/f2".
         """
+
+        logger = logging.getLogger(__name__)
+        logger.debug("Creating a NoiseFromSpectrum object. "
+                     "z.shape={0}; offset={1}; noise_amplitude={2}; profile_spectrum={3}.".format(z.shape,
+                                                                                                  offset,
+                                                                                                  noise_amplitude,
+                                                                                                  profile_spectrum))
         NoiseProfile.__init__(self, z, offset=offset, noise_amplitude=noise_amplitude)
         if profile_spectrum is None:
             raise ValueError("profile_spectrum must be set")
@@ -162,6 +191,13 @@ class NoiseFromSpectrum(NoiseProfile):
         else:
             raise ValueError("profile_spectrum has to be 'awgn', '1/f' or '1/f2'")
         self.__profile = self.generate_noise()
+        logger.debug("NoiseFromSpectrum object created.")
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\t" \
+               f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset};" \
+               f"\n\tProfile spectrum: {self.profile_spectrum}"
+        return text
 
     @property
     def profile_spectrum(self):
@@ -206,6 +242,7 @@ class NoiseFromSpectrum(NoiseProfile):
         y *= self.noise_amplitude / abs(y).max()
         if extended:
             y = y[:-1]
+        logger.debug("Noise profile generated.")
         return np.real(y) + self.offset
 
 
@@ -215,12 +252,30 @@ class CorrelatedNoise(NoiseProfile):
 
     ..warning:: This class hasn't been tested completely. It might be buggy.
     """
+
     def __init__(self, z=None, offset=0, noise_amplitude=0., correlation_length=0.):
+        """
+
+        :param z:
+        :param offset:
+        :param noise_amplitude:
+        :param correlation_length:
+        """
+        logger = logging.getLogger(__name__)
+        logger.debug("Creating CorrelatedNoise object. z.shape={0}; offset={1}; noise_amplitude={2}; "
+                     "correlation_length={3}".format(z.shape, offset, noise_amplitude, correlation_length))
         NoiseProfile.__init__(self, z=z, offset=offset, noise_amplitude=noise_amplitude)
         if correlation_length < 0:
             warnings.warn("correlation_length is negative. I will get the absolute value", UserWarning)
         self.__correlation_length = abs(correlation_length)
         NoiseProfile.__profile = self.generate_noise()
+        logger.debug("CorrelatedNoise object created.")
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\t" \
+               f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset};" \
+               f"\n\tCorrelation length: {self.correlation_length}."
+        return text
 
     @property
     def correlation_length(self):
@@ -232,6 +287,7 @@ class CorrelatedNoise(NoiseProfile):
 
     def generate_noise(self):
         logger = logging.getLogger(__name__)
+        logger.debug("Generating noise profile.")
         sigma = self.noise_amplitude
         if self.correlation_length == 0:
             r = 0
@@ -247,4 +303,5 @@ class CorrelatedNoise(NoiseProfile):
         for i in range(1, len(self.z)):
             y[i] = r * y[i - 1] + sigma * np.sqrt(1 - r ** 2) * np.random.randn()
         # y += self.offset
+        logger.debug("Noise profile generated correctly.")
         return y + self.offset

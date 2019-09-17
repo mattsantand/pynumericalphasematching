@@ -32,8 +32,16 @@ _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 
 class SimplePhasematchingDeltaBeta(object):
     """
-    Class used for the calculation of phasematching as a function of :math:`\Delta\\beta` for uniform waveguides.
+    Base class used for the calculation of phasematching as a function of :math:`\Delta\\beta` for uniform waveguides.
 
+    The accessible attributes in this class are:
+
+    :param waveguide: Waveguide object
+    :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
+    :param deltabeta: vector containing the values of :math:`\Delta\\beta` needed to calculate the phasematching
+    :type deltabeta: :class:`~numpy:numpy.ndarray`
+    :param phi: Vector containing the phasematching spectrum
+    :type phi: :class:`~numpy:numpy.ndarray`
     """
 
     def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]):
