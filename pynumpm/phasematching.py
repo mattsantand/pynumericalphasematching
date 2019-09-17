@@ -112,7 +112,8 @@ class SimplePhasematchingDeltaBeta(object):
         assigning it to the variable `deltabeta`.
 
         :param normalized: Sets the normalization of the phasematching. If True, the
-        phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]). Default: *False*.
+                           phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]).
+                           Default: *False*.
         :type normalized: bool
         :return: the function returns the complex-valued phasematching spectrum.
 
@@ -299,11 +300,11 @@ class SimplePhasematching1D(object):
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
         :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
         :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function,
-        i.e. n(variable_parameter)(wavelength in um)
+                      i.e. n(variable_parameter)(wavelength in um)
         :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda
-        function, i.e. n(variable_parameter)(wavelength in um)
+                        function, i.e. n(variable_parameter)(wavelength in um)
         :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function,
-        i.e. n(variable_parameter)(wavelength in um)
+                       i.e. n(variable_parameter)(wavelength in um)
         :param order: order of phasematching. Default: 1
         :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
 
@@ -553,9 +554,9 @@ class SimplePhasematching1D(object):
         This function is the core of the class. It calculates the phasematching of the process, considering one
         wavelength fixed and scanning the other two.
 
-        :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
-        waveguide length, Default: True
-
+        :param normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
+                                waveguide length, Default: True
+        :type normalized: bool
         :return: the complex-valued phasematching spectrum
         """
         if not self.wavelengths_set:
@@ -585,9 +586,11 @@ class SimplePhasematching1D(object):
         Plot the phasematching intensity/amplitude.
 
         :param ax: Axis handle for the plot. If None, plots in a new figure. Default is None.
-        :param bool plot_intensity: Set to True to plot the intensity profile, False to plot the amplitude and phase.
-        Default to True.
-        :param bool plot_input: Select the x axis for the plot. If True, use the `input_wavelength` as input, otherwise use `output_wavelength`.
+        :param plot_intensity: Set to True to plot the intensity profile, False to plot the amplitude and phase.
+                               Default to True.
+        :type plot_intensity: bool
+        :param plot_input: Select the x axis for the plot. If True, use the `input_wavelength` as input, otherwise use `output_wavelength`.
+        :type plot_intensity: bool
         :param kwargs: :func:`matplotlib.pyplot.plot` **kwargs arguments
         :return: figure and axis handle
         """
@@ -645,13 +648,16 @@ class Phasematching1D(SimplePhasematching1D):
         :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
         :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
         :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
-        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+                      n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                      Sellmeier's equations)
         :type n_red: function of function
         :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
-        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+                        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                        Sellmeier's equations)
         :type n_green: function of function
         :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
-            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+                       n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                       Sellmeier's equations)
         :type n_blue: function of function
         :param order: order of phasematching. Default: 1
         :type order: int
@@ -708,9 +714,12 @@ class Phasematching1D(SimplePhasematching1D):
         """
         Method to set the nonlinearity profile g(z), with either a constant profile or a variety of different windowing functions.
 
-        :param str profile_type: Type of nonlinearity profile to consider. Possible options are [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
-        :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase matching or not.
-        :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective if `profile_type` is *"gaussian"* or *"kaiser*.
+        :param str profile_type: Type of nonlinearity profile to consider. Possible options are
+                                 [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
+        :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase
+                                       matching or not.
+        :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective
+                       if `profile_type` is *"gaussian"* or *"kaiser*.
         :return: The function returns the nonlinearity profile of the system.
 
         The different types of profile available are:
@@ -834,12 +843,13 @@ class Phasematching1D(SimplePhasematching1D):
         blue_wavelength to set the wavelengths of the process:
 
         * For SHG calculations, set **either** the red_wavelength or green_wavelength as a numpy.ndarray of wavelengths
-        (in meters). The class will detect automatically that it has received a single input and will automatically
-        calculate the SHG.
+          (in meters). The class will detect automatically that it has received a single input and will automatically
+          calculate the SHG.
         * For other processes, set one wavelength as a numpy.ndarray and the other, fixed one as a float. The third
-        will be calculated automatically.
+          will be calculated automatically.
 
-        This function does not support PDC calculations.
+        This function does not support PDC calculations. Use :class:`pynumpm.phasematching.SimplePhasematching2D` or
+        :class:`pynumpm.phasematching.Phasematching2D` instead.
 
         :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
         waveguide length. Default: True
@@ -909,6 +919,9 @@ class Phasematching1D(SimplePhasematching1D):
 
 
 class SimplePhasematching2D(object):
+    """
+    Class for simple phasematching 2D
+    """
     def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide] = None,
                  n_red: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1] = None,
                  n_green: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1] = None,
@@ -1058,6 +1071,12 @@ class SimplePhasematching2D(object):
                                                                           self._WL_BLUE.shape))
 
     def calculate_phasematching(self, normalized=True):
+        """
+        Function to calculate the phasematching spectrum.
+
+        :param normalized:
+        :return:
+        """
         length = self.waveguide.length
         poling_period = self.waveguide.poling_period
         self.set_wavelengths()
@@ -1138,28 +1157,30 @@ class Phasematching2D(SimplePhasematching2D):
         :param phi: One dimensional phasematching spectrum (complex valued function)
         :type phi: :class:`~numpy:numpy.ndarray`
         :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
-            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+                      n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                      Sellmeier's equations)
         :type n_red: function of function
         :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
-            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+                        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                        Sellmeier's equations)
         :type n_green: function of function
         :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
-            n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's equations)
+                       n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's
+                       equations)
         :type n_blue: function of function
         :param int order: order of phasematching
-        :param str propagation_type:  copropagating or counterpropagating
         :param red_wavelength: None, Single float or vector of float, containing the "red" wavelengths, in meters.
         :type red_wavelength: :class:`numpy:numpy.ndarray`
         :param green_wavelength: None, Single float or vector of float, containing the "green" wavelengths, in meters.
         :type green_wavelength: :class:`numpy:numpy.ndarray`
         :param blue_wavelength: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
         :type blue_wavelength: :class:`numpy:numpy.ndarray`
-        :param signal_wavelength: Signal (scanning) wavelength of the process. It cannot be set, it is automatically set
-        to be the lowest energetic wavelength of the user-defined wavelength ranges.
-        :type signal_wavelength: :class:`numpy:numpy.ndarray`
-        :param idler_wavelength: Output (scanning) wavelength of the process. It cannot be set, it is automatically set
-        to be the highest energetic wavelength of the user-defined wavelength ranges.
-        :type idler_wavelength: :class:`numpy:numpy.ndarray`
+        :param wavelength1: Signal (scanning) wavelength of the process. It cannot be set, it is automatically set
+                                  to be the lowest energetic wavelength of the user-defined wavelength ranges.
+        :type wavelength1: :class:`numpy:numpy.ndarray`
+        :param wavelength2: Output (scanning) wavelength of the process. It cannot be set, it is automatically set
+                            to be the highest energetic wavelength of the user-defined wavelength ranges.
+        :type wavelength2: :class:`numpy:numpy.ndarray`
 
         """
 
@@ -1301,7 +1322,7 @@ class Phasematching2D(SimplePhasematching2D):
         user-defined wavelength ranges.
 
         :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
-        waveguide length, Default: True
+                                waveguide length, Default: True
 
         :return: the complex-valued phasematching spectrum
         """
@@ -1350,7 +1371,7 @@ class Phasematching2D(SimplePhasematching2D):
         it is possible to cut along wavelength not present in the original grid.
 
         :param float const_wl: Constant wavelength where to cut the phasematching. The program detects whether it is
-        within the signal or idler range.
+                               within the signal or idler range.
 
         :return wl, phi: scanning wavelength and interpolated complex-valued phasematching spectrum.
         """
