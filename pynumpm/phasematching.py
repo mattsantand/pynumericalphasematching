@@ -136,7 +136,7 @@ class SimplePhasematchingDeltaBeta(object):
 
         :param ax: Optional argument. Handle of the axis of the plot. Default: None
         :param normalized: Optional argument. If True, normalizes the plotted phasematching to have the maximum to 1.
-        Default: False
+                           Default: False
         :type normalized: bool
         :return: the axis handle of the plot
         """
@@ -704,7 +704,7 @@ class Phasematching1D(SimplePhasematching1D):
     @property
     def noise_length_product(self):
         """
-        Product between the sample length and the maximum :math:`\Delta\\beta\` variation for the process. If this value
+        Product between the sample length and the maximum :math:`\Delta\\beta` variation for the process. If this value
         is above 10, the phasematching is likely to be noisy.
 
         """
@@ -719,23 +719,21 @@ class Phasematching1D(SimplePhasematching1D):
         :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase
                                        matching or not.
         :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective
-                       if `profile_type` is *"gaussian"* or *"kaiser*.
+                       if `profile_type` is *"gaussian"* or *"kaiser"*.
         :return: The function returns the nonlinearity profile of the system.
 
         The different types of profile available are:
 
         * constant: Uniform nonlinear profile.
-        * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`.
+        * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`. Set the :math:`\sigma` of the gaussian
+                    profile with the `kwargs` argument `sigma_g_norm`, defining the standard deviation of the gaussian
+                    profile in units of the length (defauls to 0.5, i.e. L/2).
         * hamming: :func:`numpy.hamming`
         * bartlett :func:`numpy.bartlett`
         * hanning: :func:`numpy.hanning`
         * blackman: :func:`numpy.blackman`
-        * kaiser: :func:`numpy.kaiser`
-
-        If *profile_type* is set to *"gaussian"*, then `**kwargs` accets the keyword `sigma_g_norm`, defining the standard
-        deviation of the gaussian profile in units of the length (defauls to 0.5, i.e. L/2).
-        If *profile_type* is set to *"kaiser"*, then `**kwargs` accepts the keyword `beta`, describing the
-        :math:`\\beta` parameter of the Kaiser distribution.
+        * kaiser: :func:`numpy.kaiser`. Set the :math:`\\beta` parameter of the *Kaiser* profile with the `kwargs`
+                  argument `beta`,
         """
         logger = logging.getLogger(__name__)
         logger.info("Setting the nonlinear profile.")
@@ -852,7 +850,7 @@ class Phasematching1D(SimplePhasematching1D):
         :class:`pynumpm.phasematching.Phasematching2D` instead.
 
         :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
-        waveguide length. Default: True
+                                waveguide length. Default: True
 
         :return: the complex-valued phasematching spectrum
         """

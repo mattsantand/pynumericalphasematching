@@ -40,3 +40,7 @@ To install the package, simply run
 in the folder *pynumericalphasematching*.
 
 As soon as possible, the package will be uploaded on PyPI.
+
+Notes
+=====
+This package uses the `logging` module to log useful information.
