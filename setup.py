@@ -43,7 +43,7 @@ setup(
     description='''Numerical phasematching routines''',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='None',
+    url='https://test.pypi.org/legacy/',
     author='Matteo Santandrea',
     author_email='mattsantand@gmail.com',
     classifiers=[
