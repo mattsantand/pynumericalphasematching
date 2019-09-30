@@ -886,7 +886,7 @@ class Phasematching1D(SimplePhasematching1D):
         dz = np.gradient(self.waveguide.z)
         
         # for idx, z in enumerate(self.waveguide.z[:-1]):
-        for idx in tqdm(range(1, len(self.waveguide.z)), ncols=100):
+        for idx in tqdm(range(0, len(self.waveguide.z)), ncols=100):
             z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self._calculate_local_neff(idx)
@@ -1350,7 +1350,7 @@ class Phasematching2D(SimplePhasematching2D):
                                                dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
         dz = np.gradient(self.waveguide.z)
-        for idx in tqdm(range(1, len(self.waveguide.z) - 1), ncols=100):
+        for idx in tqdm(range(0, len(self.waveguide.z)), ncols=100):
             z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.__calculate_local_neff(idx)
