@@ -698,6 +698,14 @@ class Phasematching1D(SimplePhasematching1D):
                             "pynumpm.waveguide.RealisticWaveguide class.")
 
     @property
+    def deltabeta_profile(self):
+        """
+        Profile of the :math:`\Delta\\beta` errpr
+        
+        """
+        return self._delta_beta0_profile
+
+    @property
     def nonlinear_profile(self):
         return self._nonlinear_profile
 
@@ -874,9 +882,11 @@ class Phasematching1D(SimplePhasematching1D):
         logger.debug("Shape cumulative deltabeta:" + str(self._cumulative_delta_beta.shape))
         logger.debug("Shape cum_exp:" + str(self._cumulative_exponential.shape))
         self._delta_beta0_profile = np.nan * np.ones(shape=self.waveguide.z.shape)
-        dz = np.diff(self.waveguide.z)
+
+        dz = np.gradient(self.waveguide.z)
+        
         # for idx, z in enumerate(self.waveguide.z[:-1]):
-        for idx in tqdm(range(1, len(self.waveguide.z) - 1), ncols=100):
+        for idx in tqdm(range(1, len(self.waveguide.z)), ncols=100):
             z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self._calculate_local_neff(idx)
@@ -920,6 +930,7 @@ class SimplePhasematching2D(object):
     """
     Class for simple phasematching 2D
     """
+
     def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide] = None,
                  n_red: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1] = None,
                  n_green: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1] = None,
@@ -1338,7 +1349,7 @@ class Phasematching2D(SimplePhasematching2D):
         self.__cumulative_deltabeta = np.zeros(shape=(len(self.wavelength2), len(self.wavelength1)),
                                                dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
-        dz = np.diff(self.waveguide.z)
+        dz = np.gradient(self.waveguide.z)
         for idx in tqdm(range(1, len(self.waveguide.z) - 1), ncols=100):
             z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
