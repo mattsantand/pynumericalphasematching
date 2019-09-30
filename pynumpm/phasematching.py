@@ -843,7 +843,7 @@ class Phasematching1D(SimplePhasematching1D):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, normalized=True):
+    def calculate_phasematching(self, normalized=True, hide_progressbar=False):
         """
         This function calculates the phasematching of the process. Use Phasematching1D.red_wavelength/green_wavelength/
         blue_wavelength to set the wavelengths of the process:
@@ -859,6 +859,8 @@ class Phasematching1D(SimplePhasematching1D):
 
         :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
                                 waveguide length. Default: True
+        :param hide_progressbar: Parameter to disable the display of the progressbar during the calculation. Default: False
+        :type hide_progressbar: bool
 
         :return: the complex-valued phasematching spectrum
         """
@@ -884,9 +886,9 @@ class Phasematching1D(SimplePhasematching1D):
         self._delta_beta0_profile = np.nan * np.ones(shape=self.waveguide.z.shape)
 
         dz = np.gradient(self.waveguide.z)
-        
+
         # for idx, z in enumerate(self.waveguide.z[:-1]):
-        for idx in tqdm(range(0, len(self.waveguide.z)), ncols=100):
+        for idx in tqdm(range(0, len(self.waveguide.z)), ncols=100, disable=hide_progressbar):
             z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self._calculate_local_neff(idx)
@@ -1325,13 +1327,15 @@ class Phasematching2D(SimplePhasematching2D):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, normalized=True):
+    def calculate_phasematching(self, normalized=True, hide_progressbar = False):
         """
         This function is the core of the class. It calculates the 2D phasematching of the process, scanning the two
         user-defined wavelength ranges.
 
         :param bool normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
                                 waveguide length, Default: True
+        :param hide_progressbar: Parameter to disable the display of the progressbar during the calculation. Default: False
+        :type hide_progressbar: bool
 
         :return: the complex-valued phasematching spectrum
         """
@@ -1350,7 +1354,7 @@ class Phasematching2D(SimplePhasematching2D):
                                                dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
         dz = np.gradient(self.waveguide.z)
-        for idx in tqdm(range(0, len(self.waveguide.z)), ncols=100):
+        for idx in tqdm(range(0, len(self.waveguide.z)), ncols=100, disable = hide_progressbar ):
             z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.__calculate_local_neff(idx)
