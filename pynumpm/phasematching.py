@@ -224,13 +224,13 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
         self._cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
         self._cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
         self._cumulative_sinc = np.zeros(shape=len(self.deltabeta), dtype=complex)
-        for i in tqdm(range(len(self.waveguide.z) - 1)):
-            dz = self.waveguide.z[i + 1] - self.waveguide.z[i]
+        dz = np.gradient(self.waveguide.z)
+        for i in tqdm(range(len(self.waveguide.z))):
             this_deltabeta = self.deltabeta + self.waveguide.profile[i] - 2 * np.pi / self.waveguide.poling_period
-            x = this_deltabeta * dz / 2
-            self._cumulative_sinc += dz * np.sinc(x / np.pi) * np.exp(1j * x) * np.exp(
+            x = this_deltabeta * dz[i] / 2
+            self._cumulative_sinc += dz[i] * np.sinc(x / np.pi) * np.exp(1j * x) * np.exp(
                 1j * self._cumulative_delta_beta)
-            self._cumulative_delta_beta += this_deltabeta * dz
+            self._cumulative_delta_beta += this_deltabeta * dz[i]
 
         self._phi = self._cumulative_sinc
         if normalized:
@@ -238,7 +238,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
         self._noise_length_product = abs(self.waveguide.profile).max() * self.waveguide.length
         return self.phi
 
-    def plot(self, ax=None, normalized=False, verbose=False):
+    def plot(self, ax=None, normalized=False, verbose=False, **kwargs):
         """
         Function to plot the phasematching intensity.
 
@@ -260,7 +260,10 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
         y = abs(self.phi) ** 2
         if normalized:
             y = abs(self.phi) ** 2 / y.max()
-        ax.plot(self.deltabeta, y)
+        ax.plot(self.deltabeta, y, ls=kwargs.get("ls", "-"),
+                lw=kwargs.get("lw", 3),
+                color=kwargs.get("color"),
+                label=kwargs.get("label"))
         plt.title("Phasematching")
         plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
@@ -1330,7 +1333,7 @@ class Phasematching2D(SimplePhasematching2D):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, normalized=True, hide_progressbar = False):
+    def calculate_phasematching(self, normalized=True, hide_progressbar=False):
         """
         This function is the core of the class. It calculates the 2D phasematching of the process, scanning the two
         user-defined wavelength ranges.
@@ -1357,7 +1360,7 @@ class Phasematching2D(SimplePhasematching2D):
                                                dtype=complex)
         self.__cumulative_exponential = np.zeros(shape=self.__cumulative_deltabeta.shape, dtype=complex)
         dz = np.gradient(self.waveguide.z)
-        for idx in tqdm(range(0, len(self.waveguide.z)), ncols=100, disable = hide_progressbar ):
+        for idx in tqdm(range(0, len(self.waveguide.z)), ncols=100, disable=hide_progressbar):
             z = self.waveguide.z[idx]
             # 1) retrieve the current parameter (width, thickness, ...)
             n_red, n_green, n_blue = self.__calculate_local_neff(idx)
