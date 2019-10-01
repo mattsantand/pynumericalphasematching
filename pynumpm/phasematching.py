@@ -130,7 +130,7 @@ class SimplePhasematchingDeltaBeta(object):
             self._phi *= length
         return self.phi
 
-    def plot(self, ax=None, normalized=False):
+    def plot(self, ax=None, normalized=False, **kwargs):
         """
         Function to plot the phasematching intensity.
 
@@ -151,7 +151,10 @@ class SimplePhasematchingDeltaBeta(object):
         y = abs(self.phi) ** 2
         if normalized:
             y = abs(self.phi) ** 2 / y.max()
-        ax.plot(self.deltabeta, y)
+        ax.plot(self.deltabeta, y, ls=kwargs.get("ls", "-"),
+                lw=kwargs.get("lw", 3),
+                color=kwargs.get("color"),
+                label=kwargs.get("label"))
         plt.title("Phasematching")
         plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
@@ -884,7 +887,7 @@ class Phasematching1D(SimplePhasematching1D):
         self._delta_beta0_profile = np.nan * np.ones(shape=self.waveguide.z.shape)
 
         dz = np.gradient(self.waveguide.z)
-        
+
         # for idx, z in enumerate(self.waveguide.z[:-1]):
         for idx in tqdm(range(1, len(self.waveguide.z)), ncols=100):
             z = self.waveguide.z[idx]
