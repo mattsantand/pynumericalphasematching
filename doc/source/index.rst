@@ -13,6 +13,8 @@ This Python package is an API for the analysis of classical optical,
 
 This package has been developed by M. Santandrea (`email <mailto: mattsantand@gmail.com>`_), `Integrated Quantum Optics
 <https://physik.uni-paderborn.de/en/silberhorn/>`_ group, University of Paderborn, Germany.
+The author thanks M. Massaro for the help in packaging this API and B. Brecht for the development of the
+:class:`pynumpm.jsa.Pump` class.
 
 
 Contents

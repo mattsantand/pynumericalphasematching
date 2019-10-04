@@ -83,8 +83,6 @@ For more example, consult the Tutorials in the documentation.
 ## In development/ToDo list
 
 * TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the correct integration)
-* Insert testing module
-* Insert calculation of phasematched processes
 * Insert bandwidth estimation (for 1D functions)
 * TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
   (introduce in version 1.1).
