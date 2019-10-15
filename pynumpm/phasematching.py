@@ -2,13 +2,13 @@
 """
 .. module:: phasematching.py
 .. moduleauthor:: Matteo Santandrea <matteo.santandrea@upb.de>
-   :synopsis: Module to calculate the phasematching of a given waveguide, as specified by the classes provided in the
+   :synopsis: Module to calculate the phase matching spectrum of a given waveguide, as specified by the classes provided in the
    pynumpm.waveguide module.
 
-This module is used to calculate different types of phasematching:
-    * :class:`~pynumpm.phasematching.PhasematchingDeltaBeta`: 1D phasematching spectrum, given the wavevector mismatch range to be analyzed.
-    * :class:`~pynumpm.phasematching.Phasematching1D`: 1D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
-    * :class:`~pynumpm.phasematching.Phasematching2D`: 2D phasematching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+This module is used to calculate different types of phase matching:
+    * :class:`~pynumpm.phasematching.PhasematchingDeltaBeta`: 1D phase matching spectrum, given the wavevector mismatch range to be analyzed.
+    * :class:`~pynumpm.phasematching.Phasematching1D`: 1D phase matching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
+    * :class:`~pynumpm.phasematching.Phasematching2D`: 2D phase matching spectrum, given the wavelength range to be analyzed and the Sellmeier equations.
 """
 import logging
 import numpy as np
@@ -25,33 +25,31 @@ _REF_INDEX_TYPE0 = Callable[[float], float]
 _REF_INDEX_TYPE1 = Callable[[float], Callable[[float], float]]
 
 
-# TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the currect integration)
-# TODO: Use FFT to calculate Simple 1D and 2D phasematching with user
-#  defined nonlinear profile
-#  (introduce in version 1.1).
+# TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the correct integration)
+# TODO: Use FFT to calculate Simple 1D and 2D phase matching with user defined nonlinear profile (introduce in version 1.1).
 
 class SimplePhasematchingDeltaBeta(object):
     """
-    Base class used for the calculation of phasematching as a function of :math:`\Delta\\beta` for uniform waveguides.
+    Base class used for the calculation of phase matching spectra as a function of :math:`\Delta\\beta` for uniform waveguides.
 
-    The accessible attributes in this class are:
-
+    Initialization of the class requires the following parameters:
     :param waveguide: Waveguide object
     :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
-    :param deltabeta: vector containing the values of :math:`\Delta\\beta` needed to calculate the phasematching
-    :type deltabeta: :class:`~numpy:numpy.ndarray`
-    :param phi: Vector containing the phasematching spectrum
-    :type phi: :class:`~numpy:numpy.ndarray`
+
+    **Usage**
+
+    With `idealwaveguide` being a :class:`~pynumpm.waveguide.Waveguide` object, the following code calculates its
+    phase matching spectrum as a function of :math:`\Delta\\beta`:
+
+    ::
+
+        idealphasematching = SimplePhasematchingDeltaBeta(waveguide=idealwaveguide)
+        idealphasematching.deltabeta = np.arange(-1000, 1000, 1)
+        phi = idealphasematching.calculate_phasematching(normalized=True)
+
     """
 
     def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]):
-        """
-
-        :param waveguide: Waveguide object describing the properties of a uniform waveguide.
-        :type waveguide: pynumpm.waveguide.Waveguide
-
-        """
-
         self._waveguide = None
         self.waveguide = waveguide
         self._deltabeta = None
@@ -64,7 +62,7 @@ class SimplePhasematchingDeltaBeta(object):
     @property
     def waveguide(self):
         """
-        :return: The waveguide object used in the calculation.
+        Read-only: the waveguide object used in the calculation.
 
         """
         return self._waveguide
@@ -80,7 +78,7 @@ class SimplePhasematchingDeltaBeta(object):
     @property
     def deltabeta(self) -> np.ndarray:
         """
-        :return: The :math:`\Delta\\beta` vector used for the phasematching calculation.
+        :return: The :math:`\Delta\\beta` vector used for the phase matching calculation.
 
         """
         return self._deltabeta
@@ -88,7 +86,7 @@ class SimplePhasematchingDeltaBeta(object):
     @deltabeta.setter
     def deltabeta(self, value: np.ndarray):
         """
-        Define the :math:`\Delta\\beta` vector used for the phasematching calculation.
+        Define the :math:`\Delta\\beta` vector used for the phase matching calculation.
 
         :param value: Array of :math:`\Delta\\beta` [*1/m*]
         :type value: numpy.ndarray
@@ -100,26 +98,26 @@ class SimplePhasematchingDeltaBeta(object):
     @property
     def phi(self):
         """
-        :return: The phasematching complex amplitude
+        :return: The phase matching complex amplitude
 
         """
         return self._phi
 
     def calculate_phasematching(self, normalized=True):
         """
-        Function that calculates the phasematching.
-        Prior to the evaluation of the phasematching, it is necessary to set the :math:`\Delta\\beta` vector by
+        Function that calculates the phase matching spectrum.
+        Prior to the calculation of the phase matching spectrum, it is necessary to set the :math:`\Delta\\beta` vector by
         assigning it to the variable `deltabeta`.
 
-        :param normalized: Sets the normalization of the phasematching. If True, the
-                           phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]).
+        :param normalized: Sets the normalization of the phase matching amplitude. If True, the
+                           phase matching amplitude will be normalized to the unit length (i.e., the maximum will be in [0,1]).
                            Default: *False*.
         :type normalized: bool
-        :return: the function returns the complex-valued phasematching spectrum.
+        :return: the function returns the complex-valued phase matching spectrum.
 
         """
         logger = logging.getLogger(__name__)
-        logger.info("SimplePhasematchingDeltaBeta: Calculating the phasematching.")
+        logger.info("SimplePhasematchingDeltaBeta: Calculating the phase matching spectrum.")
         if self.deltabeta is None:
             raise ValueError("You need to define a delta beta range.")
 
@@ -132,11 +130,11 @@ class SimplePhasematchingDeltaBeta(object):
 
     def plot(self, ax=None, normalized=False, **kwargs):
         """
-        Function to plot the phasematching intensity.
+        Function to plot the phase matching intensity.
 
         :param ax: Optional argument. Handle of the axis of the plot. Default: None
-        :param normalized: Optional argument. If True, normalizes the plotted phasematching to have the maximum to 1.
-                           Default: False
+        :param normalized: Optional argument. If True, normalizes the plotted phase matching intensity to have the
+                           maximum to 1. Default: False
         :type normalized: bool
         :return: the axis handle of the plot
         """
@@ -146,7 +144,7 @@ class SimplePhasematchingDeltaBeta(object):
             ax = plt.gca()
         if self.phi is None:
             raise IOError(
-                "I'd really like to plot something nice, but you have not calculated the phasematching yet, "
+                "I'd really like to plot something nice, but you have not calculated the phase matching spectrum yet, "
                 "so this would only be a white canvas.")
         y = abs(self.phi) ** 2
         if normalized:
@@ -155,7 +153,7 @@ class SimplePhasematchingDeltaBeta(object):
                 lw=kwargs.get("lw", 3),
                 color=kwargs.get("color"),
                 label=kwargs.get("label"))
-        plt.title("Phasematching")
+        plt.title("Phase matching spectrum")
         plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
         plt.tight_layout()
@@ -163,7 +161,7 @@ class SimplePhasematchingDeltaBeta(object):
 
     def calculate_integral(self):
         """
-        Function to calculate the integral of the phasematching curve. It uses the function `simps` from the scipy module.
+        Function to calculate the integral of the phase matching curve. It uses the function `simps` from the scipy module.
 
         :return: Intensity integral
         """
@@ -172,19 +170,28 @@ class SimplePhasematchingDeltaBeta(object):
 
 class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
     """
-    This class is used to simulate phasematching of systems considering only the wavevector mismatch
+    This class is used to simulate phase matching spectrum of systems considering only the wavevector mismatch
     (:math:`\Delta\\beta`).
+
+    Initialization of the class requires the following parameters:
+
+    :param waveguide: Waveguide object, as provided by the class waveguide.
+    :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
+
+    **Usage**
+
+    With `realwaveguide` being a :class:`~pynumpm.waveguide.RealisticWaveguide` object, the following code calculates its
+    phase matching spectrum as a function of :math:`\Delta\\beta`:
+
+    ::
+
+        idealphasematching = PhasematchingDeltaBeta(waveguide=realwaveguide)
+        idealphasematching.deltabeta = np.arange(-1000, 1000, 1)
+        phi = idealphasematching.calculate_phasematching(normalized=True)
 
     """
 
     def __init__(self, waveguide: Waveguide.RealisticWaveguide):
-        """
-        Initialization of the class requires the following parameter:
-
-        :param waveguide: Waveguide object, as provided by the class waveguide.
-        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
-
-        """
         super(PhasematchingDeltaBeta, self).__init__(waveguide)
         self._cumulative_delta_beta = None
         self._cumulative_exp = None
@@ -208,17 +215,19 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
 
     def calculate_phasematching(self, normalized=True):
         """
-        Function that calculates the phasematching in case of inhomogeneous waveguide.
-        Prior to the evaluation of the phasematching, it is necessary to set the :math:`\Delta\\beta` vector by
+        Function that calculates the phase matching spectrum in case of inhomogeneous waveguide.
+        Prior to the evaluation of the phase matching spectrum, it is necessary to set the :math:`\Delta\\beta` vector by
         assigning it to the variable `deltabeta`.
 
-        :param normalized: Sets the normalization of the phasematching. If the normalization is on (True), the phasematching will be normalized to the unit length (i.e., the maximum will be in [0,1]). Default: False.
+        :param normalized: Sets the normalization of the phase matching spectrum. If the normalization is on (True),
+                           the phase matching spectrum will be normalized to the unit length (i.e., the maximum will be
+                           in [0,1]). Default: False.
         :type normalized: bool
-        :return: the function returns the complex-valued phasematching spectrum.
+        :return: the function returns the complex-valued phase matching spectrum.
 
         """
         logger = logging.getLogger(__name__)
-        logger.info("PhasematchingDeltaBeta: Calculating the phasematching.")
+        logger.info("PhasematchingDeltaBeta: Calculating the phase matching spectrum.")
         if self.deltabeta is None:
             raise ValueError("You need to define a delta beta range.")
         self._cumulative_delta_beta = np.zeros(shape=len(self.deltabeta), dtype=complex)
@@ -240,10 +249,11 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
 
     def plot(self, ax=None, normalized=False, verbose=False, **kwargs):
         """
-        Function to plot the phasematching intensity.
+        Function to plot the phase matching intensity.
 
         :param ax: Optional argument. Handle of the axis of the plot. Default: None
-        :param normalized: Optional argument. If True, normalizes the plotted phasematching to have the maximum to 1. Default: False
+        :param normalized: Optional argument. If True, normalizes the plotted phase matching spectrum to have the
+                           maximum to 1. Default: False
         :type normalized: bool
         :param verbose: Optional. If True, writes the main information in the plot. Default: False
         :type verbose: bool
@@ -255,7 +265,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
             ax = plt.gca()
         if self.phi is None:
             raise IOError(
-                "I'd really like to plot something nice, but you have not calculated the phasematching yet, "
+                "I'd really like to plot something nice, but you have not calculated the phase matching spectrum yet, "
                 "so this would only be a white canvas.")
         y = abs(self.phi) ** 2
         if normalized:
@@ -264,7 +274,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
                 lw=kwargs.get("lw", 3),
                 color=kwargs.get("color"),
                 label=kwargs.get("label"))
-        plt.title("Phasematching")
+        plt.title("Phase matching")
         plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
         plt.ylabel("Intensity [a.u.]")
         if verbose:
@@ -283,38 +293,57 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
 
 
 class SimplePhasematching1D(object):
-    """Class to calculate the 1D-phasematching, i.e. having one fixed wavelength and scanning another one (the third is
-        fixed due to energy conservation.
-        The convention for labelling wavelength is
+    """
+    Class to calculate the phase matching spectrum of an ideal waveguide, as a function of a single wavelength, i.e.
+    having one fixed wavelength and scanning another one (the third is fixed due to energy conservation).
+    The convention for labelling wavelength is
 
-        .. math::
+    .. math::
 
-            |\\lambda_{red}| \\geq |\\lambda_{green}| \\geq |\\lambda_{blue}|
+        |\\lambda_{red}| \\geq |\\lambda_{green}| \\geq |\\lambda_{blue}|
 
-        i.e. according to their "energy".
+    i.e. according to their "energy".
 
-        """
+    Initialization of the class requires the following parameters:
+
+    :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
+    :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
+    :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function,
+                  i.e. n(variable_parameter)(wavelength in um)
+    :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda
+                    function, i.e. n(variable_parameter)(wavelength in um)
+    :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function,
+                   i.e. n(variable_parameter)(wavelength in um)
+    :param order: order of phase matched process. Default: 1
+    :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
+
+    **Usage**
+
+    With `idealwaveguide` being a :class:`~pynumpm.waveguide.Waveguide` object and `ny` and `nz` being the functions
+    describing the refractive indices of the structure as a function of :math:`\lambda`
+    (see :ref:`getting_started__definitions`), the following code calculates its phase matching spectrum as a function
+    of :math:`\lambda_{IR}\in[1530,\,1570]\mathrm{nm}`, considering a pump :math:`\lambda_{green}=532\mathrm{nm}`::
+
+        # Define the phase matching process
+        thisprocess = phasematching.SimplePhasematching1D(waveguide=idealwaveguide,
+                                                                n_red=ny,
+                                                                n_green=nz,
+                                                                n_blue=ny,
+                                                                order=1)
+        # Define the range for the scanning wavelength
+        thisprocess.red_wavelength = np.linspace(1530e-9, 1570e-9, 5000)
+        thisprocess.green_wavelength = 532e-9
+        # Calculate the phasematching spectrum
+        phi = thisprocess.calculate_phasematching()
+
+    """
 
     def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide],
                  n_red: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
                  n_green: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
                  n_blue: Union[_REF_INDEX_TYPE0, _REF_INDEX_TYPE1],
                  order: int = 1, backpropagation: bool = False):
-        """
-        Initialization of the class requires the following parameters:
 
-        :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
-        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
-        :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function,
-                      i.e. n(variable_parameter)(wavelength in um)
-        :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda
-                        function, i.e. n(variable_parameter)(wavelength in um)
-        :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function,
-                       i.e. n(variable_parameter)(wavelength in um)
-        :param order: order of phasematching. Default: 1
-        :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
-
-        """
         self._waveguide = None
         self.waveguide = waveguide
         self._phi = None
@@ -364,7 +393,7 @@ class SimplePhasematching1D(object):
     @property
     def phi(self):
         """
-        One dimensional phasematching spectrum (complex valued function) numpy.ndarray
+        One dimensional phase matching spectrum (complex valued function) numpy.ndarray
 
         """
         return self._phi
@@ -465,7 +494,8 @@ class SimplePhasematching1D(object):
                       (self.blue_wavelength is None)
         logger.info("Number of wavelengths set to 'None': " + str(num_of_none))
         if num_of_none > 2:
-            raise ValueError("It would be cool to know in which wavelength range I should calculate the phasematching!")
+            raise ValueError("It would be cool to know in which wavelength range I should calculate the phase matching "
+                             "spectrum!")
         elif num_of_none == 2:
             # calculate SHG
             self.process = "shg"
@@ -557,19 +587,19 @@ class SimplePhasematching1D(object):
 
     def calculate_phasematching(self, normalized=True):
         """
-        This function is the core of the class. It calculates the phasematching of the process, considering one
-        wavelength fixed and scanning the other two.
+        This function is the core of the class. It calculates the phase matching spectrum of the process, considering
+        one wavelength fixed and scanning the other two.
 
-        :param normalized: If True, the phasematching is limited in [0,1]. Otherwise, the maximum depends on the
-                                waveguide length, Default: True
+        :param normalized: If True, the phase matching spectrum is limited in [0,1]. Otherwise, the maximum depends on
+                           the waveguide length, Default: True
         :type normalized: bool
-        :return: the complex-valued phasematching spectrum
+        :return: the complex-valued phase matching spectrum
         """
         if not self.wavelengths_set:
             self.set_wavelengths()
 
         logger = logging.getLogger(__name__)
-        logger.info("Calculating phasematching")
+        logger.info("Calculating phase matching spectrum.")
         db = self.calculate_delta_k()
         self._phi = np.sinc(db * self.waveguide.length / 2 / np.pi) * np.exp(-1j * db * self.waveguide.length / 2)
         if not normalized:
@@ -578,18 +608,18 @@ class SimplePhasematching1D(object):
 
     def calculate_integral(self):
         """
-        Calculate the phasematching intensity integral
+        Calculate the phase matching intensity integral
 
-        :return: the phasematching intensity integral
+        :return: the phase matching intensity integral
         """
         if self.phi is not None:
             return simps(abs(self.phi) ** 2, self.scanning_wavelength)
         else:
-            raise RuntimeError("You need to evaluate the phasematching spectrum, before I can calculate its integral.")
+            raise RuntimeError("You need to evaluate the phase matching spectrum, before I can calculate its integral.")
 
     def plot(self, ax=None, plot_intensity=True, plot_input=True, **kwargs):
         """
-        Plot the phasematching intensity/amplitude.
+        Plot the phase matching intensity/amplitude.
 
         :param ax: Axis handle for the plot. If None, plots in a new figure. Default is None.
         :param plot_intensity: Set to True to plot the intensity profile, False to plot the amplitude and phase.
@@ -599,6 +629,7 @@ class SimplePhasematching1D(object):
         :type plot_intensity: bool
         :param kwargs: :func:`matplotlib.pyplot.plot` **kwargs arguments
         :return: figure and axis handle
+
         """
         if ax is None:
             fig = plt.figure()
@@ -626,7 +657,7 @@ class SimplePhasematching1D(object):
         ylabel = kwargs.get("ylabel", "Intensity [a.u.]")
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-        ax.set_title("Phasematching")
+        ax.set_title("Phase matching")
         fig = plt.gcf()
         plt.tight_layout()
         return fig, ax
@@ -634,8 +665,8 @@ class SimplePhasematching1D(object):
 
 class Phasematching1D(SimplePhasematching1D):
     """
-    Class to calculate the 1D-phasematching, i.e. having one fixed wavelength and scanning another one (the third is
-    fixed due to energy conservation.
+    Class to calculate the 1D-phase matching spectrum, i.e. having one fixed wavelength and scanning another one
+    (the third is fixed due to energy conservation).
     The convention for labelling wavelength is
 
     .. math::
@@ -644,33 +675,48 @@ class Phasematching1D(SimplePhasematching1D):
 
     i.e. according to their "energy".
 
+    Initialization of the class requires the following parameters:
+
+    :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
+    :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
+    :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
+                  n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                  Sellmeier's equations)
+    :type n_red: function of function
+    :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
+                    n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                    Sellmeier's equations)
+    :type n_green: function of function
+    :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
+                   n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                   Sellmeier's equations)
+    :type n_blue: function of function
+    :param order: order of phase matched process. Default: 1
+    :type order: int
+    :param backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
+    :type backpropagation: bool
+
+    **Usage**
+
+    With `realwaveguide` being a :class:`~pynumpm.waveguide.RealisticWaveguide` object and `ny` and
+    `nz` being the functions describing the refractive indices of the structure as a function of :math:`\lambda` and a
+    fabrication parameter :math:`f_0` (see :ref:`getting_started__definitions`), the following code calculates its phase
+    matching spectrum as a function of :math:`\lambda_{IR}\in[1530,\,1570]\mathrm{nm}`, considering a pump
+    :math:`\lambda_{green}=532\mathrm{nm}`::
+
+        # Define the phasematching process
+        thisprocess = phasematching.Phasematching1D(waveguide=thiswaveguide,
+                                                n_red=ny,
+                                                n_green=nz,
+                                                n_blue=ny)
+        thisprocess.red_wavelength = np.linspace(1530e-9, 1570e-9, 5000)
+        thisprocess.green_wavelength = 532e-9
+        phi = thisprocess.calculate_phasematching()
+
     """
 
     def __init__(self, waveguide: Waveguide.RealisticWaveguide, n_red: _REF_INDEX_TYPE1, n_green: _REF_INDEX_TYPE1,
                  n_blue: _REF_INDEX_TYPE1, order: int = 1, backpropagation: bool = False):
-        """
-        Initialization of the class requires the following parameters:
-
-        :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
-        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
-        :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
-                      n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
-                      Sellmeier's equations)
-        :type n_red: function of function
-        :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
-                        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
-                        Sellmeier's equations)
-        :type n_green: function of function
-        :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
-                       n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
-                       Sellmeier's equations)
-        :type n_blue: function of function
-        :param order: order of phasematching. Default: 1
-        :type order: int
-        :param backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
-        :type backpropagation: bool
-
-        """
         super().__init__(waveguide=waveguide,
                          n_red=n_red,
                          n_green=n_green,
@@ -936,7 +982,50 @@ class Phasematching1D(SimplePhasematching1D):
 
 class SimplePhasematching2D(object):
     """
-    Class for simple phasematching 2D
+    Class to calculate the phase matching spectrum of an ideal waveguide, as a function of a two wavelengths, labelled
+    `wavelength1` and `wavelength2`.
+
+    These correspond to *signal* and *idler* for a PDC process and *input* and *output for an SFG/DFG process.
+
+    Initialization of the class requires the following parameters:
+    :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
+    :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
+    :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
+                  n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                  Sellmeier's equations)
+    :type n_red: function of function
+    :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
+                    n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                    Sellmeier's equations)
+    :type n_green: function of function
+    :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
+                   n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
+                   Sellmeier's equations)
+    :type n_blue: function of function
+    :param order: order of phasematching. Default: 1
+    :type order: int
+    :param backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
+    :type backpropagation: bool
+
+     **Usage**
+
+    With `idealwaveguide` being a :class:`~pynumpm.waveguide.Waveguide` object and `ny` and `nz` being the functions
+    describing the refractive indices of the structure as a function of :math:`\lambda`
+    (see :ref:`getting_started__definitions`), the following code calculates its phase matching spectrum as a function
+    of :math:`\lambda_{signal} = \lambda_{IR}\in[1530,\,1570]\mathrm{nm}` and
+    :math:`\lambda_{idler} = \lambda_{green}=\in[1270, 1320]\mathrm{nm}`::
+
+        thisprocess = phasematching.SimplePhasematching2D(waveguide=thiswaveguide,
+                                                            n_red=ny,
+                                                            n_green=nz,
+                                                            n_blue=ny,
+                                                            order=1)
+        # Define the range for the scanning wavelength
+        thisprocess.red_wavelength = np.linspace(1530e-9, 1570e-9, 1000)
+        thisprocess.green_wavelength = np.linspace(1270-9, 1320e-9, 500)
+        # Calculate the phasematching spectrum
+        phi = thisprocess.calculate_phasematching()
+
     """
 
     def __init__(self, waveguide: Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide] = None,
@@ -1031,11 +1120,13 @@ class SimplePhasematching2D(object):
 
     def load_phasematching(self, wavelength1, wavelength2, phasematching):
         """
-        Function used to load externally the phasematching spectrum
+        Function used to load the phase matching spectrum from an external matrix
 
-        :param wavelength1:
-        :param wavelength2:
-        :param phasematching:
+        :param wavelength1: Wavelength array (in m) corresponding to the columns of the `phasematching` matrix
+        :type wavelength1: numpy.ndarray
+        :param wavelength2: Wavelength array (in m) corresponding to the rows of the `phasematching` matrix
+        :type wavelength2: numpy.ndarray
+        :param phasematching: Matrix containing the complex amplitude of the phase matching spectrum
         :return:
         """
         logger = logging.getLogger(__name__)
@@ -1167,54 +1258,34 @@ class Phasematching2D(SimplePhasematching2D):
 
         i.e. according to their "energy".
 
-        Accessible attributes of the class are
+        Initialization of the class requires the following parameters:
 
-        :param waveguide: waveguide object
-        :type waveguide: :class:`pynumpm.waveguide.RealisticWaveguide`
-        :param phi: One dimensional phasematching spectrum (complex valued function)
-        :type phi: :class:`~numpy:numpy.ndarray`
-        :param n_red: refractive index for `red` wavelength. It must be a function of a function, i.e.
-                      n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
-                      Sellmeier's equations)
-        :type n_red: function of function
-        :param n_green: refractive index for `green` wavelength. It must be a function of a function, i.e.
-                        n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for
-                        Sellmeier's equations)
-        :type n_green: function of function
-        :param n_blue: refractive index for "blue" wavelength. It must be a function of a function, i.e.
-                       n(parameter)(wavelength). The wavelength **must** be in micron (usual convention for Sellmeier's
-                       equations)
-        :type n_blue: function of function
-        :param int order: order of phasematching
-        :param red_wavelength: None, Single float or vector of float, containing the "red" wavelengths, in meters.
-        :type red_wavelength: :class:`numpy:numpy.ndarray`
-        :param green_wavelength: None, Single float or vector of float, containing the "green" wavelengths, in meters.
-        :type green_wavelength: :class:`numpy:numpy.ndarray`
-        :param blue_wavelength: None, Single float or vector of float, containing the "blue" wavelengths, in meters.
-        :type blue_wavelength: :class:`numpy:numpy.ndarray`
-        :param wavelength1: Signal (scanning) wavelength of the process. It cannot be set, it is automatically set
-                                  to be the lowest energetic wavelength of the user-defined wavelength ranges.
-        :type wavelength1: :class:`numpy:numpy.ndarray`
-        :param wavelength2: Output (scanning) wavelength of the process. It cannot be set, it is automatically set
-                            to be the highest energetic wavelength of the user-defined wavelength ranges.
-        :type wavelength2: :class:`numpy:numpy.ndarray`
+        :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
+        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
+        :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function,
+                      i.e. n(variable_parameter)(wavelength in um)
+        :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda
+                        function, i.e. n(variable_parameter)(wavelength in um)
+        :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function,
+                       i.e. n(variable_parameter)(wavelength in um)
+        :param order: order of phasematching. Default: 1
+        :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
+
+        **Usage**
+
+        With `realwaveguide` being a :class:`~pynumpm.waveguide.RealisticWaveguide` object and `ny` and
+        `nz` being the functions describing the refractive indices of the structure as a function of :math:`\lambda` and a
+        fabrication parameter :math:`f_0` (see :ref:`getting_started__definitions`), the following code calculates its phase
+        matching spectrum as a function of :math:`\lambda_{IR}\in[1530,\,1570]\mathrm{nm}`, considering a pump
+        :math:`\lambda_{green}=532\mathrm{nm}`::
+
+
 
         """
 
     def __init__(self, waveguide: Waveguide.RealisticWaveguide, n_red: _REF_INDEX_TYPE1, n_green: _REF_INDEX_TYPE1,
                  n_blue: _REF_INDEX_TYPE1, order: int = 1, backpropagation: bool = False):
-        """
-        Initialization of the class requires the following parameters:
 
-        :param waveguide: Waveguide object. Use the Waveguide class in the Waveguide module to define this object.
-        :type waveguide: :class:`~pynumpm.waveguide.RealisticWaveguide`
-        :param n_red: refractive index for the "red" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
-        :param n_green: refractive index for the "green" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
-        :param n_blue: refractive index for the "blue" wavelength. It has to be a lambda function of a lambda function, i.e. n(variable_parameter)(wavelength in um)
-        :param order: order of phasematching. Default: 1
-        :param bool backpropagation: Set to True if it is necessary to calculate a backpropagation configuration.
-
-        """
         super().__init__(waveguide=waveguide, n_red=n_red, n_green=n_green, n_blue=n_blue,
                          order=order, backpropagation=backpropagation)
         self.__nonlinear_profile_set = False
