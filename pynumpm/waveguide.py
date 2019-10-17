@@ -8,26 +8,22 @@ import logging
 
 class Waveguide(object):
     """
-    Base class for the description of a waveguide object.
+    Base class for the description of a waveguide object. Initialize the object providing its length (in meter) and,
+    if necessary, its poling period.
 
-    Read-only attributes:
+    :param length: Length of the waveguide [*meter*].
+    :type length: float
+    :param poling_period: Poling period of the structure, [*meter*]. Default: +np.infty
+    :type poling_period: float
 
-    :var length: Length of the sample in meters;
-    :var poling_period: Poling period in meters;
-    :var poling_period_um: poling period in um.
+    The following block of code initialises a 10mm-long waveguide with a poling period of 16:math:`\mu\mathrm{m}`::
+
+        thiswaveguide = waveguide.Waveguide(length = 10e-3,
+                                            poling_period = 16e-6)
 
     """
 
     def __init__(self, length: float, poling_period: float = +np.infty):
-        """
-        Initialize the object providing its length (in meter) and, if necessary, its poling period.
-
-        :param length: Length of the waveguide [*meter*].
-        :type length: float
-        :param poling_period: Poling period of the structure, [*meter*]. Default: +np.infty
-        :type poling_period: float
-
-        """
         if np.isinf(poling_period):
             warnings.warn("The user has not provided a poling period. The default value of +np.infty will be used.",
                           UserWarning)
@@ -36,59 +32,76 @@ class Waveguide(object):
         self.__waveguide_profile = None
 
     def __repr__(self):
-        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\tpoling period:{self.poling_period_um}um"
+        text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length} m\n\tpoling period:{self.poling_period_um}um"
         return text
 
     @property
     def poling_period(self):
+        """
+        The poling period of the structure, in m.
+
+        :return:
+        """
         return self.__poling_period
 
     @property
     def poling_period_um(self):
+        """
+        The poling period of the structure, in :math:`\mu\mathrm{m}`.
+
+        :return:
+        """
         return self.__poling_period * 1e6
 
     @property
     def length(self):
+        """
+        The length of the structure, in m.
+
+        :return:
+        """
         return self.__length
 
 
 class RealisticWaveguide(Waveguide):
     """
-    Class for the description of variable waveguide profiles.
+    Class for the description of waveguides with variable profiles. It can generate noisy profiles (via the functions in
+    the :mod:`pynumpm.noise` module) and it can load user-defined profiles and/or poling structures (they must be
+    consistent with the user specified mesh).
 
-    It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :mod:`pynumpm.noise`
-    module) and it can load user-defined profiles (they must be consistent with the user specified mesh).
+    Initialize the waveguide by providing a z-mesh,a poling and the nominal parameter of the profile. This will
+    automatically generate a uniform profile with the specified nominal parameter.
 
-    Read-only attributes:
+    :param z: linearly spaced space mesh [*meter*].
+    :type z: numpy.ndarray
+    :param poling_period: poling period of the structure [*meter*].
+    :type poling_period: float
+    :param nominal_parameter: nominal parameter of the structure [variable units depending on the Sellmeier used].
+                              Default: None.
+    :type nominal_parameter: float
+    :param nominal_parameter_name: name of the nominal parameter (used for the axes). LaTeX syntax is allowed.
+                                   Default: empty string.
+    :type nominal_parameter_name: string
 
-    :var z: Spatial mesh of the simulation [in meters].
-    :var dz: Unit cell of the mesh (automatically calculated) [in meters].
-    :var length: length of the sample [in meters].
-    :var profile: Vector with the waveguide profile.
-    :var nominal_parameter: Nominal parameter of the waveguide.
-    :var nominal_parameter_name: Name of the nominal parameter (used when plotting)
-    :var poling_structure: Vector containing the poling structure of the system.
-    :var poling_structure_set: Boolean value returning True if the poling structure has been set.
+    The following block of code initialises and plots the profile of
+    a 15mm-long, 7:math:`\mu\mathrm{m}`-wide waveguide with a poling period of
+    9:math:`\mu\mathrm{m}`. The waveguide is discretized over a z-mesh with steps of 10:math:`\mu\mathrm{m}`.
+    The waveguide width is characeterised by a noise with a 1/f spectrum with amplitude 0.2:math:`\mu\mathrm{m}`.
+    ::
+
+        z = np.arange(0, 15e-3, 10e-6)
+        thiswaveguide = waveguide.RealisticWaveguide(z = z,
+                                                     poling_period = 9e-6,
+                                                     nominal_parameter = 7e-6,
+                                                     nominal_parameter_name = "Width")
+        thiswaveguide.create_noisy_waveguide(noise_profile = "1/f",
+                                             noise_amplitude = 0.2)
+        thiswaveguide.plot_waveguide_properties()
 
     """
 
     def __init__(self, z: np.ndarray, poling_period: float = np.infty, nominal_parameter: float = 1.,
                  nominal_parameter_name: str = ""):
-        """
-        Initialize the waveguide by providing a z-mesh,a poling and the nominal parameter of the profile. This will automatically
-        generate a uniform profile with the specified nominal parameter.
-
-        :param z: linearly spaced space mesh [*meter*].
-        :type z: numpy.ndarray
-        :param poling_period: poling period of the structure [*meter*].
-        :type poling_period: float
-        :param nominal_parameter: nominal parameter of the structure [variable units depending on the Sellmeier used]. Default: None.
-        :type nominal_parameter: float
-        :param nominal_parameter_name: name of the nominal parameter (used for the axes). LaTeX syntax is allowed. Default: empty string.
-        :type nominal_parameter_name: string
-
-        """
-
         self.__z = z
         self.__nominal_parameter = nominal_parameter
         # when an object of this class is initialized, the following call creates a uniform waveguide
@@ -104,7 +117,7 @@ class RealisticWaveguide(Waveguide):
         self.__poling_structure = None
 
     def __repr__(self):
-        text = f"{self.__class__.__name__} object.\n\tLength: {self.length}m" \
+        text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length}m" \
                f"\n\tPoling: {self.poling_period_um} um." \
                f"\n\t{self.nominal_parameter_name}: {self.nominal_parameter}" \
                f"\n\tDiscretization: {self.dz}" \
@@ -113,10 +126,20 @@ class RealisticWaveguide(Waveguide):
 
     @property
     def z(self):
+        """
+        Array containing the z-mesh of the structure.
+
+        :return:
+        """
         return self.__z
 
     @property
     def dz(self):
+        """
+        Resolution of the z-mesh.
+
+        :return:
+        """
         dz = np.diff(self.z)[0]
         return dz
 
@@ -164,10 +187,6 @@ class RealisticWaveguide(Waveguide):
 
     @nominal_parameter.setter
     def nominal_parameter(self, value):
-        """
-        Nominal fabrication parameter of the waveguide.
-
-        """
         self.__nominal_parameter = value
 
     def load_waveguide_profile(self, waveguide_profile: np.ndarray = None):
@@ -223,7 +242,7 @@ class RealisticWaveguide(Waveguide):
         If the poling structure is set via this function, the poling period of the waveguide is *automatically* set to
         +`numpy.infty`.
 
-        .. warning:: This function is untested.
+        .. warning:: The correct behaviour of this function is untested.
 
         :param poling_structure: Array containing the orientation of the poling.
         :type poling_structure: numpy.ndarray
