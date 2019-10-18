@@ -9,8 +9,6 @@ Two classes are available:
 * :class:`pynumpm.waveguide.RealisticWaveguide`, for the simulation of systems with a parameter that varies along their
   propagation axis.
 
-The objects of this class are printable (the have a __repr__ method).
-
 Waveguide
 ---------
 

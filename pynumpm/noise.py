@@ -9,20 +9,20 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-from pynumpm import utils
 
 
-def calculate_profile_properties(z=None, profile=None):
+def calculate_profile_properties(z: np.ndarray = None, profile: np.ndarray = None):
     """
     Function to calculate the noise properties (autocorrelation and power density spectrum) of the noise on the
     waveguide profile
-    :param z: z mesh of the system
-    :type z: `numpy:numpy.ndarray`
-    :param profile: Profile of the varying variable of the waveguide.
-    :type profile: `numpy:numpy.ndarray`
 
-    :return z_autocorr, autocorrelation, f, power_spectrum: Returns the autocorrelation profile (z axis included)
-    and the power spectrum (frequency and power)
+    :param z: z mesh of the system
+    :type z: numpy.ndarray
+    :param profile: Profile of the varying variable of the waveguide.
+    :type profile: numpy.ndarray
+
+    :return: z_autocorr, autocorrelation, f, power_spectrum: Returns the autocorrelation profile (z axis included)
+            and the power spectrum (frequency and power)
     """
     logger = logging.getLogger(__name__)
     logger.info("Calculating profile properties")
@@ -43,20 +43,22 @@ def calculate_profile_properties(z=None, profile=None):
 
 class NoiseProfile(object):
     """
-    Class to define a generic noise profile.
+    Base class to define a generic noise profile.
 
-    .. warning:: The method :func:`pynumpm.noise.NoiseProfile.concatenate` has not been tested completely.
+    Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude and an offset.
+
+    :param z: linearly spaced space mesh [*meter*].
+    :type z: numpy.ndarray
+    :param noise_amplitude: Amplitude of the noise profile.
+    :type noise_amplitude: float
+    :param offset: Offset of the noise profile
+    :type offset: float
+
+    The following block of code initialises and plots the profile of
 
     """
 
-    def __init__(self, z=None, noise_amplitude=0., offset=0.):
-        """
-        Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude and an offset.
-
-        :param z:
-        :param noise_amplitude:
-        :param offset:
-        """
+    def __init__(self, z: np.ndarray = None, noise_amplitude: float = 0., offset: float = 0.):
         logger = logging.getLogger(__name__)
         logger.debug("Creating NoiseProfile object. "
                      "z.shape={0}; noise_amplitude={1}; offset={2}.".format(z.shape, noise_amplitude, offset))
@@ -72,39 +74,72 @@ class NoiseProfile(object):
         self.__dz = np.diff(self.z)[0]
         self.__profile = self.__noise_amplitude * np.ones(shape=self.z.shape) + self.__offset
         self.__autocorrelation_is_calculated = False
-        self.f = None
         logger.debug("NoiseProfile object creates successfully.")
 
     def __repr__(self):
-        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\t" \
+        text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length} m\n\t" \
                f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset}"
         return text
 
     @property
     def length(self):
+        """
+        Length of the structure
+
+        """
         return self.__length
 
     @property
     def z(self):
+        """
+        Z-mesh used to discretise the profile
+
+        """
         return self.__z
 
     @property
     def dz(self):
+        """
+        Discretisation unit cell.
+
+        """
         return self.__dz
 
     @property
     def profile(self):
+        """
+        Profile of the structure.
+
+        """
         return self.__profile
 
     @property
     def noise_amplitude(self):
+        """
+        Noise amplitude of the noise profile.
+
+        """
         return self.__noise_amplitude
 
     @property
     def offset(self):
+        """
+        Offset of the noise profile.
+
+        """
         return self.__offset
 
     def concatenate(self, other):
+        """
+        Method to concatenate two noise tracks.
+
+        .. warning:: This method has not been tested completely.
+
+        :param other: Another instance of a NoiseProfile
+        :type other: :class:`pynumpm.NoiseProfile`
+
+        :return:
+        """
         logger = logging.getLogger(__name__)
         logger.debug("Concatenating two objects"
                      "other={0}".format(other))
@@ -117,13 +152,32 @@ class NoiseProfile(object):
         logger.debug("Concatenation successful.")
         return newnoise
 
-    def plot_noise_properties(self, fig=None, **kwargs):
+    def load_noise_profile(self, noise_profile: np.ndarray):
         """
-        Function to plot the nois properties.
+        Method used to load a user-generated noise profile.
 
-        :param fig:
-        :param kwargs:
-        :return:
+        :param noise_profile: Array containing the noise profile
+        :type noise_profile: numpy.ndarray
+
+        """
+        if not isinstance(noise_profile, np.ndarray):
+            raise TypeError("'noise_profile' must be a numpy.ndarray object.")
+
+        if noise_profile.shape != self.z.shape:
+            raise ValueError("The shape of 'noise_profile' is {0}, while the shape of the discretization mesh is"
+                             "{1}. They must be consistent.".format(noise_profile.shape, self.z.shape))
+        self.__profile = noise_profile
+        self.__offset = self.profile.mean()
+        self.__noise_amplitude = self.profile - self.profile.mean()
+
+    def plot_noise_properties(self, fig=None, **plotkwargs):
+        """
+        Function to plot the noise properties.
+
+        :param fig: Figure handle, if the plot needs to be in a specific figure
+        :param plotkwargs: Dictionary of properties to be passed to the plotting functions. This can be used e.g. to
+                           define the colours and the size of the lines
+        :return: fig, [ax1, ax2, ax3]. The handles to the figure object and the three axes of the figure.
         """
         logger = logging.getLogger(__name__)
         logger.debug("Plotting noise properties.")
@@ -134,48 +188,54 @@ class NoiseProfile(object):
             fig = plt.figure(fig.number)
 
         plt.subplot(211)
-        l1, = plt.plot(self.z, self.profile, **kwargs)
+        ax1 = plt.gca()
+        l1, = plt.plot(self.z, self.profile, **plotkwargs)
         plt.title("Noise")
         plt.xlabel("z")
         plt.ylabel("Noise")
 
         plt.subplot(234)
+        ax2 = plt.gca()
         l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation",
-                           **kwargs)
+                           **plotkwargs)
         plt.title("|R(z)|^2")
         plt.xlabel("z")
 
         plt.subplot(235)
-        l3, = plt.loglog(f, abs(power_spectrum) ** 2, **kwargs)
+        ax3 = plt.gca()
+        l3, = plt.loglog(f, abs(power_spectrum) ** 2, **plotkwargs)
         plt.title("|S(f)|^2")
         plt.xlabel("f")
         plt.subplot(236)
         plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))))
         plt.title("Histogram of the noise.")
         plt.tight_layout()
-        return fig, [l1, l2, l3]
+        return fig, [ax1, ax2, ax3]
 
 
 class NoiseFromSpectrum(NoiseProfile):
     """
-    Class to create a noise profile given a specific noise power spectrum. It can create
+    Class to create a noise profile given a specific noise power spectrum. It inherits from NoiseProfile.
+    It can create `Additive White Gaussian Noise (awgn) <https://en.wikipedia.org/wiki/Additive_white_Gaussian_noise>`_,
+    `1/f noise <https://en.wikipedia.org/wiki/Pink_noise>`_ and
+    `1/f2 noise <https://en.wikipedia.org/wiki/Brownian_noise>`_.
 
-    * awgn noise
-    * 1/f noise
-    * 1/f2 noise
+    Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude, an offset
+    and a string describing the power spectrum of the noise.
+
+    :param z: linearly spaced space mesh [*meter*].
+    :type z: numpy.ndarray
+    :param noise_amplitude: Amplitude of the noise profile.
+    :type noise_amplitude: float
+    :param offset: Offset of the noise profile
+    :type offset: float
+    :param profile_spectrum: Noise profile of the simulated structure. Can be one of "awgn", "1/f", "1/f2".
+    :type profile_spectrum: str
 
     """
 
-    def __init__(self, z=None, offset=0, noise_amplitude=0., profile_spectrum=None):
-        """
-        Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude, an offset
-        and a string describing the power spectrum of the noise.
-
-        :param z:
-        :param offset:
-        :param noise_amplitude:
-        :param profile_spectrum: Can be one of "awgn", "1/f", "1/f2".
-        """
+    def __init__(self, z: np.ndarray = None, offset: float = 0, noise_amplitude: float = 0.,
+                 profile_spectrum: str = None):
 
         logger = logging.getLogger(__name__)
         logger.debug("Creating a NoiseFromSpectrum object. "
@@ -185,29 +245,41 @@ class NoiseFromSpectrum(NoiseProfile):
                                                                                                   profile_spectrum))
         NoiseProfile.__init__(self, z, offset=offset, noise_amplitude=noise_amplitude)
         if profile_spectrum is None:
-            raise ValueError("profile_spectrum must be set")
+            raise ValueError("'profile_spectrum' must be set")
         if profile_spectrum.lower() in ["awgn", "1/f", "1/f2"]:
             self.__profile_spectrum = profile_spectrum.lower()
         else:
-            raise ValueError("profile_spectrum has to be 'awgn', '1/f' or '1/f2'")
-        self.__profile = self.generate_noise()
+            raise ValueError("'profile_spectrum' has to be 'awgn', '1/f' or '1/f2'")
+        self.__profile = self._generate_noise()
         logger.debug("NoiseFromSpectrum object created.")
 
     def __repr__(self):
-        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\t" \
+        text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length} m\n\t" \
                f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset};" \
                f"\n\tProfile spectrum: {self.profile_spectrum}"
         return text
 
     @property
     def profile_spectrum(self):
+        """
+        Type of noise spectrum of the structure
+
+        """
         return self.__profile_spectrum
 
     @property
     def profile(self):
+        """
+        Profile of the structure
+
+        """
         return self.__profile
 
-    def generate_noise(self):
+    def _generate_noise(self):
+        """
+        Function that generates the noise profile.
+
+        """
         # This function generates the noise.
 
         logger = logging.getLogger(__name__)
@@ -272,7 +344,7 @@ class CorrelatedNoise(NoiseProfile):
         logger.debug("CorrelatedNoise object created.")
 
     def __repr__(self):
-        text = f"{self.__class__.__name__} object.\n\tLength: {self.length} m\n\t" \
+        text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length} m\n\t" \
                f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset};" \
                f"\n\tCorrelation length: {self.correlation_length}."
         return text

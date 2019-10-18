@@ -13,10 +13,10 @@ class Waveguide(object):
 
     :param length: Length of the waveguide [*meter*].
     :type length: float
-    :param poling_period: Poling period of the structure, [*meter*]. Default: +np.infty
+    :param poling_period: Poling period of the structure, [*meter*]. Default: +numpy.infty
     :type poling_period: float
 
-    The following block of code initialises a 10mm-long waveguide with a poling period of 16:math:`\mu\mathrm{m}`::
+    The following block of code initialises a 10mm-long waveguide with a poling period of 16 :math:`\mu\mathrm{m}`::
 
         thiswaveguide = waveguide.Waveguide(length = 10e-3,
                                             poling_period = 16e-6)
@@ -25,7 +25,7 @@ class Waveguide(object):
 
     def __init__(self, length: float, poling_period: float = +np.infty):
         if np.isinf(poling_period):
-            warnings.warn("The user has not provided a poling period. The default value of +np.infty will be used.",
+            warnings.warn("The user has not provided a poling period. The default value of +numpy.infty will be used.",
                           UserWarning)
         self.__poling_period = poling_period
         self.__length = length
@@ -40,7 +40,6 @@ class Waveguide(object):
         """
         The poling period of the structure, in m.
 
-        :return:
         """
         return self.__poling_period
 
@@ -49,7 +48,6 @@ class Waveguide(object):
         """
         The poling period of the structure, in :math:`\mu\mathrm{m}`.
 
-        :return:
         """
         return self.__poling_period * 1e6
 
@@ -58,7 +56,6 @@ class Waveguide(object):
         """
         The length of the structure, in m.
 
-        :return:
         """
         return self.__length
 
@@ -84,9 +81,9 @@ class RealisticWaveguide(Waveguide):
     :type nominal_parameter_name: string
 
     The following block of code initialises and plots the profile of
-    a 15mm-long, 7:math:`\mu\mathrm{m}`-wide waveguide with a poling period of
-    9:math:`\mu\mathrm{m}`. The waveguide is discretized over a z-mesh with steps of 10:math:`\mu\mathrm{m}`.
-    The waveguide width is characeterised by a noise with a 1/f spectrum with amplitude 0.2:math:`\mu\mathrm{m}`.
+    a 15mm-long, 7 :math:`\mu\mathrm{m}`-wide waveguide with a poling period of
+    9 :math:`\mu\mathrm{m}`. The waveguide is discretized over a z-mesh with steps of 10 :math:`\mu\mathrm{m}`.
+    The waveguide width is characeterised by a noise with a 1/f spectrum with amplitude 0.2 :math:`\mu\mathrm{m}`.
     ::
 
         z = np.arange(0, 15e-3, 10e-6)
@@ -285,10 +282,9 @@ class RealisticWaveguide(Waveguide):
         the power spectrum, autocorrelation and histogram distribution of the noise.
         If a Figure handle is passed, it plots in said Figure.
 
-        :param fig: Handle of the figure where the plots should be displayed. If *None*, then opens a new figure. Default
-        is None.
+        :param fig: Handle of the figure where the plots should be displayed. If *None*, then opens a new figure.
+                    Default is None.
         :type fig: matplotlib.figure.Figure
-        :return:
 
         """
         if fig is None:
