@@ -93,6 +93,7 @@ def test_simple_phasematching():
     thisprocess.calculate_phasematching(normalized=False)
     print(thisprocess.calculate_integral())
     thisprocess.plot()
+    print(utils.bandwidth(thisprocess.deltabeta, abs(thisprocess.phi) ** 2))
 
     thisprocess2 = phasematching.SimplePhasematchingDeltaBeta(waveguide=thiswaveguide)
     thisprocess2.deltabeta = deltabeta
@@ -110,6 +111,7 @@ def test_simple_phasematching():
     thisprocess3.blue_wavelength = 532e-9
     thisprocess3.calculate_phasematching()
     thisprocess3.plot()
+    print(utils.bandwidth(thisprocess3.red_wavelength, abs(thisprocess3.phi) ** 2))
 
     thisprocess4 = phasematching.SimplePhasematching2D(waveguide=thiswaveguide2,
                                                        n_red=ny(150),
@@ -124,7 +126,50 @@ def test_simple_phasematching():
     plt.show()
 
 
+def test_phasematching():
+    ny, nz = custom_sellmeier()
+    z = np.linspace(0, 25, 1000) * 1e-3
+
+    thiswaveguide = waveguide.RealisticWaveguide(z=z, nominal_parameter_name=r"$\Delta\beta$", nominal_parameter=0)
+    thiswaveguide.create_noisy_waveguide(noise_profile="1/f", noise_amplitude=1000)
+    thiswaveguide.plot_waveguide_properties()
+
+    thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
+    thisprocess.deltabeta = np.linspace(-5000, 5000, 1000)
+    thisprocess.calculate_phasematching(normalized=True)
+    print(thisprocess.calculate_integral())
+    thisprocess.plot()
+
+    poling_period = utils.calculate_poling_period(1550e-9, 0, 532e-9, ny(150), nz(150), ny(150))
+    thiswaveguide2 = waveguide.RealisticWaveguide(z=z,
+                                                  poling_period=poling_period,
+                                                  nominal_parameter_name=r"$T$",
+                                                  nominal_parameter=150)
+    thiswaveguide2.create_noisy_waveguide(noise_profile="1/f", noise_amplitude=5)
+
+    thisprocess2 = phasematching.Phasematching1D(waveguide=thiswaveguide2,
+                                                 n_red=ny,
+                                                 n_green=nz,
+                                                 n_blue=ny)
+    thisprocess2.red_wavelength = np.linspace(1530, 1570, 1000) * 1e-9
+    thisprocess2.blue_wavelength = 532e-9
+    thisprocess2.calculate_phasematching()
+    thisprocess2.plot()
+
+    thisprocess3 = phasematching.Phasematching2D(waveguide=thiswaveguide2,
+                                                 n_red=ny,
+                                                 n_green=nz,
+                                                 n_blue=ny)
+    thisprocess3.red_wavelength = np.linspace(1530, 1570, 200) * 1e-9
+    thisprocess3.blue_wavelength = np.linspace(530, 534, 200) * 1e-9
+    thisprocess3.calculate_phasematching()
+    thisprocess3.plot()
+
+    plt.show()
+
+
 if __name__ == '__main__':
     # test_waveguide()
     # test_noise()
-    test_simple_phasematching()
+    # test_simple_phasematching()
+    test_phasematching()

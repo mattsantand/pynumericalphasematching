@@ -25,7 +25,7 @@ class Process(enum.Enum):
     SFG = "SFG. Input is the wavelength1, Output is the wavelength2."
     DFG = "DFG. Input is the wavelength1, Output is the wavelength2."
     PDC = "PDC."
-    BWPDC = "BWPDC. Signal is the for the backward propagating field."  # TODO: Check this
+    BWPDC = "BWPDC. Wavelength1 is the forward propagating field, wavelength2 is the backward one."  # TODO: Check this
 
 
 class Pump(object):
