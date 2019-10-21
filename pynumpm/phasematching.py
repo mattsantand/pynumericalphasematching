@@ -1262,7 +1262,7 @@ class SimplePhasematching2D(object):
             ax = plt.gca()
 
         plt.sca(ax)
-        WL1, WL2 = np.meshgrid(self.wavelength1 * 1e-9, self.wavelength2 * 1e-9)
+        WL1, WL2 = np.meshgrid(self.wavelength1 * 1e9, self.wavelength2 * 1e9)
         plt.contour(WL1, WL2, self._deltabeta, N, **contourkwargs)
         plt.colorbar()
 
