@@ -46,6 +46,8 @@ class NoiseProfile(object):
     Base class to define a generic noise profile.
 
     Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude and an offset.
+    It generates a random profile, where each point is drawn from a normal distribution with mean `offset` and standard
+    deviation `noise_amplitude`.
 
     :param z: linearly spaced space mesh [*meter*].
     :type z: numpy.ndarray
@@ -54,7 +56,13 @@ class NoiseProfile(object):
     :param offset: Offset of the noise profile
     :type offset: float
 
-    The following block of code initialises and plots the profile of
+    The following block of code initialises and plots the profile of a NoiseProfile::
+
+        z = np.linspace(0, 10, 1000)*1e-3
+        thisnoise = NoiseProfile(z=z,
+                                 noise_amplitude=0.1,
+                                 offset = 3)
+        thisnoise.plot_noise_properties()
 
     """
 
@@ -72,7 +80,7 @@ class NoiseProfile(object):
         self._offset = offset
         self._length = self.z.max() - self.z.min()
         self._dz = np.diff(self.z)[0]
-        self._profile = self._noise_amplitude * np.ones(shape=self.z.shape) + self._offset
+        self._profile = self._noise_amplitude * np.random.randn(shape=self.z.shape) + self._offset
         self._autocorrelation_is_calculated = False
         logger.debug("NoiseProfile object creates successfully.")
 
@@ -267,6 +275,15 @@ class NoiseFromSpectrum(NoiseProfile):
     Finally, the IFFT of :math:`\mathbf{c}` is calculated to retrieve the spectral distribution of the noise.
     If necessary, an offset is added at the end.
 
+    The following block of code initialises and plots the profile of a NoiseFromSpectrum object::
+
+        z = np.linspace(0, 10, 1000)*1e-3
+        thisnoise = NoiseFromSpectrum(z=z,
+                                 noise_amplitude=0.1,
+                                 offset = 3,
+                                 profile_spectrum = "1/f")
+        thisnoise.plot_noise_properties()
+
     """
 
     def __init__(self, z: np.ndarray = None, offset: float = 0, noise_amplitude: float = 0.,
@@ -367,6 +384,16 @@ class CorrelatedNoise(NoiseProfile):
     profile, :math:`\sigma` is the amplitude of the noise and :math:`\rho` is the correlation factor given by
     :math:`\rho = \exp{-\Delta z/L_C}`, being :math:`\Delta z` the size of the mesh cell and :math:`L_C` the correlation
     length.
+
+    The following block of code initialises and plots the profile of a CorrelatedNoise object::
+
+        z = np.linspace(0, 10, 1000)*1e-3
+        thisnoise = CorrelatedNoise(z=z,
+                                 noise_amplitude=0.1,
+                                 offset = 3,
+                                 profile_spectrum = "1/f")
+        thisnoise.plot_noise_properties()
+
 
     ..warning:: This class hasn't been tested completely. It might be buggy.
 
