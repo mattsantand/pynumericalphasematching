@@ -558,6 +558,9 @@ class SimplePhasematching1D(object):
                     b=self.blue_wavelength))
                 raise ValueError("Something unexpected happened in set_wavelength. "
                                  "Check the log please and chat with the developer.")
+        elif num_of_none == 0:
+            raise ValueError("You have set 3 wavelengths. But at least one should be free, it will be determined"
+                             "from energy conservation.")
         self._wavelengths_set = True
         self._lamr0 = self.red_wavelength.mean() if type(self.red_wavelength) == np.ndarray else self.red_wavelength
         self._lamg0 = self.green_wavelength.mean() if type(
