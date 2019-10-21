@@ -159,6 +159,8 @@ def example_noise():
     othernoise.plot_noise_properties()
     concatenate_noise = NoiseProfile.concatenate(thisnoise, othernoise)
     concatenate_noise.plot_noise_properties()
+    sum_noise = thisnoise + othernoise
+    sum_noise.plot_noise_properties()
     plt.show()
 
 

@@ -81,6 +81,20 @@ class NoiseProfile(object):
                f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset}"
         return text
 
+    def __add__(self, other):
+        if not isinstance(other, NoiseProfile):
+            raise ValueError("The 'other' object to sum must belong at least to the class pynumpm.noise.NoiseProfile.")
+        if len(self.z) != len(other.z):
+            raise ValueError("The meshes of the two objects must be of the same size.")
+        if (self.z == other.z).sum() != len(self.z):
+            raise ValueError("The two objects have been defined on different meshes.")
+        result_profile = self.profile + other.profile
+        res_mean = result_profile.mean()
+        res_ampl = abs(result_profile - res_mean).max()
+        result = NoiseProfile(self.z, offset=res_mean, noise_amplitude=res_ampl)
+        result._profile = result_profile
+        return result
+
     @property
     def length(self):
         """
