@@ -203,28 +203,37 @@ class NoiseProfile(object):
             fig = plt.figure()
         else:
             fig = plt.figure(fig.number)
+        list_of_axes = fig.get_axes()
+        if list_of_axes == []:
+            ax1 = plt.subplot(211)
+            ax2 = plt.subplot(234)
+            ax3 = plt.subplot(235)
+            ax4 = plt.subplot(236)
+        else:
+            if len(list_of_axes) == 4:
+                ax1, ax2, ax3, ax4 = list_of_axes
+            else:
+                raise ConnectionError("The figure does not have the correct number of axes (4).")
 
-        plt.subplot(211)
-        ax1 = plt.gca()
+        plt.sca(ax1)
         l1, = plt.plot(self.z, self.profile, **plotkwargs)
         plt.title("Noise")
         plt.xlabel("z")
         plt.ylabel("Noise")
 
-        plt.subplot(234)
-        ax2 = plt.gca()
+        plt.sca(ax2)
         l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation",
                            **plotkwargs)
         plt.title("|R(z)|^2")
         plt.xlabel("z")
 
-        plt.subplot(235)
-        ax3 = plt.gca()
+        plt.sca(ax3)
         l3, = plt.loglog(f, abs(power_spectrum) ** 2, **plotkwargs)
         plt.title("|S(f)|^2")
         plt.xlabel("f")
-        plt.subplot(236)
-        plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))))
+
+        plt.sca(ax4)
+        plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))), **plotkwargs)
         plt.title("Histogram of the noise.")
         plt.tight_layout()
         return fig, [ax1, ax2, ax3]
@@ -272,6 +281,8 @@ class NoiseFromSpectrum(NoiseProfile):
         NoiseProfile.__init__(self, z, offset=offset, noise_amplitude=noise_amplitude)
         if profile_spectrum is None:
             raise ValueError("'profile_spectrum' must be set")
+        if not isinstance(profile_spectrum, str):
+            raise TypeError("'profile_spectrum' must be a string.")
         if profile_spectrum.lower() in ["awgn", "1/f", "1/f2"]:
             self._profile_spectrum = profile_spectrum.lower()
         else:
@@ -281,7 +292,7 @@ class NoiseFromSpectrum(NoiseProfile):
 
     def __repr__(self):
         text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length} m\n\t" \
-               f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset};" \
+               f"Noise amplitude:{self.noise_amplitude}\n\tNoise offset:{self.offset}" \
                f"\n\tProfile spectrum: {self.profile_spectrum}"
         return text
 
@@ -360,6 +371,7 @@ class CorrelatedNoise(NoiseProfile):
     ..warning:: This class hasn't been tested completely. It might be buggy.
 
     """
+
     def __init__(self, z=None, offset=0, noise_amplitude=0., correlation_length=0.):
         logger = logging.getLogger(__name__)
         logger.debug("Creating CorrelatedNoise object. z.shape={0}; offset={1}; noise_amplitude={2}; "
@@ -385,7 +397,6 @@ class CorrelatedNoise(NoiseProfile):
 
         """
         return self._correlation_length
-
 
     def generate_noise(self):
         """
