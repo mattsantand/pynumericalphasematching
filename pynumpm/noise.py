@@ -80,7 +80,7 @@ class NoiseProfile(object):
         self._offset = offset
         self._length = self.z.max() - self.z.min()
         self._dz = np.diff(self.z)[0]
-        self._profile = self._noise_amplitude * np.random.randn(shape=self.z.shape) + self._offset
+        self._profile = self._noise_amplitude * np.random.randn(*self.z.shape) + self._offset
         self._autocorrelation_is_calculated = False
         logger.debug("NoiseProfile object creates successfully.")
 
