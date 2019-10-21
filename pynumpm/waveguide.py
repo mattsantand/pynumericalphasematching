@@ -24,6 +24,12 @@ class Waveguide(object):
     """
 
     def __init__(self, length: float, poling_period: float = +np.infty):
+        if not isinstance(length, float):
+            raise ValueError("'length' must be a float.")
+
+        if not isinstance(poling_period, float):
+            raise ValueError("'length' must be a float.")
+
         if np.isinf(poling_period):
             warnings.warn("The user has not provided a poling period. The default value of +numpy.infty will be used.",
                           UserWarning)
@@ -99,8 +105,23 @@ class RealisticWaveguide(Waveguide):
 
     def __init__(self, z: np.ndarray, poling_period: float = np.infty, nominal_parameter: float = 1.,
                  nominal_parameter_name: str = ""):
+
+        if not isinstance(z, np.ndarray):
+            raise TypeError("'z' must be a numpy.ndarray.")
+        if len(z.shape) > 2 or (len(z.shape) == 2 and z.shape[1] != 1):
+            raise ValueError("z is a {0} array. It needs to be a 1D array instead.".format(z.shape))
+        if len(z.shape) == 2:
+            # in this case, z.shape = (xxx, 1). We need to reduce it to (xxx,)
+            warnings.warn("z has the shape {0}. Reshaping it to ({1},)".format(z.shape, z.shape[0]))
+            z = z.reshape(-1, )
+        if not isinstance(nominal_parameter, float):
+            raise TypeError("'nominal_parameter' must be a float")
+        if not isinstance(nominal_parameter_name, str):
+            raise TypeError("'nominal_parameter_name' must be a string")
+
         self._z = z
         length = self.z[-1] - self.z[0]
+
         Waveguide.__init__(self, length, poling_period)
         self._nominal_parameter = nominal_parameter
         # when an object of this class is initialized, the following call creates a uniform waveguide
