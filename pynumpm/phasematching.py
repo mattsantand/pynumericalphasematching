@@ -60,7 +60,7 @@ class SimplePhasematchingDeltaBeta(object):
         return text
 
     @property
-    def waveguide(self):
+    def waveguide(self) -> Union[Waveguide.Waveguide, Waveguide.RealisticWaveguide]:
         """
         Read-only: the waveguide object used in the calculation.
 
@@ -96,16 +96,16 @@ class SimplePhasematchingDeltaBeta(object):
         self._deltabeta = value
 
     @property
-    def phi(self):
+    def phi(self) -> np.ndarray:
         """
         :return: The phase matching complex amplitude
 
         """
         return self._phi
 
-    def calculate_phasematching(self, normalized=True):
+    def calculate_phasematching(self, normalized=True) -> np.ndarray:
         """
-        Function that calculates the phase matching spectrum.
+        This function calculates the phase matching spectrum.
         Prior to the calculation of the phase matching spectrum, it is necessary to set the :math:`\Delta\\beta` vector by
         assigning it to the variable `deltabeta`.
 
