@@ -297,7 +297,7 @@ class RealisticWaveguide(Waveguide):
         plt.tight_layout()
         return fig, ax
 
-    def plot_waveguide_properties(self, fig: matplotlib.figure.Figure = None):
+    def plot_waveguide_properties(self, fig=None, **plotkwargs):
         """
         Function to plot the waveguide properties in a figure. This function plots the waveguide profile,
         the power spectrum, autocorrelation and histogram distribution of the noise.
@@ -308,48 +308,44 @@ class RealisticWaveguide(Waveguide):
         :type fig: matplotlib.figure.Figure
 
         """
-        if fig is None:
-            fig = plt.figure()
-
-        # Calculates the profile properties.
+        logger = logging.getLogger(__name__)
+        logger.debug("Plotting noise properties.")
         z_autocorr, autocorr, f, power_spectrum = noise.calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
         else:
             fig = plt.figure(fig.number)
+        list_of_axes = fig.get_axes()
+        if list_of_axes == []:
+            ax1 = plt.subplot(211)
+            ax2 = plt.subplot(234)
+            ax3 = plt.subplot(235)
+            ax4 = plt.subplot(236)
+        else:
+            if len(list_of_axes) == 4:
+                ax1, ax2, ax3, ax4 = list_of_axes
+            else:
+                raise ConnectionError("The figure does not have the correct number of axes (4).")
 
-        # Plot the waveguide profile
-        plt.subplot(211)
-        ax0 = plt.gca()
-        l1, = plt.plot(self.z, self.profile)
-        plt.title("Waveguide profile")
-        plt.xlabel("z [m]")
-        ax0.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
-        plt.ylabel(self.nominal_parameter_name)
+        plt.sca(ax1)
+        l1, = plt.plot(self.z, self.profile, **plotkwargs)
+        plt.title("Noise")
+        plt.xlabel("z")
+        plt.ylabel("Noise")
 
-        # Plot the autocorrelation profile
-        plt.subplot(234)
-        ax1 = plt.gca()
-        l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation")
+        plt.sca(ax2)
+        l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation",
+                           **plotkwargs)
         plt.title("|R(z)|^2")
-        plt.xlabel("z [m]")
-        ax0.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
-        plt.grid(axis="both")
+        plt.xlabel("z")
 
-        # Plot the spectral distribution
-        plt.subplot(235)
-        ax2 = plt.gca()
-        l3, = plt.loglog(f, abs(power_spectrum) ** 2)
-        plt.grid(axis="both")
+        plt.sca(ax3)
+        l3, = plt.loglog(f, abs(power_spectrum) ** 2, **plotkwargs)
         plt.title("|S(f)|^2")
         plt.xlabel("f")
 
-        # Plot the histogram of the profile.
-        plt.subplot(236)
-        ax3 = plt.gca()
-        plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))), density=True)
-        plt.title("Distribution of " + self.nominal_parameter_name.lower().split("[")[0])
-        plt.xlabel(self.nominal_parameter_name)
-        plt.ylabel("Frequencies")
+        plt.sca(ax4)
+        plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))), **plotkwargs)
+        plt.title("Histogram of the noise.")
         plt.tight_layout()
-        return fig, [ax0, ax1, ax2, ax3], [l1, l2, l3]
+        return fig, [ax1, ax2, ax3]
