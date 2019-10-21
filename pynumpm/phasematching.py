@@ -33,15 +33,14 @@ class SimplePhasematchingDeltaBeta(object):
     Base class used for the calculation of phase matching spectra as a function of :math:`\Delta\\beta` for uniform waveguides.
 
     Initialization of the class requires the following parameters:
+
     :param waveguide: Waveguide object
     :type waveguide: :class:`~pynumpm.waveguide.Waveguide`
 
     **Usage**
 
     With `idealwaveguide` being a :class:`~pynumpm.waveguide.Waveguide` object, the following code calculates its
-    phase matching spectrum as a function of :math:`\Delta\\beta`:
-
-    ::
+    phase matching spectrum as a function of :math:`\Delta\\beta`::
 
         idealphasematching = SimplePhasematchingDeltaBeta(waveguide=idealwaveguide)
         idealphasematching.deltabeta = np.arange(-1000, 1000, 1)
@@ -970,6 +969,12 @@ class Phasematching1D(SimplePhasematching1D):
         return self.phi
 
     def plot_deltabeta_error(self, ax=None):
+        """
+        This method plots the :math:`\Delta\\beta (z)` distribution as a function of z.
+
+        :param ax: [Optional} The axis handle used to plot.
+        :return: the axis handle of the plot
+        """
         # self.calculate_phasematching_error()
         if ax is None:
             plt.figure()
@@ -1133,6 +1138,7 @@ class SimplePhasematching2D(object):
         logger.debug("Loading externally the phasematching spectrum")
         self._wavelength1 = wavelength1
         self._wavelength2 = wavelength2
+        self._deltabeta = None
         self._phi = phasematching
         logger.info("User-provided phasematching has been loaded the phasematching spectrum")
 
@@ -1189,22 +1195,22 @@ class SimplePhasematching2D(object):
         poling_period = self.waveguide.poling_period
         self.set_wavelengths()
         if self._backpropagation:
-            deltabeta = 2 * np.pi * (self._n_blue(self._WL_BLUE * 1e6) / self._WL_BLUE -
-                                     self._n_green(self._WL_GREEN * 1e6) / self._WL_GREEN +
-                                     self._n_red(self._WL_RED * 1e6) / self._WL_RED -
-                                     1 / poling_period)
+            self._deltabeta = 2 * np.pi * (self._n_blue(self._WL_BLUE * 1e6) / self._WL_BLUE -
+                                           self._n_green(self._WL_GREEN * 1e6) / self._WL_GREEN +
+                                           self._n_red(self._WL_RED * 1e6) / self._WL_RED -
+                                           1 / poling_period)
         else:
-            deltabeta = 2 * np.pi * (self._n_blue(self._WL_BLUE * 1e6) / self._WL_BLUE -
-                                     self._n_green(self._WL_GREEN * 1e6) / self._WL_GREEN -
-                                     self._n_red(self._WL_RED * 1e6) / self._WL_RED -
-                                     1 / poling_period)
+            self._deltabeta = 2 * np.pi * (self._n_blue(self._WL_BLUE * 1e6) / self._WL_BLUE -
+                                           self._n_green(self._WL_GREEN * 1e6) / self._WL_GREEN -
+                                           self._n_red(self._WL_RED * 1e6) / self._WL_RED -
+                                           1 / poling_period)
 
-        self._phi = np.sinc(deltabeta * length / 2 / np.pi) * np.exp(-1j * deltabeta * length / 2)
+        self._phi = np.sinc(self._deltabeta * length / 2 / np.pi) * np.exp(-1j * self._deltabeta * length / 2)
         if not normalized:
             self._phi /= length
         return self.phi
 
-    def plot(self, **kwargs):
+    def plot(self, ax=None, **kwargs):
         """
         Function to plot phasematching. Pass ax handle through "ax" to plot in a specified axis environment.
 
@@ -1213,7 +1219,6 @@ class SimplePhasematching2D(object):
         """
 
         plot_intensity = kwargs.get("plot_intensity", True)
-        ax = kwargs.get("ax", None)
         if ax is None:
             fig = plt.figure()
             ax = plt.gca()
@@ -1244,6 +1249,22 @@ class SimplePhasematching2D(object):
              "cbar": cbar}
         plt.tight_layout()
         return d
+
+    def plot_deltabeta_contour(self, ax=None, N=100, **contourkwargs):
+        """
+        Function to plot the contour lines of the :math:`\Delta\\beta`
+        :param ax:
+        :param kwargs:
+        :return:
+        """
+        if ax is None:
+            fig = plt.figure()
+            ax = plt.gca()
+
+        plt.sca(ax)
+        WL1, WL2 = np.meshgrid(self.wavelength1 * 1e-9, self.wavelength2 * 1e-9)
+        plt.contour(WL1, WL2, self._deltabeta, N, **contourkwargs)
+        plt.colorbar()
 
 
 class Phasematching2D(SimplePhasematching2D):
