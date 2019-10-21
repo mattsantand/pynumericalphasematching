@@ -114,6 +114,9 @@ class RealisticWaveguide(Waveguide):
             # in this case, z.shape = (xxx, 1). We need to reduce it to (xxx,)
             warnings.warn("z has the shape {0}. Reshaping it to ({1},)".format(z.shape, z.shape[0]))
             z = z.reshape(-1, )
+
+        if isinstance(nominal_parameter, int):
+            nominal_parameter = float(nominal_parameter)
         if not isinstance(nominal_parameter, float):
             raise TypeError("'nominal_parameter' must be a float")
         if not isinstance(nominal_parameter_name, str):
