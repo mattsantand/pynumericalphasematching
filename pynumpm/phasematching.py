@@ -1253,8 +1253,10 @@ class SimplePhasematching2D(object):
     def plot_deltabeta_contour(self, ax=None, N=100, **contourkwargs):
         """
         Function to plot the contour lines of the :math:`\Delta\\beta`
-        :param ax:
-        :param kwargs:
+
+        :param ax: Handle of the axis where the plot will be
+        :param N: Number of lines for the contour plot
+        :param contourkwargs: Additional parameters to be passed to `matplotlib.pyplot.contour()`
         :return:
         """
         if ax is None:
