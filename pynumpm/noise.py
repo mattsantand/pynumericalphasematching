@@ -82,10 +82,13 @@ class NoiseProfile(object):
         return text
 
     def __add__(self, other):
+        # Check that it makes sense to sum the two objects. They mus be at least of the class NoiseProfile...
         if not isinstance(other, NoiseProfile):
             raise ValueError("The 'other' object to sum must belong at least to the class pynumpm.noise.NoiseProfile.")
+        # ... have the same number of points ...
         if len(self.z) != len(other.z):
             raise ValueError("The meshes of the two objects must be of the same size.")
+        # ... and be defined on the same mesh
         if (self.z == other.z).sum() != len(self.z):
             raise ValueError("The two objects have been defined on different meshes.")
         result_profile = self.profile + other.profile
@@ -246,6 +249,15 @@ class NoiseFromSpectrum(NoiseProfile):
     :param profile_spectrum: Noise profile of the simulated structure. Can be one of "awgn", "1/f", "1/f2".
     :type profile_spectrum: str
 
+    The noise profile is generated on the basis of the profile spectrum.
+    At first, the vector :math:`\mathbf{f}`of the spatial frequencies is created.
+    Then, the respective coefficients :math:`\mathbf{c}` are generated according to
+    :math:`\mathbf{c} = \mathbf{f}^{-\gamma}`, where :math:`\gamma` is equal to 0, 1, 2 for AWGN, 1/f and 1/f2 noise.
+    A random phase is then sampled for each coefficient :math:`c_k` in :math:`\mathbf{c}`. The phase of :math:`c_{-k}`
+    is opposite to the phase of :math:`c_k` to ensure a real-valued noise.
+    Finally, the IFFT of :math:`\mathbf{c}` is calculated to retrieve the spectral distribution of the noise.
+    If necessary, an offset is added at the end.
+
     """
 
     def __init__(self, z: np.ndarray = None, offset: float = 0, noise_amplitude: float = 0.,
@@ -281,20 +293,11 @@ class NoiseFromSpectrum(NoiseProfile):
         """
         return self._profile_spectrum
 
-    @property
-    def profile(self):
-        """
-        Profile of the structure
-
-        """
-        return self._profile
-
     def generate_noise(self):
         """
         Function that generates the noise profile.
 
         """
-        # This function generates the noise.
 
         logger = logging.getLogger(__name__)
         logger.info("Generating {s} spectrum.".format(s=self.profile_spectrum))
@@ -334,19 +337,30 @@ class NoiseFromSpectrum(NoiseProfile):
 
 class CorrelatedNoise(NoiseProfile):
     """
-    Class to describe correlated noise.
+    Class to create a correlated noise profile given a correlation length. It inherits from NoiseProfile.
+
+    Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude, an offset
+    and a string describing the power spectrum of the noise.
+    :param z: linearly spaced space mesh [*meter*].
+    :type z: numpy.ndarray
+    :param noise_amplitude: Amplitude of the noise profile.
+    :type noise_amplitude: float
+    :param offset: Offset of the noise profile
+    :type offset: float
+    :param correlation_length: Parameter describing the correlation length of the noise.
+    :type correlation_length: float
+
+
+    The ith point :math:`y_i` of the correlated profile is generated drawing it from the normal distribution with mean
+    :math:`\rho y_{i-1}` and variance :math:`\sigma^2 (1-\rho^2)`, where :math:`y_{i-1}` is the previous point of the
+    profile, :math:`\sigma` is the amplitude of the noise and :math:`\rho` is the correlation factor given by
+    :math:`\rho = \exp{-\Delta z/L_C}`, being :math:`\Delta z` the size of the mesh cell and :math:`L_C` the correlation
+    length.
 
     ..warning:: This class hasn't been tested completely. It might be buggy.
+
     """
-
     def __init__(self, z=None, offset=0, noise_amplitude=0., correlation_length=0.):
-        """
-
-        :param z:
-        :param offset:
-        :param noise_amplitude:
-        :param correlation_length:
-        """
         logger = logging.getLogger(__name__)
         logger.debug("Creating CorrelatedNoise object. z.shape={0}; offset={1}; noise_amplitude={2}; "
                      "correlation_length={3}".format(z.shape, offset, noise_amplitude, correlation_length))
@@ -366,13 +380,18 @@ class CorrelatedNoise(NoiseProfile):
 
     @property
     def correlation_length(self):
+        """
+        Correlation length of the noise
+
+        """
         return self._correlation_length
 
-    @property
-    def profile(self):
-        return self._profile
 
     def generate_noise(self):
+        """
+        Function to generate the noise profile.
+
+        """
         logger = logging.getLogger(__name__)
         logger.debug("Generating noise profile.")
         sigma = self.noise_amplitude
