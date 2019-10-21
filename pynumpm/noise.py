@@ -66,14 +66,14 @@ class NoiseProfile(object):
             raise ValueError("z cannot be None")
         if noise_amplitude < 0:
             warnings.warn("noise_amplitude is negative. Taking the absolute value", UserWarning)
-        self.__noise_amplitude = abs(noise_amplitude)
+        self._noise_amplitude = abs(noise_amplitude)
 
-        self.__z = z
-        self.__offset = offset
-        self.__length = self.z.max() - self.z.min()
-        self.__dz = np.diff(self.z)[0]
-        self.__profile = self.__noise_amplitude * np.ones(shape=self.z.shape) + self.__offset
-        self.__autocorrelation_is_calculated = False
+        self._z = z
+        self._offset = offset
+        self._length = self.z.max() - self.z.min()
+        self._dz = np.diff(self.z)[0]
+        self._profile = self._noise_amplitude * np.ones(shape=self.z.shape) + self._offset
+        self._autocorrelation_is_calculated = False
         logger.debug("NoiseProfile object creates successfully.")
 
     def __repr__(self):
@@ -87,7 +87,7 @@ class NoiseProfile(object):
         Length of the structure
 
         """
-        return self.__length
+        return self._length
 
     @property
     def z(self):
@@ -95,7 +95,7 @@ class NoiseProfile(object):
         Z-mesh used to discretise the profile
 
         """
-        return self.__z
+        return self._z
 
     @property
     def dz(self):
@@ -103,7 +103,7 @@ class NoiseProfile(object):
         Discretisation unit cell.
 
         """
-        return self.__dz
+        return self._dz
 
     @property
     def profile(self):
@@ -111,7 +111,7 @@ class NoiseProfile(object):
         Profile of the structure.
 
         """
-        return self.__profile
+        return self._profile
 
     @property
     def noise_amplitude(self):
@@ -119,7 +119,7 @@ class NoiseProfile(object):
         Noise amplitude of the noise profile.
 
         """
-        return self.__noise_amplitude
+        return self._noise_amplitude
 
     @property
     def offset(self):
@@ -127,7 +127,7 @@ class NoiseProfile(object):
         Offset of the noise profile.
 
         """
-        return self.__offset
+        return self._offset
 
     def concatenate(self, other):
         """
@@ -148,7 +148,7 @@ class NoiseProfile(object):
         new_z = np.append(self.z, other.z + self.z[-1])
         newprofile = np.append(self.profile, other.profile)
         newnoise = NoiseProfile(z=new_z)
-        newnoise.__profile = newprofile
+        newnoise._profile = newprofile
         logger.debug("Concatenation successful.")
         return newnoise
 
@@ -166,9 +166,9 @@ class NoiseProfile(object):
         if noise_profile.shape != self.z.shape:
             raise ValueError("The shape of 'noise_profile' is {0}, while the shape of the discretization mesh is"
                              "{1}. They must be consistent.".format(noise_profile.shape, self.z.shape))
-        self.__profile = noise_profile
-        self.__offset = self.profile.mean()
-        self.__noise_amplitude = self.profile - self.profile.mean()
+        self._profile = noise_profile
+        self._offset = self.profile.mean()
+        self._noise_amplitude = self.profile - self.profile.mean()
 
     def plot_noise_properties(self, fig=None, **plotkwargs):
         """
@@ -247,10 +247,10 @@ class NoiseFromSpectrum(NoiseProfile):
         if profile_spectrum is None:
             raise ValueError("'profile_spectrum' must be set")
         if profile_spectrum.lower() in ["awgn", "1/f", "1/f2"]:
-            self.__profile_spectrum = profile_spectrum.lower()
+            self._profile_spectrum = profile_spectrum.lower()
         else:
             raise ValueError("'profile_spectrum' has to be 'awgn', '1/f' or '1/f2'")
-        self.__profile = self._generate_noise()
+        self._profile = self.generate_noise()
         logger.debug("NoiseFromSpectrum object created.")
 
     def __repr__(self):
@@ -265,7 +265,7 @@ class NoiseFromSpectrum(NoiseProfile):
         Type of noise spectrum of the structure
 
         """
-        return self.__profile_spectrum
+        return self._profile_spectrum
 
     @property
     def profile(self):
@@ -273,9 +273,9 @@ class NoiseFromSpectrum(NoiseProfile):
         Profile of the structure
 
         """
-        return self.__profile
+        return self._profile
 
-    def _generate_noise(self):
+    def generate_noise(self):
         """
         Function that generates the noise profile.
 
@@ -337,10 +337,11 @@ class CorrelatedNoise(NoiseProfile):
         logger.debug("Creating CorrelatedNoise object. z.shape={0}; offset={1}; noise_amplitude={2}; "
                      "correlation_length={3}".format(z.shape, offset, noise_amplitude, correlation_length))
         NoiseProfile.__init__(self, z=z, offset=offset, noise_amplitude=noise_amplitude)
+        # NoiseProfile._profile = self.generate_noise()
         if correlation_length < 0:
             warnings.warn("correlation_length is negative. I will get the absolute value", UserWarning)
-        self.__correlation_length = abs(correlation_length)
-        NoiseProfile.__profile = self.generate_noise()
+        self._correlation_length = abs(correlation_length)
+        self._profile = self.generate_noise()
         logger.debug("CorrelatedNoise object created.")
 
     def __repr__(self):
@@ -351,11 +352,11 @@ class CorrelatedNoise(NoiseProfile):
 
     @property
     def correlation_length(self):
-        return self.__correlation_length
+        return self._correlation_length
 
     @property
     def profile(self):
-        return self.__profile
+        return self._profile
 
     def generate_noise(self):
         logger = logging.getLogger(__name__)
