@@ -27,9 +27,9 @@ class Waveguide(object):
         if np.isinf(poling_period):
             warnings.warn("The user has not provided a poling period. The default value of +numpy.infty will be used.",
                           UserWarning)
-        self.__poling_period = poling_period
-        self.__length = length
-        self.__waveguide_profile = None
+        self._poling_period = poling_period
+        self._length = length
+        self._waveguide_profile = None
 
     def __repr__(self):
         text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length} m\n\tpoling period:{self.poling_period_um}um"
@@ -41,7 +41,7 @@ class Waveguide(object):
         The poling period of the structure, in m.
 
         """
-        return self.__poling_period
+        return self._poling_period
 
     @property
     def poling_period_um(self):
@@ -49,7 +49,7 @@ class Waveguide(object):
         The poling period of the structure, in :math:`\mu\mathrm{m}`.
 
         """
-        return self.__poling_period * 1e6
+        return self._poling_period * 1e6
 
     @property
     def length(self):
@@ -57,7 +57,7 @@ class Waveguide(object):
         The length of the structure, in m.
 
         """
-        return self.__length
+        return self._length
 
 
 class RealisticWaveguide(Waveguide):
@@ -99,19 +99,19 @@ class RealisticWaveguide(Waveguide):
 
     def __init__(self, z: np.ndarray, poling_period: float = np.infty, nominal_parameter: float = 1.,
                  nominal_parameter_name: str = ""):
-        self.__z = z
-        self.__nominal_parameter = nominal_parameter
-        # when an object of this class is initialized, the following call creates a uniform waveguide
-        self.__waveguide_profile = self.load_waveguide_profile()
-        self.__nominal_parameter_name = nominal_parameter_name
+        self._z = z
         length = self.z[-1] - self.z[0]
         Waveguide.__init__(self, length, poling_period)
-        if self.__nominal_parameter_name == "":
+        self._nominal_parameter = nominal_parameter
+        # when an object of this class is initialized, the following call creates a uniform waveguide
+        self._waveguide_profile = self.load_waveguide_profile()
+        self._nominal_parameter_name = nominal_parameter_name
+        if self._nominal_parameter_name == "":
             warnings.warn(
                 "The name of the variable parameter was left empty. "
                 "That's really not a great name...",
                 UserWarning)
-        self.__poling_structure = None
+        self._poling_structure = None
 
     def __repr__(self):
         text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length}m" \
@@ -128,7 +128,7 @@ class RealisticWaveguide(Waveguide):
 
         :return:
         """
-        return self.__z
+        return self._z
 
     @property
     def dz(self):
@@ -148,7 +148,7 @@ class RealisticWaveguide(Waveguide):
         width or temperature profile).
 
         """
-        return self.__waveguide_profile
+        return self._waveguide_profile
 
     @property
     def nominal_parameter_name(self):
@@ -156,7 +156,7 @@ class RealisticWaveguide(Waveguide):
         Name of the nominal fabrication parameter.
 
         """
-        return self.__nominal_parameter_name
+        return self._nominal_parameter_name
 
     @property
     def poling_structure_set(self):
@@ -172,7 +172,7 @@ class RealisticWaveguide(Waveguide):
         Array containing the poling structure.
 
         """
-        return self.__poling_structure
+        return self._poling_structure
 
     @property
     def nominal_parameter(self):
@@ -180,11 +180,11 @@ class RealisticWaveguide(Waveguide):
         Nominal fabrication parameter of the waveguide.
 
         """
-        return self.__nominal_parameter
+        return self._nominal_parameter
 
     @nominal_parameter.setter
     def nominal_parameter(self, value):
-        self.__nominal_parameter = value
+        self._nominal_parameter = value
 
     def load_waveguide_profile(self, waveguide_profile: np.ndarray = None):
         """
@@ -200,17 +200,17 @@ class RealisticWaveguide(Waveguide):
         """
         # If the waveguide profile is None, then create a uniform waveguide
         if waveguide_profile is None:
-            self.__waveguide_profile = self.nominal_parameter * np.ones(shape=self.z.shape)
+            self._waveguide_profile = self.nominal_parameter * np.ones(shape=self.z.shape)
         else:
             if waveguide_profile.shape != self.z.shape:
                 raise ValueError("The shape of the waveguide_profile {s1} is different from the z mesh {s2}".format(
                     s1=waveguide_profile.shape,
                     s2=self.z.shape))
             else:
-                self.__waveguide_profile = waveguide_profile
+                self._waveguide_profile = waveguide_profile
                 self.nominal_parameter = self.profile.mean()
 
-        return self.__waveguide_profile
+        return self._waveguide_profile
 
     def create_noisy_waveguide(self, noise_profile: str = "1/f", noise_amplitude: float = 0.2):
         """
@@ -248,9 +248,9 @@ class RealisticWaveguide(Waveguide):
         """
         if poling_structure.shape != self.profile.shape:
             raise ValueError("The poling_structure must have the same shape as the waveguide profile!")
-        self.__poling_structure = poling_structure
-        self.__poling_period = +np.infty
-        return self.__poling_structure
+        self._poling_structure = poling_structure
+        self._poling_period = +np.infty
+        return self._poling_structure
 
     def plot(self, ax: matplotlib.pyplot.Axes = None):
         """
