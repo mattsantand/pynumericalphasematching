@@ -21,7 +21,8 @@ class Propagation(enum.Enum):
 
 def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
                             nr: Callable[[float], float] = None, ng: Callable[[float], float] = None,
-                            nb: Callable[[float], float] = None, order=1, propagation_type=Propagation.COPROPAGATION):
+                            nb: Callable[[float], float] = None, order=1, propagation_type=Propagation.COPROPAGATION,
+                            verbose = False):
     """
     Function to calculate the poling period of a specific process. To ensure energy conservation, specify only two
     wavelengths (in meter) and leave the free one to 0
@@ -56,6 +57,8 @@ def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
     Lambda = order / (nb(abs(lamb) * 1e6) / lamb -
                       ng(abs(lamg) * 1e6) / lamg +
                       propagation_type.value * nr(abs(lamr) * 1e6) / lamr)
+    if verbose:
+        print(lamr, lamg, lamb, Lambda)
     return Lambda
 
 
