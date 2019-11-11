@@ -13,8 +13,7 @@ import warnings
 
 def calculate_profile_properties(z: np.ndarray = None, profile: np.ndarray = None):
     """
-    Function to calculate the noise properties (autocorrelation and power density spectrum) of the noise on the
-    waveguide profile
+    Function to calculate the noise properties (autocorrelation and power density spectrum) a user-defined profile.
 
     :param z: z mesh of the system
     :type z: numpy.ndarray

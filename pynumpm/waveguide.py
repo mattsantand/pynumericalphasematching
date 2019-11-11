@@ -149,8 +149,6 @@ class RealisticWaveguide(Waveguide):
     def z(self):
         """
         Array containing the z-mesh of the structure.
-
-        :return:
         """
         return self._z
 
@@ -158,8 +156,6 @@ class RealisticWaveguide(Waveguide):
     def dz(self):
         """
         Resolution of the z-mesh.
-
-        :return:
         """
         dz = np.diff(self.z)[0]
         return dz
@@ -170,7 +166,6 @@ class RealisticWaveguide(Waveguide):
         Waveguide profile (array).
         Array containing the values of the waveguide profile to be simulated (e.g., the waveguide
         width or temperature profile).
-
         """
         return self._waveguide_profile
 
