@@ -101,3 +101,8 @@ This project is licensed under the GNU GPLv3+ License - see the [LICENSE.md](LIC
 ## Acknowledgment
 * Benjamin Brecht, University of Paderborn (`Pump()` class)
 * Marcello Massaro, University of Paderborn. Help with docstring, documentation, VCS, and cleaning up my messy work.
+
+## How to cite
+Please cite this package as *PyNumericalPhasematching v1.0, 2019*.
+
+We are currently wrapping up a paper with a static DOI for this package. 
