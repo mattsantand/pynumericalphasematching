@@ -35,14 +35,12 @@ pynumpm requires the following python packages:
 The setup will automatically take care of installing the missing packages, when possible.   
 
 ## Installation
-To install the package, simply run 
-
-`pip install pynumpm`
-
-Alternatively, it is possible to install the package by downloading the package from [GitHub](https://github.com/mattsantand/pynumericalphasematching)
+The package by downloading the package from [GitHub](https://github.com/mattsantand/pynumericalphasematching)
 and, in the folder *pynumericalphasematching*, run
 
 `python setup.py install`
+
+The installation via PyPI will be available as soon as the package is stable and deployable.
 
 ## Examples 
 
