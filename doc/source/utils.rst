@@ -1,8 +1,5 @@
-utilities
-*********
-
-Contents of the module
-======================
+`Utils` module
+**************
 
 .. automodule:: pynumpm.utils
    :members:

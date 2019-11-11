@@ -1,8 +1,26 @@
+`JSA` module
+************
+
+Process
+-------
+
+.. autoclass:: pynumpm.jsa.Process
+   :members:
+
+
+Pump
+----
+
+.. autoclass:: pynumpm.jsa.Pump
+   :members:
+
 JSA
-****
+---
 
-Classes
-=======
+.. autoclass:: pynumpm.jsa.JSA
+   :members:
 
-.. automodule:: pynumpm.jsa
-    :members:
+
+..
+    .. automodule:: pynumpm.jsa
+        :members:

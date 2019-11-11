@@ -4,83 +4,109 @@ from scipy.signal import savgol_filter
 import scipy.optimize as opt
 import logging
 import enum
+from typing import Callable, List
 
 
 class Propagation(enum.Enum):
+    """
+    Enum class containing the two possible propagation configurations, *copropagation* and *counterpropagation*. It is
+    used to change the sign of the red_wavelength in the calculations of the deltabeta in this module.
+
+    """
     COPROPAGATION = -1
-    """Sign of the signal in copropagatio"""
+    """Sign of the signal in copropagation"""
     COUNTEPROPAGATION = +1
     """Sign of signal in counterpropagation"""
 
-def calculate_poling_period(lamr=0, lamg=0, lamb=0, nr=None, ng=None, nb=None, order=1, **kwargs):
+
+def calculate_poling_period(lamr: float = 0, lamg: float = 0, lamb: float = 0,
+                            nr: Callable[[float], float] = None, ng: Callable[[float], float] = None,
+                            nb: Callable[[float], float] = None, order=1, propagation_type=Propagation.COPROPAGATION,
+                            verbose = False):
     """
-    Function to calculate the poling period of a specific process. To ensure energy conservation, specify only 2
+    Function to calculate the poling period of a specific process. To ensure energy conservation, specify only two
     wavelengths (in meter) and leave the free one to 0
 
-    :param lamr:
-    :param lamg:
-    :param lamb:
-    :param nr:
-    :param ng:
-    :param nb:
-    :param order:
-    :param kwargs:
-    :return:
+    :param lamr: Wavelength of the red field [m].
+    :type lamr: float
+    :param lamg: Wavelength of the green field [m].
+    :type lamg: float
+    :param lamb: Wavelength of the blue field [m].
+    :type lamb: float
+    :param nr: Function returning the refractive index for the red field.
+    :type nr: Function
+    :param ng: Function returning the refractive index for the green field.
+    :type ng: Function
+    :param nb: Function returning the refractive index for the blue field.
+    :type nb: Function
+    :param order: Order of the process. Default: 1
+    :type order: int
+    :param propagation_type: Type of the propagation (co- or counter-propagation). Default is coprop.
+    :type propagation_type: :class:`pynumpm.utils.Propagation`
+    :return: The poling period.
     """
-    propagation_type = kwargs.get("propagation_type", "copropagation")
-    if (lamb == 0):
+
+    if not isinstance(propagation_type, Propagation):
+        raise TypeError("propagation_type must be of the type pynumpm.utils.Propagation")
+    if lamb == 0:
         lamb = 1. / (1. / abs(lamg) + 1. / abs(lamr))
-    if (lamg == 0):
+    if lamg == 0:
         lamg = 1. / (1. / abs(lamb) - 1. / abs(lamr))
-    if (lamr == 0):
+    if lamr == 0:
         lamr = 1. / (1. / abs(lamb) - 1. / abs(lamg))
-    if propagation_type.lower() == "copropagation":
-        Lambda = order / (nb(abs(lamb) * 1e6) / lamb - ng(abs(lamg) * 1e6) / lamg - nr(abs(lamr) * 1e6) / lamr)
-    elif propagation_type.lower() == "counterpropagation":
-        Lambda = order / (nb(abs(lamb) * 1e6) / lamb - ng(abs(lamg) * 1e6) / lamg + nr(abs(lamr) * 1e6) / lamr)
-    else:
-        raise ValueError("Don't know " + propagation_type)
-    return lamr, lamg, lamb, Lambda
+    Lambda = order / (nb(abs(lamb) * 1e6) / lamb -
+                      ng(abs(lamg) * 1e6) / lamg +
+                      propagation_type.value * nr(abs(lamr) * 1e6) / lamr)
+    if verbose:
+        print(lamr, lamg, lamb, Lambda)
+    return Lambda
 
 
-def deltabeta(lamr=None, lamg=None, lamb=None, nr=None, ng=None, nb=None, poling=np.infty, order=1,
-              propagation=Propagation.COPROPAGATION):
+def calculate_phasematching_point(fixed_wl, poling_period: float, nr: Callable[[float], float],
+                                  ng: Callable[[float], float], nb: Callable[[float], float],
+                                  hint, order: int = 1, verbose: bool = False):
     """
-    Function to calculate the delta
-    :param lamr:
-    :param lamg:
-    :param lamb:
-    :param nr:
-    :param ng:
-    :param nb:
-    :param poling:
-    :param order:
-    :return:
+    Function to calculate the phasematching point, given a wavelength and the poling period of the structure.
+
+    This function tries to minimise the energy and momentum conservation equations to find the possible phasematched
+    processes, given a fixed wavelength and the poling period, using the `fsolve`routine from `scipy`.
+
+    The `fixed_wl` variable is a list (or tuple) containing the value and the field name ("r", "g" or "b" for red,
+    green and blue). For example, if one wants to define the green field as fixed at 800nm, the `fixed_wl` must be in
+    the form [800e-9, "g"].
+
+    In case of an SHG calculation, `fixed_wl` can receive as second parameter the string "shg".
+
+    .. note:: In case of an SHG calculation, the value of the constant wavelength is not used.
+
+
+
+    :param fixed_wl: Wavelength to be kept constant during the calculation.
+    :type fixed_wl: list
+    :param poling_period: Poling period of the structure
+    :type poling_period: float
+    :param nr: Function returning the refractive index for the red field.
+    :type nr: Function
+    :param ng: Function returning the refractive index for the green field.
+    :type ng: Function
+    :param nb: Function returning the refractive index for the blue field.
+    :type nb: Function
+    :param hint: List of the two wavelengths to be used as first hints to find the solution.
+    :type hint: list
+    :param order: Order of the process. Default: 1
+    :type order: int
+    :param verbose: Set the calculation to be verbose or not. Default: False
+    :type verbose: bool
+    :return: List of red wavelength, green wavelength, blue wavelength and poling period.
+
     """
-    importError = True
-    if lamr is None and lamg is not None and lamb is not None:
-        importError = False
-        lamr = (lamb ** -1 - lamg ** -1) ** -1
-    if lamg is None and lamr is not None and lamb is not None:
-        importError = False
-        lamg = (lamb ** -1 - lamr ** -1) ** -1
-    if lamb is None and lamr is not None and lamg is not None:
-        importError = False
-        lamb = (lamr ** -1 + lamg ** -1) ** -1
-
-    if importError:
-        raise ValueError("Only one of the input wavelengths can be 'None'")
-
-    return 2 * np.pi * (nb(lamb * 1e6) / lamb - ng(lamg * 1e6) / lamg +
-                        propagation.value * nr(lamr * 1e6) / lamr - order / poling)
-
-
-def calculate_phasematching_point(fixed_wl, poling_period, nb, ng, nr, hint, order=1, verbose=False):
     lam, constlam = fixed_wl
+    # convert all the units in um
     lam *= 1e6
     poling_period_um = poling_period * 1e6
-    hint = [i * 1e6 for i in hint]
+    hint = np.array([i * 1e6 for i in hint])
 
+    # List of functions describing energy and momentum conservation, to be minimised.
     def zb(w):
         wb = lam
         wg, wr = w
@@ -117,6 +143,7 @@ def calculate_phasematching_point(fixed_wl, poling_period, nb, ng, nr, hint, ord
             return False, np.array([np.nan, np.nan, np.nan, np.nan])
 
     else:
+        out = [False, False, False]
         if constlam == 'b':
             out = opt.fsolve(zb, hint, full_output=True)
         if constlam == 'g':
@@ -124,7 +151,7 @@ def calculate_phasematching_point(fixed_wl, poling_period, nb, ng, nr, hint, ord
         if constlam == 'r':
             out = opt.fsolve(zr, hint, full_output=True)
 
-        if (out[2] == 1):
+        if out[2] == 1:
             # arr = np.sort(np.array([lam, out[0][0], out[0][1]]))
             arr = np.array([lam, out[0][0], out[0][1]])
             return True, np.array([arr[0], arr[1], arr[2], poling_period_um]) * 1e-6
@@ -136,7 +163,10 @@ def calculate_phasematching_point(fixed_wl, poling_period, nb, ng, nr, hint, ord
 
 def bandwidth(wl, phi, **kwargs):
     """
-    Calculates the bandwidth of a given phasematching phi on axis wl from a fitting with savgol_filter
+    Function to calculate the bandwidth of a given phasematching spectrum fitting it with savgol_filter and then approximating it
+    with a UnivariateSpline.
+
+    .. warning:: This function has not been tested thoroughly.
 
     :param wl: Wavelengths
     :type wl: Array
@@ -146,9 +176,9 @@ def bandwidth(wl, phi, **kwargs):
 
     Additional parameters
 
-    :param window_size: Savgol_filter parameter
+    :param window_size: Savgol_filter  window_size parameter
     :type window_size: int
-    :param polynomial_order: Savgol_filter parameter
+    :param polynomial_order: Savgol_filter polynomial_order parameter
     :type polynomial_order: int
     """
 
@@ -164,30 +194,4 @@ def bandwidth(wl, phi, **kwargs):
     return bw
 
 
-def calculate_profile_properties(z=None, profile=None):
-    """
-    Function to calculate the noise properties (autocorrelation and power density spectrum) of the noise on the
-    waveguide profile
-    :param z: z mesh of the system
-    :type z: `numpy:numpy.ndarray`
-    :param profile: Profile of the varying variable of the waveguide.
-    :type profile: `numpy:numpy.ndarray`
 
-    :return z_autocorr, autocorrelation, f, power_spectrum: Returns the autocorrelation profile (z axis included)
-    and the power spectrum (frequency and power)
-    """
-    logger = logging.getLogger(__name__)
-    logger.info("Calculating profile properties")
-    if z is None:
-        raise IOError("The z mesh is missing. Please, can you be so kind to provide me the discretization of the axis?")
-    if profile is None:
-        raise IOError("Oh dear! It looks like you have an empty profile! What do you want me to calculate about THAT? "
-                      "Please provide a non-empty profile...")
-
-    f = np.fft.fftshift(np.fft.fftfreq(len(z), np.diff(z)[0]))
-    noise_spectrum = np.fft.fft(profile)
-    power_spectrum = noise_spectrum * np.conj(noise_spectrum)
-    autocorrelation = np.fft.ifftshift(np.fft.ifft(power_spectrum))
-    power_spectrum = np.fft.fftshift(power_spectrum)
-    z_autocorr = np.fft.fftshift(np.fft.fftfreq(len(f), np.diff(f)[0]))
-    return z_autocorr, autocorrelation, f, power_spectrum

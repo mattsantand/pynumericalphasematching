@@ -39,22 +39,23 @@ with open(os.path.join(here, 'README.md')) as f:
 
 setup(
     name='pynumpm',
-    version='0.2',
+    version='1.0rc',
     description='''Numerical phasematching routines''',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='None',
+    url='https://test.pypi.org/legacy/',
     author='Matteo Santandrea',
-    author_email='matteo.santandrea@upb.de',
+    author_email='mattsantand@gmail.com',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
         'Programming Language :: Python :: 3.7',
     ],
     install_requires=[
-        'numpy', 'matplotlib', 'scipy', "warnings;python_version<'3.4'", "logging;python_version<'3.4'"
+        'numpy', 'matplotlib', 'scipy', "warnings;python_version<'3.4'", "logging;python_version<'3.4'",
+        'tqdm'
     ],
     packages=find_packages(),
 )

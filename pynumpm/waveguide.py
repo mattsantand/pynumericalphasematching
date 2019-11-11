@@ -2,116 +2,163 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import warnings
-from pynumpm import noise, utils
+from pynumpm import noise
 import logging
 
 
 class Waveguide(object):
     """
-    Base class for the description of a waveguide object
+    Base class for the description of a waveguide object. Initialize the object providing its length (in meter) and,
+    if necessary, its poling period.
+
+    :param length: Length of the waveguide [*meter*].
+    :type length: float
+    :param poling_period: Poling period of the structure, [*meter*]. Default: +numpy.infty
+    :type poling_period: float
+
+    The following block of code initialises a 10mm-long waveguide with a poling period of 16 :math:`\mu\mathrm{m}`::
+
+        thiswaveguide = waveguide.Waveguide(length = 10e-3,
+                                            poling_period = 16e-6)
 
     """
+
     def __init__(self, length: float, poling_period: float = +np.infty):
-        """
+        if not isinstance(length, float):
+            raise ValueError("'length' must be a float.")
 
-        :param length: Length of the waveguide [*meter*].
-        :type length: float
-        :param poling_period: Poling period of the structure, [*meter*]. Default: +np.infty
-        :type poling_period: float
+        if not isinstance(poling_period, float):
+            raise ValueError("'length' must be a float.")
 
-        """
         if np.isinf(poling_period):
-            warnings.warn("The user has not provided a poling period. The default value of +np.infty will be used.",
+            warnings.warn("The user has not provided a poling period. The default value of +numpy.infty will be used.",
                           UserWarning)
-        self.__poling_period = poling_period
-        self.__poling_structure_set = False
-        self.__length = length
+        self._poling_period = poling_period
+        self._length = length
+        self._waveguide_profile = None
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length} m\n\tpoling period:{self.poling_period_um}um"
+        return text
 
     @property
     def poling_period(self):
         """
-        Poling period [*meter*].
+        The poling period of the structure, in m.
 
         """
-        return self.__poling_period
+        return self._poling_period
 
     @property
     def poling_period_um(self):
         """
-        Poling period [*micrometer*].
+        The poling period of the structure, in :math:`\mu\mathrm{m}`.
 
         """
-        return self.__poling_period * 1e6
+        return self._poling_period * 1e6
 
     @property
     def length(self):
         """
-        Crystal length [*meter*].
+        The length of the structure, in m.
 
         """
-        return self.__length
+        return self._length
 
 
 class RealisticWaveguide(Waveguide):
     """
-    RealisticWaveguide class.
+    Class for the description of waveguides with variable profiles. It can generate noisy profiles (via the functions in
+    the :mod:`pynumpm.noise` module) and it can load user-defined profiles and/or poling structures (they must be
+    consistent with the user specified mesh).
 
-    It is used to describe waveguide profiles. It can generate noisy profiles (via the functions in the :mod:`noise`
-    module), it can load user-defined profiles (they must be consistent with the user specified mesh).
-    Moreover, the user can specify a poling structure (functionality unused in the CalculatePhasematching at the
-    moment).
+    Initialize the waveguide by providing a z-mesh,a poling and the nominal parameter of the profile. This will
+    automatically generate a uniform profile with the specified nominal parameter.
+
+    :param z: linearly spaced space mesh [*meter*].
+    :type z: numpy.ndarray
+    :param poling_period: poling period of the structure [*meter*].
+    :type poling_period: float
+    :param nominal_parameter: nominal parameter of the structure [variable units depending on the Sellmeier used].
+                              Default: None.
+    :type nominal_parameter: float
+    :param nominal_parameter_name: name of the nominal parameter (used for the axes). LaTeX syntax is allowed.
+                                   Default: empty string.
+    :type nominal_parameter_name: string
+
+    The following block of code initialises and plots the profile of
+    a 15mm-long, 7 :math:`\mu\mathrm{m}`-wide waveguide with a poling period of
+    9 :math:`\mu\mathrm{m}`. The waveguide is discretized over a z-mesh with steps of 10 :math:`\mu\mathrm{m}`.
+    The waveguide width is characeterised by a noise with a 1/f spectrum with amplitude 0.2 :math:`\mu\mathrm{m}`.
+    ::
+
+        z = np.arange(0, 15e-3, 10e-6)
+        thiswaveguide = waveguide.RealisticWaveguide(z = z,
+                                                     poling_period = 9e-6,
+                                                     nominal_parameter = 7e-6,
+                                                     nominal_parameter_name = "Width")
+        thiswaveguide.create_noisy_waveguide(noise_profile = "1/f",
+                                             noise_amplitude = 0.2)
+        thiswaveguide.plot_waveguide_properties()
 
     """
 
     def __init__(self, z: np.ndarray, poling_period: float = np.infty, nominal_parameter: float = 1.,
                  nominal_parameter_name: str = ""):
-        """
-        Initialize the waveguide by providing a z-mesh and the nominal parameter of the profile. This will automatically
-        generate a uniform profile with the specified nominal parameter.
 
-        :param z: linearly spaced space mesh [*meter*].
-        :type z: numpy.ndarray
-        :param poling_period: poling period of the structure [*meter*].
-        :type poling_period: float
-        :param nominal_parameter: nominal parameter of the structure [variable units, depend on the Sellmeier used].
-        Default: None.
-        :type nominal_parameter: float
-        :param nominal_parameter_name: name of the nominal parameter (used for the axes). LaTeX syntax is allowed.
-        Default: empty string.
-        :type nominal_parameter_name: string
+        if not isinstance(z, np.ndarray):
+            raise TypeError("'z' must be a numpy.ndarray.")
+        if len(z.shape) > 2 or (len(z.shape) == 2 and z.shape[1] != 1):
+            raise ValueError("z is a {0} array. It needs to be a 1D array instead.".format(z.shape))
+        if len(z.shape) == 2:
+            # in this case, z.shape = (xxx, 1). We need to reduce it to (xxx,)
+            warnings.warn("z has the shape {0}. Reshaping it to ({1},)".format(z.shape, z.shape[0]))
+            z = z.reshape(-1, )
 
-        """
+        if isinstance(nominal_parameter, int):
+            nominal_parameter = float(nominal_parameter)
+        if not isinstance(nominal_parameter, float):
+            raise TypeError("'nominal_parameter' must be a float")
+        if not isinstance(nominal_parameter_name, str):
+            raise TypeError("'nominal_parameter_name' must be a string")
 
-        self.__z = z
-        self.__dz = np.diff(self.z)[0]
-        self.__nominal_parameter = nominal_parameter
-        # when an object of this class is initialized, this call creates a uniform waveguide
-        self.__waveguide_profile = self.load_waveguide_profile()
-        self.__nominal_parameter_name = nominal_parameter_name
+        self._z = z
         length = self.z[-1] - self.z[0]
+
         Waveguide.__init__(self, length, poling_period)
-        if self.__nominal_parameter_name == "":
+        self._nominal_parameter = nominal_parameter
+        # when an object of this class is initialized, the following call creates a uniform waveguide
+        self._waveguide_profile = self.load_waveguide_profile()
+        self._nominal_parameter_name = nominal_parameter_name
+        if self._nominal_parameter_name == "":
             warnings.warn(
                 "The name of the variable parameter was left empty. "
-                "That's really not a great name..",
+                "That's really not a great name...",
                 UserWarning)
-        self.__poling_structure = None
+        self._poling_structure = None
+
+    def __repr__(self):
+        text = f"{self.__class__.__name__} object at {hex(id(self))}.\n\tLength: {self.length}m" \
+               f"\n\tPoling: {self.poling_period_um} um." \
+               f"\n\t{self.nominal_parameter_name}: {self.nominal_parameter}" \
+               f"\n\tDiscretization: {self.dz}" \
+               f"\n\tPoling structure set: {self.poling_structure_set}"
+        return text
 
     @property
     def z(self):
         """
-        Uniformly spaced mesh [*meter*]
-
+        Array containing the z-mesh of the structure.
         """
-        return self.__z
+        return self._z
 
     @property
     def dz(self):
         """
-        Space discretization [*meter*]. It is automatically calculated from the input z.
-
+        Resolution of the z-mesh.
         """
-        return self.__dz
+        dz = np.diff(self.z)[0]
+        return dz
 
     @property
     def profile(self):
@@ -119,9 +166,8 @@ class RealisticWaveguide(Waveguide):
         Waveguide profile (array).
         Array containing the values of the waveguide profile to be simulated (e.g., the waveguide
         width or temperature profile).
-
         """
-        return self.__waveguide_profile
+        return self._waveguide_profile
 
     @property
     def nominal_parameter_name(self):
@@ -129,7 +175,7 @@ class RealisticWaveguide(Waveguide):
         Name of the nominal fabrication parameter.
 
         """
-        return self.__nominal_parameter_name
+        return self._nominal_parameter_name
 
     @property
     def poling_structure_set(self):
@@ -145,7 +191,7 @@ class RealisticWaveguide(Waveguide):
         Array containing the poling structure.
 
         """
-        return self.__poling_structure
+        return self._poling_structure
 
     @property
     def nominal_parameter(self):
@@ -153,40 +199,37 @@ class RealisticWaveguide(Waveguide):
         Nominal fabrication parameter of the waveguide.
 
         """
-        return self.__nominal_parameter
+        return self._nominal_parameter
 
     @nominal_parameter.setter
     def nominal_parameter(self, value):
-        """
-        Nominal fabrication parameter of the waveguide.
-
-        """
-        self.__nominal_parameter = value
+        self._nominal_parameter = value
 
     def load_waveguide_profile(self, waveguide_profile: np.ndarray = None):
         """
         Function to load a user-defined waveguide profile.
 
         :param waveguide_profile: Array with the waveguide profile, with respect to the parameter under investigation,
-        or *None*. If *None*, it will create a uniform waveguide with the a constant `waveguide.nominal_parameter`.
-        If an array, it *must* have the same shape as the z-mesh. Default: None
+                                  or *None*. If *None*, it will create a uniform waveguide with the a constant
+                                  `waveguide.nominal_parameter`. If an array, it *must* have the same shape as the
+                                  z-mesh. Default: None
         :type waveguide_profile: numpy.ndarray
         :return: The numpy.ndarray containing the waveguide profile.
 
         """
         # If the waveguide profile is None, then create a uniform waveguide
         if waveguide_profile is None:
-            self.__waveguide_profile = self.nominal_parameter * np.ones(shape=self.z.shape)
+            self._waveguide_profile = self.nominal_parameter * np.ones(shape=self.z.shape)
         else:
             if waveguide_profile.shape != self.z.shape:
                 raise ValueError("The shape of the waveguide_profile {s1} is different from the z mesh {s2}".format(
                     s1=waveguide_profile.shape,
                     s2=self.z.shape))
             else:
-                self.__waveguide_profile = waveguide_profile
+                self._waveguide_profile = waveguide_profile
                 self.nominal_parameter = self.profile.mean()
 
-        return self.__waveguide_profile
+        return self._waveguide_profile
 
     def create_noisy_waveguide(self, noise_profile: str = "1/f", noise_amplitude: float = 0.2):
         """
@@ -211,9 +254,11 @@ class RealisticWaveguide(Waveguide):
         """
         Function to load the poling structure of the waveguide. This function can be used to create custom poling
         structures, such as apodized poling, e.g. `[1] <https://arxiv.org/abs/1410.7714>`_ and
-        `[2] <https://arxiv.org/abs/1704.03683>`_
-        If the poling structure is set via this function, the poling period of the waveguide is set to +numpy.inftz
-        .. warning:: The effectiveness of this function in the calculation of the phasematching spectra is untested.
+        `[2] <https://arxiv.org/abs/1704.03683>`_.
+        If the poling structure is set via this function, the poling period of the waveguide is *automatically* set to
+        +`numpy.infty`.
+
+        .. warning:: The correct behaviour of this function is untested.
 
         :param poling_structure: Array containing the orientation of the poling.
         :type poling_structure: numpy.ndarray
@@ -222,13 +267,13 @@ class RealisticWaveguide(Waveguide):
         """
         if poling_structure.shape != self.profile.shape:
             raise ValueError("The poling_structure must have the same shape as the waveguide profile!")
-        self.__poling_structure = poling_structure
-        self.__poling_period = +np.infty
-        return self.__poling_structure
+        self._poling_structure = poling_structure
+        self._poling_period = +np.infty
+        return self._poling_structure
 
-    def plot(self, ax: matplotlib.axes.Axes = None):
+    def plot(self, ax: matplotlib.pyplot.Axes = None):
         """
-        Function to plot the waveguide profile.
+        Function to plot the waveguide profile. If an axis handle is passed, it will plot in those axes.
 
         :param ax: handle to axis, if you want to plot in specific axes.
         :type ax: matplotlib.axes.Axes
@@ -247,56 +292,58 @@ class RealisticWaveguide(Waveguide):
         ax.set_ylabel(self.nominal_parameter_name)
         ax.set_title("Waveguide profile")
         ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+        plt.tight_layout()
         return fig, ax
 
-    def plot_waveguide_properties(self, fig: matplotlib.figure.Figure = None):
+    def plot_waveguide_properties(self, fig=None, **plotkwargs):
         """
         Function to plot the waveguide properties in a figure. This function plots the waveguide profile,
         the power spectrum, autocorrelation and histogram distribution of the noise.
+        If a Figure handle is passed, it plots in said Figure.
 
-        :param fig: Handle of the figure where the plots should be displayed. If *None*, then opens a new figure. Default
-        is None.
+        :param fig: Handle of the figure where the plots should be displayed. If *None*, then opens a new figure.
+                    Default is None.
         :type fig: matplotlib.figure.Figure
-        :return:
 
         """
-        if fig is None:
-            fig = plt.figure()
-
-        z_autocorr, autocorr, f, power_spectrum = utils.calculate_profile_properties(self.z, self.profile)
+        logger = logging.getLogger(__name__)
+        logger.debug("Plotting noise properties.")
+        z_autocorr, autocorr, f, power_spectrum = noise.calculate_profile_properties(self.z, self.profile)
         if fig is None:
             fig = plt.figure()
         else:
             fig = plt.figure(fig.number)
+        list_of_axes = fig.get_axes()
+        if list_of_axes == []:
+            ax1 = plt.subplot(211)
+            ax2 = plt.subplot(234)
+            ax3 = plt.subplot(235)
+            ax4 = plt.subplot(236)
+        else:
+            if len(list_of_axes) == 4:
+                ax1, ax2, ax3, ax4 = list_of_axes
+            else:
+                raise ConnectionError("The figure does not have the correct number of axes (4).")
 
-        plt.subplot(211)
-        ax0 = plt.gca()
-        l1, = plt.plot(self.z, self.profile)
-        plt.title("Waveguide profile")
-        plt.xlabel("z [m]")
-        ax0.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
-        plt.ylabel(self.nominal_parameter_name)
+        plt.sca(ax1)
+        l1, = plt.plot(self.z, self.profile, **plotkwargs)
+        plt.title("Noise")
+        plt.xlabel("z")
+        plt.ylabel("Noise")
 
-        plt.subplot(234)
-        ax1 = plt.gca()
-        l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation")
+        plt.sca(ax2)
+        l2, = plt.semilogy(z_autocorr, abs(autocorr) ** 2, label="Calculated autocorrelation",
+                           **plotkwargs)
         plt.title("|R(z)|^2")
-        plt.xlabel("z [m]")
-        ax0.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
-        plt.grid(axis="both")
+        plt.xlabel("z")
 
-        plt.subplot(235)
-        ax2 = plt.gca()
-        l3, = plt.loglog(f, abs(power_spectrum) ** 2)
-        plt.grid(axis="both")
+        plt.sca(ax3)
+        l3, = plt.loglog(f, abs(power_spectrum) ** 2, **plotkwargs)
         plt.title("|S(f)|^2")
         plt.xlabel("f")
 
-        plt.subplot(236)
-        ax3 = plt.gca()
-        plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))), density=True)
-        plt.title("Distribution of " + self.nominal_parameter_name.lower().split("[")[0])
-        plt.xlabel(self.nominal_parameter_name)
-        plt.ylabel("Frequencies")
+        plt.sca(ax4)
+        plt.hist(self.profile, bins=int(np.sqrt(len(self.profile))), **plotkwargs)
+        plt.title("Histogram of the noise.")
         plt.tight_layout()
-        return fig, [ax0, ax1, ax2, ax3], [l1, l2, l3]
+        return fig, [ax1, ax2, ax3]

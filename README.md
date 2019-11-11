@@ -1,17 +1,29 @@
-# Welcome to pynumpm v0.2
+# Welcome to pynumpm v1.0
 
 Welcome to pynumpm, short for PyNumericalPhasematching! 
 
-This package is meant to help you with the simulation of the phasematching spectrum of nonlinear processes, in particular of collinear three wave mixing processes.
+This package is meant to help you with the simulation of the phasematching spectrum of nonlinear processes, in 
+particular of collinear three wave mixing processes. It can numerically calculate the phasematching of ideal waveguides
+and of waveguides with variable profile along their propagation axes. Moreover, it can calculate the phasematching
+as a function of the wavevector mismatch $\Delta\beta$, of one scanning wavelength or of two scanning wavelength. 
+This last functionality can be used for the calculation of *joint spectral amplitude* and *intensity* spectra and 
+properties.
 
-**Note**: all physical quantities in this package are expressed in SI units (m, s, Hz).
+**Notes**
+* All physical quantities in this package are expressed in SI units (m, s, Hz).
+* In this package, the wavelengths are usually denoted as *red*, *green* and *blue* (or *r*, *g*, *b*). This implies 
+that the blue field has shortest wavelength and the red has the longest wavelength. In case two fields have the same
+wavelength, then the names are interchangeable.
+* The functions describing the refractive indices, when used, must follow the convention of the standard Sellmeier's 
+equation, i.e. they **must** accept the wavelength in $\mu$ m    
 
 ## Getting started
 
 ### Prerequisites
-pynumpm has been written for Python3, but this release should still work with Python2. Support for Python2 is not provided.
+pynumpm has been written for Python3, but this release should still work with Python2. 
+Support for Python2 is not provided.
 
-Pynumpm requires the following python packages:
+pynumpm requires the following python packages:
     
 * pip
 * [numpy](http://www.numpy.org/)    
@@ -23,37 +35,64 @@ Pynumpm requires the following python packages:
 The setup will automatically take care of installing the missing packages, when possible.   
 
 ## Installation
-To install the package, simply run 
-
-`pip install pynumpm`
-
-Alternatively, it is possible to install the package by downloading the package from [GitHub](https://github.com/mattsantand/pynumericalphasematching) and, in the folder *pynumericalphasematching*, run
+The package by downloading the package from [GitHub](https://github.com/mattsantand/pynumericalphasematching)
+and, in the folder *pynumericalphasematching*, run
 
 `python setup.py install`
+
+The installation via PyPI will be available as soon as the package is stable and deployable.
 
 ## Examples 
 
 The basic steps to run a simulation, are:
+
 1. Create a `waveguide` object, using a suitable class from the `waveguide` module.
 2. Create a `phasematching` object, using a suitable class from the `phasematching` module and loading the `waveguide` 
 object into such object.
 3. Run the `calculate_phasematching()` method of the phasematching object to calculate the phasematching spectrum.
 
-### Additional tools
+Here, the first steps for setting up a simple simulation are described. For more information and tutorial, check the 
+[documentation](https://pynumericalphasematching.readthedocs.io/en/latest/). 
 
-* `utility.??`
+### First steps
+The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4$\mu$ m.
+```python
+import numpy as np
+from pynumpm import waveguide
+
+thiswaveguide = waveguide.Waveguide(length = 1e-2,
+                                    poling_period = 4.4e-6)                                          
+``` 
+
+The following lines load the `Waveguide` object created in the previous step into a `PhasematchingDeltaBeta` object and 
+calculate the phasematching spectrum as a function of $\Delta\beta$
+```python  
+
+deltabeta = np.linspace(-5000, 5000, 1000)
+thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
+thisprocess.deltabeta = deltabeta
+thisprocess.calculate_phasematching()
+thisprocess.plot()
+```
+
+For more example, consult the Tutorials in the documentation.
+
 
 ## In development/ToDo list
 
-* Update the calculation method in the Phasematching1D and Phasematching2D classes. Instead using a rectangular 
-approximation, it is possible to use the correct integration using a sinc().
+* TODO: replace rectangular integration in Phasematching 1D and 2D with the sinc (the correct integration)
+* Insert bandwidth estimation (for 1D functions)
+* TODO: Use FFT to calculate Simple 1D and 2D phasematching with user defined nonlinear profile
+  (introduce in version 1.1).
 
-* Modify the RealisticWaveguide and Phasematching classes such that the `Waveguide`, `SimplePhasematching1D` and 
-`SimplePhasematching2D` are used as parent classes and the other classes are their children. 
+
+## Documentation
+The complete documentation of this package can be found [here](https://pynumericalphasematching.readthedocs.io/en/latest/).
+
 
 ## Author
 
-* [Matteo Santandrea](mailto:mattsantand@gmail.com), University of Paderborn.
+* [Matteo Santandrea](mailto:mattsantand@gmail.com), University of Paderborn, [Integrated Quantum Optics](https://physik.uni-paderborn.de/silberhorn/) group
 
 ## License 
 
