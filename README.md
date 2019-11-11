@@ -1,4 +1,5 @@
 # Welcome to pynumpm v1.0
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3538004.svg)](https://doi.org/10.5281/zenodo.3538004)
 
 Welcome to pynumpm, short for PyNumericalPhasematching! 
 
@@ -103,6 +104,4 @@ This project is licensed under the GNU GPLv3+ License - see the [LICENSE.md](LIC
 * Marcello Massaro, University of Paderborn. Help with docstring, documentation, VCS, and cleaning up my messy work.
 
 ## How to cite
-Please cite this package as *PyNumericalPhasematching v1.0, 2019*.
-
-We are currently wrapping up a paper with a static DOI for this package. 
+Please cite this package as *PyNumericalPhasematching v1.0, 2019*. The DOI of this package is 10.5281/zenodo.3538004 
