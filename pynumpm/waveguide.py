@@ -80,10 +80,9 @@ class RealisticWaveguide(Waveguide):
     :param poling_period: poling period of the structure [*meter*].
     :type poling_period: float
     :param nominal_parameter: nominal parameter of the structure [variable units depending on the Sellmeier used].
-                              Default: None.
     :type nominal_parameter: float
-    :param nominal_parameter_name: name of the nominal parameter (used for the axes). LaTeX syntax is allowed.
-                                   Default: empty string.
+    :param nominal_parameter_name: (*optional*) name of the nominal parameter (used for the axes). LaTeX syntax is
+                                   allowed.
     :type nominal_parameter_name: string
 
     The following block of code initialises and plots the profile of
@@ -235,11 +234,13 @@ class RealisticWaveguide(Waveguide):
         """
         Function to create a noisy waveguide with a predefined noise spectrum.
 
-        :param noise_profile: String identifying the noise profile. Default is *1/f*. Options are AWGN | 1/f | 1/f2
+        :param noise_profile: String identifying the noise profile. Options are AWGN | 1/f | 1/f2. Default: 1/f.
         :type noise_profile: str
-        :param noise_amplitude: Range of the noise (in the same units as :py:meth:`~RealisticWaveguide.RealisticWaveguide.create_noisy_waveguide.nominal_parameter`)
+        :param noise_amplitude: Range of the noise (in the same units as
+                                :py:meth:`~RealisticWaveguide.RealisticWaveguide.create_noisy_waveguide.nominal_parameter`).
+                                Default: 0.2
         :type noise_amplitude: float
-        :return: A numpy.ndarray containing the generated profile of the waveguide.
+        :return: A :class:`~numpy:numpy.ndarray` containing the generated profile of the waveguide.
 
         """
         # Generate a noise profile using the NoiseFromSpectrum function.
@@ -260,7 +261,8 @@ class RealisticWaveguide(Waveguide):
 
         .. warning:: The correct behaviour of this function is untested.
 
-        :param poling_structure: Array containing the orientation of the poling.
+        :param poling_structure: Array containing the orientation of the poling. It must have the same dimensions of
+                                 the z-mesh.
         :type poling_structure: numpy.ndarray
         :return: The poling structure
 
