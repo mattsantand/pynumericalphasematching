@@ -56,7 +56,7 @@ Here, the first steps for setting up a simple simulation are described. For more
 [documentation](https://pynumericalphasematching.readthedocs.io/en/latest/). 
 
 ### First steps
-The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4$\mu$ m.
+The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4<a href="https://www.codecogs.com/eqnedit.php?latex=\mu&space;m" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu&space;m" title="\mu m" /></a>.
 ```python
 import numpy as np
 from pynumpm import waveguide
@@ -66,7 +66,7 @@ thiswaveguide = waveguide.Waveguide(length = 1e-2,
 ``` 
 
 The following lines load the `Waveguide` object created in the previous step into a `PhasematchingDeltaBeta` object and 
-calculate the phasematching spectrum as a function of $\Delta\beta$
+calculate the phasematching spectrum as a function of <a href="https://www.codecogs.com/eqnedit.php?latex=\Delta\beta" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\Delta\beta" title="\Delta\beta" /></a>
 ```python  
 
 deltabeta = np.linspace(-5000, 5000, 1000)
