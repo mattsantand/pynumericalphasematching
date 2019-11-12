@@ -320,7 +320,7 @@ class SimplePhasematching1D(object):
 
     With `idealwaveguide` being a :class:`~pynumpm.waveguide.Waveguide` object and `ny` and `nz` being the functions
     describing the refractive indices of the structure as a function of :math:`\lambda`
-    (see :ref:`getting_started__definitions`), the following code calculates its phase matching spectrum as a function
+    (see :ref:`getting_started__definitions` ), the following code calculates its phase matching spectrum as a function
     of :math:`\lambda_{IR}\in[1530,\,1570]\mathrm{nm}`, considering a pump :math:`\lambda_{green}=532\mathrm{nm}`::
 
         # Define the phase matching process
@@ -1305,6 +1305,8 @@ class Phasematching2D(SimplePhasematching2D):
         matching spectrum as a function of :math:`\lambda_{IR}\in[1530,\,1570]\mathrm{nm}`, considering a pump
         :math:`\lambda_{green}=532\mathrm{nm}`::
 
+            pass
+
 
 
         """
@@ -1342,22 +1344,23 @@ class Phasematching2D(SimplePhasematching2D):
         :param str profile_type: Type of nonlinearity profile to consider. Possible options are [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
         :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase matching or not.
         :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective if `profile_type` is *"gaussian"* or *"kaiser*.
-        :return: The function returns the nonlinearity profile of the system.
 
         The different types of profile available are:
 
         * constant: Uniform nonlinear profile.
-        * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`.
+        * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`; in this case, `**kwargs` accepts the
+          keyword `sigma_g_norm`, defining the standard deviation of the gaussian profile in units of the length
+          (Default: 0.5, representing a :math:`\sigma= L/2`)
         * hamming: :func:`numpy.hamming`
         * bartlett :func:`numpy.bartlett`
         * hanning: :func:`numpy.hanning`
         * blackman: :func:`numpy.blackman`
-        * kaiser: :func:`numpy.kaiser`
+        * kaiser: :func:`numpy.kaiser`; in this case, `**kwargs` accepts the keyword `beta`, describing the
+          :math:`\\beta` parameter of the Kaiser distribution.
 
-        If *profile_type* is set to *"gaussian"*, then `**kwargs` accets the keyword `sigma_g_norm`, defining the standard
-        deviation of the gaussian profile in units of the length (defauls to 0.5, i.e. L/2).
-        If *profile_type* is set to *"kaiser"*, then `**kwargs` accepts the keyword `beta`, describing the
-        :math:`\\beta` parameter of the Kaiser distribution.
+
+        :return: The function returns the nonlinearity profile of the system.
+
         """
         logger = logging.getLogger(__name__)
         logger.info("Setting the nonlinear profile.")

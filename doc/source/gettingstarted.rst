@@ -55,6 +55,7 @@ For example, the code
 defines a wavelength at 1550nm.
 
 .. _getting_started__definitions:
+
 Definitions
 -----------
 It is necessary to be extremely careful when calculating processes using the dispersion relations of the material under
