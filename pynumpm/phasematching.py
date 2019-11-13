@@ -1341,9 +1341,14 @@ class Phasematching2D(SimplePhasematching2D):
         """
         Method to set the nonlinearity profile g(z), with either a constant profile or a variety of different windowing functions.
 
-        :param str profile_type: Type of nonlinearity profile to consider. Possible options are [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
-        :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase matching or not.
-        :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective if `profile_type` is *"gaussian"* or *"kaiser*.
+        :param profile_type: Type of nonlinearity profile to consider. Possible options are
+                             [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
+        :type profile_type: str
+        :param first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase
+                                  matching or not.
+        :type first_order_coeff: bool
+        :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective
+                       if `profile_type` is *"gaussian"* or *"kaiser*.
 
         The different types of profile available are:
 
