@@ -1355,7 +1355,7 @@ class Phasematching2D(SimplePhasematching2D):
         * constant: Uniform nonlinear profile.
         * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`; in this case, `**kwargs` accepts the
           keyword `sigma_g_norm`, defining the standard deviation of the gaussian profile in units of the length
-          (Default: 0.5, representing a :math:`\sigma= L/2`)
+          (Default: 0.5, representing a :math:`\sigma= L/2` )
         * hamming: :func:`numpy.hamming`
         * bartlett :func:`numpy.bartlett`
         * hanning: :func:`numpy.hanning`
