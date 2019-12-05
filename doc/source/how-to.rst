@@ -300,7 +300,7 @@ of :math:`\delta\beta_{max} = 100\mathrm{m}^{-1}` and calculates its spectrum in
     deltabeta = np.linspace(-5000, 5000, 1000)
     thisprocess.deltabeta = deltabeta
     thisprocess.calculate_phasematching(normalized=True)
-    thisprocess.plot(verbose=True)
+    thisprocess.plot(add_infobox=True)
     plt.show()
 
 Wavelength dependent: 1D

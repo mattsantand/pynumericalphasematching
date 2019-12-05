@@ -130,35 +130,45 @@ class SimplePhasematchingDeltaBeta(object):
             self._phi *= length
         return self.phi
 
-    def plot(self, ax=None, normalized=False, **kwargs):
+    def plot(self, ax=None, normalize_to_max=False, amplitude=False, **kwargs):
         """
-        Function to plot the phase matching intensity.
+        Function to plot the phase matching spectrum amplitude or intensity.
 
         :param ax: Optional argument. Handle of the axis of the plot. Default: None
-        :param normalized: Optional argument. If True, normalizes the plotted phase matching intensity to have the
+        :param normalize_to_max: Optional argument. If True, normalizes the plotted phase matching intensity to have the
                            maximum to 1. Default: False
-        :type normalized: bool
+        :type normalize_to_max: bool
+        :param amplitude: Optional argument. Plot the phase matching spectrum amplitude instead of the intensity.
+                          Default: False.
+        :type amplitude: bool
         :return: the axis handle of the plot
         """
         if ax is None:
-            fig = plt.figure()
-            plt.subplot(111)
+            plt.figure()
             ax = plt.gca()
+
         if self.phi is None:
             raise IOError(
                 "I'd really like to plot something nice, but you have not calculated the phase matching spectrum yet, "
                 "so this would only be a white canvas.")
-        y = abs(self.phi) ** 2
-        if normalized:
-            y = abs(self.phi) ** 2 / y.max()
-        ax.plot(self.deltabeta, y, ls=kwargs.get("ls", "-"),
+
+        if amplitude:
+            y = abs(self.phi)
+        else:
+            y = abs(self.phi) ** 2
+
+        if normalize_to_max:
+            y /= y.max()
+
+        ax.plot(self.deltabeta, y,
+                ls=kwargs.get("ls", "-"),
                 lw=kwargs.get("lw", 3),
-                color=kwargs.get("color"),
-                label=kwargs.get("label"))
-        plt.title("Phase matching spectrum")
-        plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
-        plt.ylabel("Intensity [a.u.]")
-        plt.tight_layout()
+                color=kwargs.get("color", None),
+                label=kwargs.get("label", None))
+
+        ax.set_title("Phase matching spectrum")
+        ax.set_xlabel(r"$\Delta\beta$ [m$^{-1}$]")
+        ax.set_ylabel("Intensity [a.u.]")
         return ax
 
     def calculate_integral(self):
@@ -249,37 +259,56 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
         self._noise_length_product = abs(self.waveguide.profile).max() * self.waveguide.length
         return self.phi
 
-    def plot(self, ax=None, normalized=False, verbose=False, **kwargs):
+    def plot(self, ax=None, normalize_to_max=False, amplitude=False, phase=False, add_infobox=False, **kwargs):
         """
         Function to plot the phase matching intensity.
 
         :param ax: Optional argument. Handle of the axis of the plot. Default: None
-        :param normalized: Optional argument. If True, normalizes the plotted phase matching spectrum to have the
+        :param normalize_to_max: Optional argument. If True, normalizes the plotted phase matching spectrum to have the
                            maximum to 1. Default: False
-        :type normalized: bool
-        :param verbose: Optional. If True, writes the main information in the plot. Default: False
-        :type verbose: bool
-        :return: the axis handle of the plot
+        :type normalize_to_max: bool
+        :param amplitude: Optional argument. Plot the phase matching spectrum amplitude instead of the intensity.
+                  Default: False.
+        :type amplitude: bool
+        :param phase: Optional argument. Overlays to the phase matching amplitude (or intensity) the relative phase.
+                      Default: False
+        :type phase: bool
+        :param add_infobox: Optional. If True, writes the main information in the plot. Default: False
+        :type add_infobox: bool
+        :return: the axis handle of the plot. If *phase* is True, then it is a list of two handles
         """
         if ax is None:
-            fig = plt.figure()
-            plt.subplot(111)
+            plt.figure()
             ax = plt.gca()
         if self.phi is None:
             raise IOError(
                 "I'd really like to plot something nice, but you have not calculated the phase matching spectrum yet, "
                 "so this would only be a white canvas.")
-        y = abs(self.phi) ** 2
-        if normalized:
-            y = abs(self.phi) ** 2 / y.max()
-        ax.plot(self.deltabeta, y, ls=kwargs.get("ls", "-"),
-                lw=kwargs.get("lw", 3),
-                color=kwargs.get("color"),
-                label=kwargs.get("label"))
-        plt.title("Phase matching")
-        plt.xlabel(r"$\Delta\beta$ [m$^{-1}$]")
-        plt.ylabel("Intensity [a.u.]")
-        if verbose:
+        if amplitude:
+            y = abs(self.phi)
+        else:
+            y = abs(self.phi) ** 2
+
+        if normalize_to_max:
+            y /= y.max()
+
+        l1, = ax.plot(self.deltabeta, y,
+                      ls=kwargs.get("ls", "-"),
+                      lw=kwargs.get("lw", 3),
+                      color=kwargs.get("color"),
+                      label=kwargs.get("label"))
+
+        ax.set_title("Phase matching")
+        ax.set_xlabel(r"$\Delta\beta$ [m$^{-1}$]")
+        ax.set_ylabel("Intensity [a.u.]")
+
+        if phase:
+            yphase = np.unwrap(np.angle(self.phi))
+            ax2 = ax.twinx()
+            ax2.plot(self.deltabeta, yphase, ls=":", color=l1.get_color(), **kwargs)
+            ax2.set_ylabel("Phase [rad]")
+
+        if add_infobox:
             integral = self.calculate_integral()
             noise_length_product = self.noise_length_product
             text = "Integral: {integ:.3}\n".format(integ=integral) + \
@@ -288,9 +317,11 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
             y0, y1 = plt.ylim()
             x = .7 * (x1 - x0) + x0
             y = .7 * y1
-            props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+            props = dict(boxstyle='round', facecolor='wheat', alpha=1)
             plt.text(x, y, text, bbox=props)
-        plt.tight_layout()
+
+        if phase:
+            return [ax, ax2]
         return ax
 
 
@@ -619,50 +650,66 @@ class SimplePhasematching1D(object):
         else:
             raise RuntimeError("You need to evaluate the phase matching spectrum, before I can calculate its integral.")
 
-    def plot(self, ax=None, plot_intensity=True, plot_input=True, **kwargs):
+    def plot(self, ax=None, normalize_to_max=False, amplitude=False, phase=False, plot_input=True, **kwargs):
         """
         Plot the phase matching intensity/amplitude.
 
         :param ax: Axis handle for the plot. If None, plots in a new figure. Default is None.
-        :param plot_intensity: Set to True to plot the intensity profile, False to plot the amplitude and phase.
-                               Default to True.
-        :type plot_intensity: bool
-        :param plot_input: Select the x axis for the plot. If True, use the `input_wavelength` as input, otherwise use `output_wavelength`.
-        :type plot_intensity: bool
+        :param normalize_to_max: Optional argument. If True, normalizes the plotted phase matching spectrum to have the
+                           maximum to 1. Default: False
+        :type normalize_to_max: bool
+        :param amplitude: Optional argument. Plot the phase matching spectrum amplitude instead of the intensity.
+                          Default: False.
+        :type amplitude: bool
+        :param phase: Optional argument. Overlays to the phase matching amplitude (or intensity) the relative phase.
+                      Default: False
+        :type phase: bool
+        :param plot_input: Select the x axis for the plot. If True, use the `input_wavelength` as input, otherwise use
+                           `output_wavelength`.
+        :type plot_input: bool
         :param kwargs: :func:`matplotlib.pyplot.plot` **kwargs arguments
-        :return: figure and axis handle
-
+        :return: list containing  the axis handle(s). If *phase* is True, then a list of two handles will be provided.
         """
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.gca()
-        else:
-            fig = plt.gcf()
 
         if plot_input:
-            wl = self.input_wavelength
+            wl = self.input_wavelength * 1e9
+            xlabel = r"$\lambda_{in}$ [nm]"
         else:
-            wl = self.output_wavelength
+            wl = self.output_wavelength * 1e9
+            xlabel = r"$\lambda_{out}$ [nm]"
 
-        if plot_intensity:
-            plt.plot(wl * 1e9, abs(self.phi) ** 2, ls=kwargs.get("ls", "-"),
-                     lw=kwargs.get("lw", 3),
-                     color=kwargs.get("color"),
-                     label=kwargs.get("label"))
+        if amplitude:
+            y = abs(self.phi)
+            ylabel = "Amplitude"
         else:
-            plt.plot(wl * 1e9, np.abs(self.phi), label="Amplitude", **kwargs)
-            plt.gca().set_ylabel("Amplitude")
-            plt.gca().twinx().plot(wl * 1e9, np.unwrap(np.angle(self.phi)), ls=":", color="k", label="Phase", **kwargs)
-            plt.gca().set_ylabel("Phase [rad]")
+            y = abs(self.phi) ** 2
+            ylabel = "Intensity"
 
-        xlabel = kwargs.get("xlabel", "Wavelength [nm]")
-        ylabel = kwargs.get("ylabel", "Intensity [a.u.]")
+        if normalize_to_max:
+            y /= y.max()
+            ylabel = "Normalised " + ylabel.lower()
+
+        l1, = ax.plot(wl, y,
+                      ls=kwargs.get("ls", "-"),
+                      lw=kwargs.get("lw", 3),
+                      color=kwargs.get("color"),
+                      label=kwargs.get("label"))
+
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title("Phase matching")
-        fig = plt.gcf()
-        plt.tight_layout()
-        return fig, ax
+
+        if phase:
+            yphase = np.unwrap(np.angle(self.phi))
+            ax2 = ax.twinx()
+            ax2.plot(wl, yphase, ls=":", color=l1.get_color(), **kwargs)
+            ax2.set_ylabel("Phase [rad]")
+            return [ax, ax2]
+
+        return ax
 
 
 class Phasematching1D(SimplePhasematching1D):
@@ -836,14 +883,22 @@ class Phasematching1D(SimplePhasematching1D):
         self._nonlinear_profile = g
         return self.nonlinear_profile
 
-    def plot_nonlinearity_profile(self):
+    def plot_nonlinearity_profile(self, ax=None):
         """
         Function to plot the nonlinearity profile
 
         """
-        x = self.waveguide.z
+        if ax is None:
+            plt.figure()
+            ax = plt.gca()
+
+        x = self.waveguide.z * 1e3
         y = self.nonlinear_profile(self.waveguide.z)
-        plt.plot(x, y)
+        ax.plot(x, y)
+        ax.set_title("Nonlinearity profile")
+        ax.set_xlabel("Z [mm]")
+        ax.set_ylabel("g(z) [a.u.]")
+        return ax
 
     def _calculate_local_neff(self, posidx):
         local_parameter = self.waveguide.profile[posidx]
@@ -977,13 +1032,15 @@ class Phasematching1D(SimplePhasematching1D):
         :param ax: [Optional} The axis handle used to plot.
         :return: the axis handle of the plot
         """
-        # self.calculate_phasematching_error()
         if ax is None:
             plt.figure()
             ax = plt.gca()
         else:
             ax = ax
-        ax.plot(self.waveguide.z, self._delta_beta0_profile)
+        ax.plot(self.waveguide.z * 1e3, self._delta_beta0_profile)
+        ax.set_title("Error profile")
+        ax.set_xlabel("Z [mm]")
+        ax.set_ylabel(r"$\delta\beta$ [1/m]")
         return ax
 
 
@@ -1061,6 +1118,7 @@ class SimplePhasematching2D(object):
         self._WL_GREEN = None
         self._WL_BLUE = None
         self._phi = None
+        self._wavelengths_tags = None
 
     @property
     def waveguide(self):
@@ -1164,6 +1222,7 @@ class SimplePhasematching2D(object):
             if self.red_wavelength is None:
                 self._wavelength1 = self.green_wavelength
                 self._wavelength2 = self.blue_wavelength
+                self._wavelengths_tags = [r"$\lambda_{g}$", r"$\lambda_{b}$"]
                 self._pump_centre = (self.blue_wavelength.mean() ** -1 - self.green_wavelength.mean() ** -1) ** -1
                 self._WL_GREEN, self._WL_BLUE = np.meshgrid(self.green_wavelength, self.blue_wavelength)
                 self._WL_RED = (self._WL_BLUE ** -1 - self._WL_GREEN ** -1) ** -1
@@ -1171,11 +1230,13 @@ class SimplePhasematching2D(object):
                 self._pump_centre = (self.blue_wavelength.mean() ** -1 - self.red_wavelength.mean() ** -1) ** -1
                 self._wavelength1 = self.red_wavelength
                 self._wavelength2 = self.blue_wavelength
+                self._wavelengths_tags = [r"$\lambda_{r}$", r"$\lambda_{b}$"]
                 self._WL_RED, self._WL_BLUE = np.meshgrid(self.red_wavelength, self.blue_wavelength)
                 self._WL_GREEN = (self._WL_BLUE ** -1 - self._WL_RED ** -1) ** -1
             elif self.blue_wavelength is None:
                 self._wavelength1 = self.red_wavelength
                 self._wavelength2 = self.green_wavelength
+                self._wavelengths_tags = [r"$\lambda_{r}$", r"$\lambda_{g}$"]
                 self._pump_centre = (self.green_wavelength.mean() ** -1 + self.red_wavelength.mean() ** -1) ** -1
                 self._WL_RED, self._WL_GREEN = np.meshgrid(self.red_wavelength, self.green_wavelength)
                 self._WL_BLUE = (self._WL_RED ** -1 + self._WL_GREEN ** -1) ** -1
@@ -1213,44 +1274,52 @@ class SimplePhasematching2D(object):
             self._phi /= length
         return self.phi
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax=None, normalize_to_max=False, amplitude=False, plot_colorbar=True, **kwargs):
         """
-        Function to plot the phase matching spectrum. Pass ax handle through "ax" to plot in a specified axis environment.
+        Plot the phase matching intensity/amplitude.
 
-        :param kwargs:
+        :param ax: Axis handle for the plot. If None, plots in a new figure. Default is None.
+        :param normalize_to_max: Optional argument. If True, normalizes the plotted phase matching spectrum to have the
+                           maximum to 1. Default: False
+        :type normalize_to_max: bool
+        :param amplitude: Optional argument. Plot the phase matching spectrum amplitude instead of the intensity.
+                          Default: False.
+        :type amplitude: bool
+        :param plot_colorbar: Optional argument. Set to True to plot the colorbar.
+        :type plot_colorbar: bool
+        :param kwargs: :func:`matplotlib.pyplot.plot` **kwargs arguments
+        :return: list containing  the axis handle(s). If *phase* is True, then a list of two handles will be provided.
         """
-
-        plot_intensity = kwargs.get("plot_intensity", True)
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.gca()
 
-        phi = abs(self.phi)
-        if plot_intensity:
-            phi = phi ** 2
+        if amplitude:
+            y = abs(self.phi)
+        else:
+            y = abs(self.phi) ** 2
+
+        if normalize_to_max:
+            y /= y.max()
 
         cmap = kwargs.get("cmap", "viridis")
-        vmin = kwargs.get("vmin", phi.min())
-        vmax = kwargs.get("vmax", phi.max())
+        vmin = kwargs.get("vmin", y.min())
+        vmax = kwargs.get("vmax", y.max())
 
-        im = ax.pcolormesh(self.wavelength1 * 1e9, self.wavelength2 * 1e9, phi, cmap=cmap, vmin=vmin,
+        im = ax.pcolormesh(self.wavelength1 * 1e9, self.wavelength2 * 1e9, y, cmap=cmap, vmin=vmin,
                            vmax=vmax)
-        if kwargs.get("cbar", True):
+        if plot_colorbar:
             cbar = plt.colorbar(im)
         else:
             cbar = None
-        ax.set_xlabel("Wavelength [nm]")
-        ax.set_ylabel("Wavelength [nm]")
-        ax.set_title("Phasematching")
-        fig = plt.gcf()
-        d = {"fig": fig,
-             "ax": ax,
-             "im": im,
-             "vmin": vmin,
-             "vmax": vmax,
-             "cbar": cbar}
-        plt.tight_layout()
-        return d
+
+        ax.set_xlabel(self._wavelengths_tags[0] + " [nm]")
+        ax.set_ylabel(self._wavelengths_tags[1] + " [nm]")
+        ax.set_title("Phase matching spectrum")
+
+        if plot_colorbar:
+            return ax, cbar.ax
+        return ax
 
     def plot_deltabeta_contour(self, ax=None, N=100, **contourkwargs):
         """
@@ -1261,13 +1330,14 @@ class SimplePhasematching2D(object):
         :param contourkwargs: Additional parameters to be passed to `matplotlib.pyplot.contour()`
         """
         if ax is None:
-            fig = plt.figure()
+            plt.figure()
             ax = plt.gca()
 
         plt.sca(ax)
         WL1, WL2 = np.meshgrid(self.wavelength1 * 1e9, self.wavelength2 * 1e9)
         plt.contour(WL1, WL2, self._deltabeta, N, **contourkwargs)
-        plt.colorbar()
+        cbar = plt.colorbar()
+        return ax, cbar.ax
 
 
 class Phasematching2D(SimplePhasematching2D):

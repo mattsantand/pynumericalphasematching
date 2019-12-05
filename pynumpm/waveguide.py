@@ -279,7 +279,7 @@ class RealisticWaveguide(Waveguide):
 
         :param ax: handle to axis, if you want to plot in specific axes.
         :type ax: matplotlib.axes.Axes
-        :return: fig, ax: handle to figure and axis objects
+        :return: ax: handle to the axis object
 
         """
         if ax is None:
@@ -295,7 +295,7 @@ class RealisticWaveguide(Waveguide):
         ax.set_title("Waveguide profile")
         ax.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
         plt.tight_layout()
-        return fig, ax
+        return ax
 
     def plot_waveguide_properties(self, fig=None, **plotkwargs):
         """
@@ -306,7 +306,8 @@ class RealisticWaveguide(Waveguide):
         :param fig: Handle of the figure where the plots should be displayed. If *None*, then opens a new figure.
                     Default is None.
         :type fig: matplotlib.figure.Figure
-
+        :param plotkwargs: dictionary to be passed to :func:`matplotlib.pyplot.plot`
+        :type plotkwargs: dict
         """
         logger = logging.getLogger(__name__)
         logger.debug("Plotting noise properties.")

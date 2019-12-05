@@ -285,7 +285,7 @@ def tutorial_example_phasematching_deltabeta_realistic_wg():
     thisprocess = PhasematchingDeltaBeta(waveguide=thiswaveguide)
     thisprocess.deltabeta = deltabeta
     thisprocess.calculate_phasematching(normalized=True)
-    thisprocess.plot(verbose=True)
+    thisprocess.plot(add_infobox=True, amplitude=True, phase=True)
     plt.show()
 
 
@@ -327,7 +327,7 @@ def tutorial_example_1Dphasematching():
     thisprocess.red_wavelength = np.linspace(red_wl0 - red_span / 2, red_wl0 + red_span / 2, 1000)
     thisprocess.green_wavelength = green_wl0
     phi = thisprocess.calculate_phasematching()
-    thisprocess.plot()
+    thisprocess.plot(phase=True)
     plt.show()
 
 
@@ -480,14 +480,14 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M')
-    example_simple_waveguide()
-    example_waveguide()
-    example_noise()
-    example_simple_phasematching_deltabeta()
-    tutorial_example_realistic_waveguide()
-    tutorial_example_noisy_waveguide()
-    tutorial_example_ideal_deltabeta()
-    tutorial_example_simple1dphasematching()
+    # example_simple_waveguide()
+    # example_waveguide()
+    # example_noise()
+    # example_simple_phasematching_deltabeta()
+    # tutorial_example_realistic_waveguide()
+    # tutorial_example_noisy_waveguide()
+    # tutorial_example_ideal_deltabeta()
+    # tutorial_example_simple1dphasematching()
     tutorial_example_simple2dphasematching()
     tutorial_example_phasematching_deltabeta_realistic_wg()
     tutorial_example_1Dphasematching()
