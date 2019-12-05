@@ -442,15 +442,15 @@ class JSA(object):
 
         :param ax: Axes handles
         :type ax: matplotlib.pyplot.axes
-        :param light_plot: Flag to allow plotting in the *light* mode. The light_plot mode is compatible only with
-        linear meshes of the signal/idler wavelengths. Default is False.
+        :param light_plot:  Flag to allow plotting in the *light* mode. The light_plot mode is compatible only with
+                            linear meshes of the signal/idler wavelengths. Default is False.
         :type light_plot: bool
         :param normalized: Flag to plot the JSI normalized or unnormalized. Default is True.
         :type normalized: bool
         :param plot_pump: Flag to plot the pump spectrum overlayed as contour plot. Default is False.
         :type plot_pump: bool.
         :param kwargs:
-        :return:
+        :return: the axes handle for the plot
         """
         logger = logging.getLogger(__name__)
         if self.jsa is None:
@@ -497,6 +497,15 @@ class JSA(object):
         return ax
 
     def plot_marginals(self, ax=None, **kwargs):
+        """
+        Function to plot the marginals of the JSI.
+
+        :param ax:  Axes handles for the *two* axes where to draw the marginals. The input can be None or a list of
+                    the two axes handles. If None, a new plot is generated with two subplots, one for each marginal.
+                    Default: *None*
+        :type ax:  matplotlib.pyplot.axes
+        :return: the Axes handles
+        """
         if ax is None:
             fig, ax = plt.subplots(1, 2)
         else:
