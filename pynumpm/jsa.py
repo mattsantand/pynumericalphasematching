@@ -238,11 +238,10 @@ class Pump(object):
             raise NotImplementedError("The process {0} has not been implemented yet.".format(self.process))
 
     def calculate_pump_spectrum(self):
-        """ Calculates the pump function
+        """
+        This function calculates the pump function.
 
-        === Returns ===
-        _pump_function -- matrix containing the pump function in
-                          wavelength1 and wavelength2 frequecy plane
+        :return: matrix containing the pump function in wavelength1 and wavelength2 frequency plane
         """
         logger = logging.getLogger(__name__)
         self.__set_wavelengths()
@@ -338,15 +337,15 @@ class JSA(object):
         self.__pump = value
 
     @property
-    def JSA(self):
+    def jsa(self):
         return self.__JSA
 
     @property
-    def JSI(self):
+    def jsi(self):
         return self.__JSI
 
     @property
-    def K(self):
+    def schmidt_number(self):
         return self.__K
 
     @property
@@ -404,12 +403,12 @@ class JSA(object):
         :return: the Schmidt number.
         """
         logger = logging.getLogger(__name__)
-        if self.JSA is None:
+        if self.jsa is None:
             self.calculate_JSA()
         U, self.__singular_values, V = np.linalg.svd(self.__JSA)
         self.__singular_values /= np.sqrt((self.__singular_values ** 2).sum())
         self.__K = 1 / (self.__singular_values ** 4).sum()
-        text = "Schmidt number K: {K}\nPurity: {P}".format(K=self.K, P=1 / self.K)
+        text = "Schmidt number K: {K}\nPurity: {P}".format(K=self.schmidt_number, P=1 / self.schmidt_number)
         if verbose:
             print(text)
         logger.info(text)
@@ -454,7 +453,7 @@ class JSA(object):
         :return:
         """
         logger = logging.getLogger(__name__)
-        if self.JSA is None:
+        if self.jsa is None:
             logger.info("The JSA was not calculated. I'll try to calculate it right away.")
             self.calculate_JSA()
             # raise ValueError("You need to calculate the JSA first, use the command calculate_jsa()")
@@ -465,7 +464,7 @@ class JSA(object):
         x = self.phasematching.wavelength1 * 1e9
         y = self.phasematching.wavelength2 * 1e9
 
-        jsi_to_plot = self.JSI
+        jsi_to_plot = self.jsi
         if normalized:
             logger.debug("The user wants the normalised JSI.")
             jsi_to_plot /= jsi_to_plot.max()
