@@ -449,8 +449,7 @@ The function :func:`pynumpm.utils.calculate_poling_period` can be used to calcul
 The following code calculates the poling period of a type 0 difference frequency generation with input wavelengths
 550nm and 1200nm.
 
-.. warning:: The refractive index functions that need to be provided to this function must be wavelength-dependent, i.e.
-:math:`n=n(\lambda)`.
+.. warning:: The refractive index functions that need to be provided to this function must be wavelength-dependent, i.e. :math:`n=n(\lambda)`.
 
 ::
 
