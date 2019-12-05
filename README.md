@@ -12,7 +12,7 @@ This last functionality can be used for the calculation of *joint spectral ampli
 properties.
 
 **Notes**
-* All physical quantities in this package are expressed in SI units (m, s, Hz).
+* All physical quantities in this package are expressed in SI units (m, s, rad/s).
 * In this package, the wavelengths are usually denoted as *red*, *green* and *blue* (or *r*, *g*, *b*). This implies 
 that the blue field has shortest wavelength and the red has the longest wavelength. In case two fields have the same
 wavelength, then the names are interchangeable.
@@ -42,7 +42,7 @@ and, in the folder *pynumericalphasematching*, run
 
 `python setup.py install`
 
-The installation via PyPI will be available as soon as the package is stable and deployable.
+The installation via PyPI will be available as soon as the package is stable.
 
 ## Examples 
 
