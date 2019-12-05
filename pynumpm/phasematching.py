@@ -791,14 +791,14 @@ class Phasematching1D(SimplePhasematching1D):
 
             * constant: Uniform nonlinear profile.
             * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`. Set the :math:`\sigma` of the gaussian
-                        profile with the `kwargs` argument `sigma_g_norm`, defining the standard deviation of the gaussian
-                        profile in units of the length (defauls to 0.5, i.e. L/2).
+              profile with the `kwargs` argument `sigma_g_norm`, defining the standard deviation of the gaussian
+              profile in units of the length (defauls to 0.5, i.e. L/2).
             * hamming:  :func:`numpy.hamming`.
             * bartlett:  :func:`numpy.bartlett`.
             * hanning:  :func:`numpy.hanning`.
             * blackman: :func:`numpy.blackman`.
             * kaiser:   :func:`numpy.kaiser`. Set the :math:`\\beta` parameter of the *Kaiser* profile with the `kwargs`
-                        argument `beta`,
+              argument `beta`,
         """
         logger = logging.getLogger(__name__)
         logger.info("Setting the nonlinear profile.")
