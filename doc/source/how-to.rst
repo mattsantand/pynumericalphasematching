@@ -405,6 +405,7 @@ are provided.
 The bandwidth of the pump is set to 1nm.
 
 ::
+
     from pynumpm import jsa
 
     # The pump is the pump for a SFG process.
@@ -414,7 +415,7 @@ The bandwidth of the pump is set to 1nm.
     # set the bandwidth to 1nm
     thispump.pump_width = 1e-9
     thispump.plot()
-
+    plt.show()
 
 
 
@@ -426,6 +427,7 @@ The following code loads the a 2D phasematching object and a pump object and cal
 decomposition. At the end, it plots the weights of the first ten Schmidt modes and the JSI with the pump overlayed.
 
 ::
+
     from pynumpm import jsa
 
     thisjsa = jsa.JSA(phasematching=thisphasematching,
@@ -434,6 +436,7 @@ decomposition. At the end, it plots the weights of the first ten Schmidt modes a
     thisjsa.calculate_schmidt_decomposition()
     thisjsa.plot_schmidt_coefficients(ncoeff = 10)
     thisjsa.plot(plot_pump=True)
+    plt.show()
 
 6. Utilities
 ============
@@ -446,8 +449,7 @@ The function :func:`pynumpm.utils.calculate_poling_period` can be used to calcul
 The following code calculates the poling period of a type 0 difference frequency generation with input wavelengths
 550nm and 1200nm.
 
-.. warning:: The refractive index functions that need to be provided to this function must be wavelength-dependent, i.e.
-:math:`n=n(\lambda)`.
+.. warning:: The refractive index functions that need to be provided to this function must be wavelength-dependent, i.e. :math:`n=n(\lambda)`.
 
 ::
 

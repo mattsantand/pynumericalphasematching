@@ -6,7 +6,8 @@ Welcome to pynumpm, short for PyNumericalPhasematching!
 This package is meant to help you with the simulation of the phasematching spectrum of nonlinear processes, in 
 particular of collinear three wave mixing processes. It can numerically calculate the phasematching of ideal waveguides
 and of waveguides with variable profile along their propagation axes. Moreover, it can calculate the phasematching
-as a function of the wavevector mismatch $\Delta\beta$, of one scanning wavelength or of two scanning wavelength. 
+as a function of the wavevector mismatch 
+<a href="https://www.codecogs.com/eqnedit.php?latex=\Delta\beta" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\Delta\beta" title="\Delta\beta" /></a>, of one scanning wavelength or of two scanning wavelength. 
 This last functionality can be used for the calculation of *joint spectral amplitude* and *intensity* spectra and 
 properties.
 
@@ -16,7 +17,7 @@ properties.
 that the blue field has shortest wavelength and the red has the longest wavelength. In case two fields have the same
 wavelength, then the names are interchangeable.
 * The functions describing the refractive indices, when used, must follow the convention of the standard Sellmeier's 
-equation, i.e. they **must** accept the wavelength in $\mu$ m    
+equation, i.e. they **must** accept the wavelength in <a href="https://www.codecogs.com/eqnedit.php?latex=\mu&space;m" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu&space;m" title="\mu m" /></a>. 
 
 ## Getting started
 
@@ -56,7 +57,7 @@ Here, the first steps for setting up a simple simulation are described. For more
 [documentation](https://pynumericalphasematching.readthedocs.io/en/latest/). 
 
 ### First steps
-The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4$\mu$ m.
+The next code creates an ideal waveguide with length L = 10mm and a poling period of 4.4<a href="https://www.codecogs.com/eqnedit.php?latex=\mu&space;m" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mu&space;m" title="\mu m" /></a>.
 ```python
 import numpy as np
 from pynumpm import waveguide
@@ -66,7 +67,7 @@ thiswaveguide = waveguide.Waveguide(length = 1e-2,
 ``` 
 
 The following lines load the `Waveguide` object created in the previous step into a `PhasematchingDeltaBeta` object and 
-calculate the phasematching spectrum as a function of $\Delta\beta$
+calculate the phasematching spectrum as a function of <a href="https://www.codecogs.com/eqnedit.php?latex=\Delta\beta" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\Delta\beta" title="\Delta\beta" /></a>
 ```python  
 
 deltabeta = np.linspace(-5000, 5000, 1000)

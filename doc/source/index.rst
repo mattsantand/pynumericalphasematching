@@ -6,8 +6,8 @@
 ===================================
 Welcome to PyNumPy's documentation!
 ===================================
-Greetings! Welcome to PyNumericalPhasematching, aka pynumpy.
-This Python package is an API for the analysis of classical optical,
+Greetings! Welcome to PyNumericalPhasematching, aka PyNumPy.
+This Python package is an API for the analysis of classical
 `nonlinear optical processes <https://en.wikipedia.org/wiki/Nonlinear_optics#Frequency-mixing_processes>`_
 (mainly three wave mixing) in guiding structures.
 

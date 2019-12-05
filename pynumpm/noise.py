@@ -63,6 +63,9 @@ class NoiseProfile(object):
                                  offset = 3)
         thisnoise.plot_noise_properties()
 
+    .. note:: This class has its own __add__ method, allowing one to sum the effects of two noise profiles, if their
+             dimensions match.
+
     """
 
     def __init__(self, z: np.ndarray = None, noise_amplitude: float = 0., offset: float = 0.):
@@ -265,14 +268,15 @@ class NoiseFromSpectrum(NoiseProfile):
     :param profile_spectrum: Noise profile of the simulated structure. Can be one of "awgn", "1/f", "1/f2".
     :type profile_spectrum: str
 
-    The noise profile is generated on the basis of the profile spectrum.
-    At first, the vector :math:`\mathbf{f}`of the spatial frequencies is created.
-    Then, the respective coefficients :math:`\mathbf{c}` are generated according to
-    :math:`\mathbf{c} = \mathbf{f}^{-\gamma}`, where :math:`\gamma` is equal to 0, 1, 2 for AWGN, 1/f and 1/f2 noise.
-    A random phase is then sampled for each coefficient :math:`c_k` in :math:`\mathbf{c}`. The phase of :math:`c_{-k}`
-    is opposite to the phase of :math:`c_k` to ensure a real-valued noise.
-    Finally, the IFFT of :math:`\mathbf{c}` is calculated to retrieve the spectral distribution of the noise.
-    If necessary, an offset is added at the end.
+    The noise profile is generated on the basis of the profile spectrum with the following algorithm:
+
+    1. The vector :math:`\mathbf{f}` of the spatial frequencies is created.
+    2. The respective coefficients :math:`\mathbf{c}` are generated according to
+       :math:`\mathbf{c} = \mathbf{f}^{-\gamma}`, where :math:`\gamma` is equal to 0, 1, 2 for AWGN, 1/f and 1/f2 noise.
+    3. A random phase is then sampled for each coefficient :math:`c_k` in :math:`\mathbf{c}`. The phase of :math:`c_{-k}`
+       is opposite to the phase of :math:`c_k` to ensure a real-valued noise.
+    4. The IFFT of :math:`\mathbf{c}` is calculated to retrieve the spectral distribution of the noise.
+       If necessary, an offset is added at the end.
 
     The following block of code initialises and plots the profile of a NoiseFromSpectrum object::
 
@@ -368,6 +372,7 @@ class CorrelatedNoise(NoiseProfile):
 
     Initialize the noise object passing a numpy array containing the mesh along z, the noise amplitude, an offset
     and a string describing the power spectrum of the noise.
+
     :param z: linearly spaced space mesh [*meter*].
     :type z: numpy.ndarray
     :param noise_amplitude: Amplitude of the noise profile.
@@ -379,10 +384,10 @@ class CorrelatedNoise(NoiseProfile):
 
 
     The ith point :math:`y_i` of the correlated profile is generated drawing it from the normal distribution with mean
-    :math:`\rho y_{i-1}` and variance :math:`\sigma^2 (1-\rho^2)`, where :math:`y_{i-1}` is the previous point of the
-    profile, :math:`\sigma` is the amplitude of the noise and :math:`\rho` is the correlation factor given by
-    :math:`\rho = \exp{-\Delta z/L_C}`, being :math:`\Delta z` the size of the mesh cell and :math:`L_C` the correlation
-    length.
+    :math:`\\rho y_{i-1}` and variance :math:`\sigma^2 (1-\\rho^2)`, where :math:`y_{i-1}` is the previous point of the
+    profile, :math:`\sigma` is the amplitude of the noise and :math:`\\rho` is the correlation factor given by
+    :math:`\\rho = \exp{-\Delta z/L_C}`, being :math:`\Delta z` the size of the mesh cell and :math:`L_C` the
+    correlation length.
 
     The following block of code initialises and plots the profile of a CorrelatedNoise object::
 
@@ -394,7 +399,7 @@ class CorrelatedNoise(NoiseProfile):
         thisnoise.plot_noise_properties()
 
 
-    ..warning:: This class hasn't been tested completely. It might be buggy.
+    .. warning:: This class hasn't been tested completely. It might be buggy.
 
     """
 
