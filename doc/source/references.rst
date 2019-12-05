@@ -8,9 +8,10 @@ The phasematching spectrum of a nonlinear optical process in an *ideal* guiding 
 length :math:`L` can be calculated using the equation
 
 .. math::
+    :label: ideal_phasematching
 
     \phi &= \frac{1}{L}\int_0^L \exp\left\lbrace \mathrm{i}\Delta\beta z\right\rbrace dz\\
-    &= sinc\left(\frac{\Delta\beta L}{2}\right)\exp\left\lbrace \mathrm{i}\frac{\Delta\beta L}{2}\right\rbrace,
+    &= \mathrm{sinc}\left(\frac{\Delta\beta L}{2}\right)\exp\left\lbrace \mathrm{i}\frac{\Delta\beta L}{2}\right\rbrace,
 
 
 where :math:`\Delta\beta` is the phase mismatch of the process, :math:`z` is the optical axis of the system and
@@ -28,11 +29,33 @@ If, however, the structure is not ideal and its properties change along the prop
 In this case, the phasematching spectrum is given by
 
 .. math::
+    :label: real_phasematching
 
     \phi = \frac{1}{L}\int_0^L \exp\left\lbrace \mathrm{i} \int_0^z\Delta\beta(\xi)d\xi \right\rbrace dz.
 
+
 The integral :math:`\int_0^z\Delta\beta(\xi)d\xi` is necessary to correctly keep track of the phase acquired by the
 fields as they travel along an inhomogeneous medium.
+
+In the current iteration of the software, the previous integral is solved in two slightly different ways.
+The class :class:`pynumpm.SimplePhasematchingDeltaBeta` discretises it as
+
+.. math::
+
+    \phi = \frac{1}{L} \sum_{i=0}^{N} \Delta z_i \mathrm{sinc}\left(\frac{\Delta\beta_i \Delta z_i}{2}\right)
+    \mathrm{e}^{i\frac{\Delta\beta_i \Delta z_i}{2}}\mathrm{e}^{i \sum_{j=0}^{i-1} \Delta\beta_j\Delta z_j}.
+
+This is an exact piecewise integration of :eq:`real_phasematching`.
+
+The classes :class:`pynumpm.SimplePhasematching1D` and :class:`pynumpm.SimplePhasematching2D` discretise
+:eq:`real_phasematching` as
+
+.. math::
+
+    \phi = \frac{1}{L} \sum_{i=0}^{N} \Delta z_i \mathrm{e}^{i \sum_{j=0}^{i} \Delta\beta_j\Delta z_j}
+
+which is the rectangular approximation of :eq:`real_phasematching`. In the future, I will update also these calculations.
+However, there is no real difference between the two methods, if the wavelength and the z meshes have enough resolution.
 
 While this API can be used to calculate the spectrum of an ideal waveguide, this task is quite trivial, since an analytic
 expression exist (see first integral).
