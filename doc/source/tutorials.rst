@@ -55,9 +55,10 @@ as a function of one scanning wavelength, for an SFG process.
 Here, we assume as waveguide width an additive white gaussian process with amplitude 0.2.
 
 .. attention:: The simulation of processes with variable dispersion relations requires very specific inputs. In
-particular, the equations `n` specifying the variation of the dispersion as a function of the waveguide parameter must be
-in the form `n=n(param)(wl)`, i.e. `n(param)` must return a dispersion function `n(wl)`. Moreover, the function `n(wl)`
-must follow the convention of Sellmeier's equation, i.e. the input waveguide must be in :math:`\mu\mathrm{m}`.
+               particular, the equations `n` specifying the variation of the dispersion as a function of the waveguide
+               parameter must be in the form `n=n(param)(wl)`, i.e. `n(param)` must return a dispersion function
+               `n(wl)`. Moreover, the function `n(wl)` must follow the convention of Sellmeier's equation, i.e. the
+               input waveguide must be in :math:`\mu\mathrm{m}`.
 
 .. note:: We assume that the correct Sellmeier have been loaded and stored in the variables `nx`, `ny`, `nz`.
 
@@ -162,9 +163,9 @@ Important notes
 
 The function `n` describing the dispersion relation **must** follow these requirements:
 
-1. When using a :class:`pynumpm.SimplePhasematching1D` or :class:`pynumpm.SimplePhasematching2D` object, `n` has the
-form `n=n(wl)`. It receives as inputs wavelengths in :math:`\mu` m (standard notation for Sellmeier equations) and returns
- the respective refractive index. E.g.
+1.  When using a :class:`pynumpm.SimplePhasematching1D` or :class:`pynumpm.SimplePhasematching2D` object, `n` has the
+    form `n=n(wl)`. It receives as inputs wavelengths in :math:`\mu\mathrm{m}`  (standard notation for Sellmeier equations)
+    and returns the respective refractive index. E.g.
 
 ::
 
@@ -175,7 +176,7 @@ form `n=n(wl)`. It receives as inputs wavelengths in :math:`\mu` m (standard not
         return A*wl + B*wl**2
 
 
-2. When using a `Phasematching1D` or `Phasematching2D` object, `n` has the form `n=n(param)(wavelength)`, where `param`
-is a generic parameter that influences the dispersion of the material (e.g. temperature or one fabrication parameter of
-the nonlinear system). In particular, `n(param)` has to return a function that describes the refractive index as a
-function of the wavelength, with the same convention as in point 1.
+2.  When using a `Phasematching1D` or `Phasematching2D` object, `n` has the form `n=n(param)(wavelength)`, where `param`
+    is a generic parameter that influences the dispersion of the material (e.g. temperature or one fabrication parameter
+    of the nonlinear system). In particular, `n(param)` has to return a function that describes the refractive index as
+    a function of the wavelength, with the same convention as in point 1.
