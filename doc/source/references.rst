@@ -38,7 +38,7 @@ The integral :math:`\int_0^z\Delta\beta(\xi)d\xi` is necessary to correctly keep
 fields as they travel along an inhomogeneous medium.
 
 In the current iteration of the software, the previous integral is solved in two slightly different ways.
-The class :class:`pynumpm.SimplePhasematchingDeltaBeta` discretises it as
+The class :class:`pynumpm.phasematching.SimplePhasematchingDeltaBeta` discretises it as
 
 .. math::
 
@@ -47,8 +47,8 @@ The class :class:`pynumpm.SimplePhasematchingDeltaBeta` discretises it as
 
 This is an exact piecewise integration of :eq:`real_phasematching`.
 
-The classes :class:`pynumpm.SimplePhasematching1D` and :class:`pynumpm.SimplePhasematching2D` discretise
-:eq:`real_phasematching` as
+The classes :class:`pynumpm.phasematching.SimplePhasematching1D` and :class:`pynumpm.phasematching.SimplePhasematching2D`
+discretise :eq:`real_phasematching` as
 
 .. math::
 
