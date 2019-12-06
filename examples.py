@@ -1,5 +1,4 @@
 """
-
 .. module: examples.py
 .. moduleauthor: Matteo Santandrea <matteo.santandrea@upb.de>
 
