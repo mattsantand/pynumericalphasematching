@@ -55,7 +55,7 @@ setup(
     ],
     install_requires=[
         'numpy', 'matplotlib', 'scipy', "warnings;python_version<'3.4'", "logging;python_version<'3.4'",
-        'tqdm'
+        'tqdm', 'pytest'
     ],
     packages=find_packages(),
 )

@@ -32,6 +32,7 @@ pynumpm requires the following python packages:
 * [scipy](https://www.scipy.org/)
 * warnings
 * logging
+* pytest
    
 The setup will automatically take care of installing the missing packages, when possible.   
 
