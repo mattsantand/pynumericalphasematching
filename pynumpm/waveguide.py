@@ -23,16 +23,17 @@ class Waveguide(object):
 
     """
 
-    def __init__(self, length: float, poling_period: float = +np.infty):
+    def __init__(self, length: float, poling_period: float = None):
         if not isinstance(length, float):
             raise ValueError("'length' must be a float.")
 
         if not isinstance(poling_period, float):
             raise ValueError("'length' must be a float.")
 
-        if np.isinf(poling_period):
+        if poling_period is None:
             warnings.warn("The user has not provided a poling period. The default value of +numpy.infty will be used.",
                           UserWarning)
+            poling_period = +np.infty
         self._poling_period = poling_period
         self._length = length
         self._waveguide_profile = None
