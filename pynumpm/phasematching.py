@@ -215,7 +215,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
     def noise_length_product(self):
         return self._noise_length_product
 
-    def calculate_phasematching(self, normalized=True, hide_progressbar=False):
+    def calculate_phasematching(self, normalized=True, hide_progressbar=True):
         """
         Function that calculates the phase matching spectrum in case of inhomogeneous waveguide.
         Prior to the evaluation of the phase matching spectrum, it is necessary to set the :math:`\Delta\\beta` vector by
@@ -225,6 +225,9 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
                            the phase matching spectrum will be normalized to the unit length (i.e., the maximum will be
                            in [0,1]). Default: False.
         :type normalized: bool
+        :param hide_progressbar: Parameter to disable the display of the progressbar during the calculation. Default: True
+        :type hide_progressbar: bool
+
         :return: the function returns the complex-valued phase matching spectrum.
 
         """
@@ -899,7 +902,7 @@ class Phasematching1D(SimplePhasematching1D):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, normalized=True, hide_progressbar=False):
+    def calculate_phasematching(self, normalized=True, hide_progressbar=True):
         """
         This function calculates the phase matching of the process. Use Phasematching1D.red_wavelength/green_wavelength/
         blue_wavelength to set the wavelengths of the process:
@@ -915,7 +918,7 @@ class Phasematching1D(SimplePhasematching1D):
 
         :param bool normalized: If True, the phase matching is limited in [0,1]. Otherwise, the maximum depends on the
                                 waveguide length. Default: True
-        :param hide_progressbar: Parameter to disable the display of the progressbar during the calculation. Default: False
+        :param hide_progressbar: Parameter to disable the display of the progressbar during the calculation. Default: True
         :type hide_progressbar: bool
 
         :return: the complex-valued phase matching spectrum
@@ -1440,14 +1443,14 @@ class Phasematching2D(SimplePhasematching2D):
         else:
             raise NotImplementedError("I don't know what you asked!\n" + self.propagation_type)
 
-    def calculate_phasematching(self, normalized=True, hide_progressbar=False):
+    def calculate_phasematching(self, normalized=True, hide_progressbar=True):
         """
         This function is the core of the class. It calculates the 2D phase matching spectrum of the process,
         scanning the two user-defined wavelength ranges.
 
         :param bool normalized: If True, the phase matching is limited in [0,1]. Otherwise, the maximum depends on the
                                 waveguide length, Default: True
-        :param hide_progressbar: Parameter to disable the display of the progressbar during the calculation. Default: False
+        :param hide_progressbar: Parameter to disable the display of the progressbar during the calculation. Default: True
         :type hide_progressbar: bool
 
         :return: the complex-valued phase matching spectrum
