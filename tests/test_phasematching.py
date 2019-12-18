@@ -209,9 +209,64 @@ def test_PhasematchingDeltaBeta():
     thisprocess.deltabeta = db
     phi = thisprocess.calculate_phasematching()
     correct_phi = np.sinc(db * length / 2 / np.pi) * np.exp(1j * db * length / 2)
-    assert np.all(abs(correct_phi-phi)<1e-3)
+    assert np.all(abs(correct_phi - phi) < 1e-3)
+    profile = np.load("pink_noise_wg_profile.npy") * 2000
+
+    length = 24.5e-3
+    z = np.linspace(0, length, len(profile))
+    thiswaveguide = waveguide.RealisticWaveguide(z=z,
+                                                 poling_period=+np.infty,
+                                                 nominal_parameter=0,
+                                                 nominal_parameter_name="db")
+    thiswaveguide.load_waveguide_profile(profile)
+    thisprocess = phasematching.PhasematchingDeltaBeta(waveguide=thiswaveguide)
+    db = np.linspace(-1000, 1000, 2000)
+    thisprocess.deltabeta = db
+    phi = thisprocess.calculate_phasematching()
+    correct_phi = np.load("spectrum_pink_waveguide_deltabeta.npy")
+    assert np.all(abs(correct_phi - phi) < 1e-4)
+
+
+def test_Phasematching1D():
+    nominal_parameter = 20
+    wlred0 = 1550e-9
+    wlgreen0 = 775e-9
+    wlblue0 = (wlred0 ** -1 + wlgreen0 ** -1) ** -1
+
+    nred = nz
+    ngreen = nz
+    nblue = nz
+
+    poling_period = utils.calculate_poling_period(wlred0, wlgreen0, 0,
+                                                  nred(nominal_parameter), ngreen(nominal_parameter),
+                                                  nblue(nominal_parameter))
+
+    length = 25e-3
+    z = np.linspace(0, length, 5000)
+    thiswaveguide = waveguide.RealisticWaveguide(z=z,
+                                                 poling_period=poling_period,
+                                                 nominal_parameter=nominal_parameter,
+                                                 nominal_parameter_name="Temperature")
+    thisprocess = phasematching.Phasematching1D(waveguide=thiswaveguide,
+                                                n_red=nred,
+                                                n_green=ngreen,
+                                                n_blue=nblue)
+    redwl = np.linspace(wlred0 - 2e-9, wlred0 + 2e-9, 1000)
+    thisprocess.red_wavelength = redwl
+    thisprocess.green_wavelength = wlgreen0
+    bluewl = (redwl ** -1 + wlgreen0 ** -1) ** -1
+    phi = thisprocess.calculate_phasematching()
+    db = 2 * np.pi * (nblue(nominal_parameter)(bluewl * 1e6) / bluewl -
+                      ngreen(nominal_parameter)(wlgreen0 * 1e6) / wlgreen0 -
+                      nred(nominal_parameter)(redwl * 1e6) / redwl -
+                      1 / poling_period)
+    correct_phi = np.sinc(db * length / 2 / np.pi) * np.exp(-1j * db * length / 2)
+    assert np.all(np.abs(correct_phi - phi) < 1e-3)
+
+
+    # profile = np.load("pink_noise_wg_profile.npy") * 10 + nominal_parameter
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
-    # test_PhasematchingDeltaBeta()
+    # pytest.main([__file__])
+    test_Phasematching1D()
