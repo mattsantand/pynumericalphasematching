@@ -215,7 +215,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
     def noise_length_product(self):
         return self._noise_length_product
 
-    def calculate_phasematching(self, normalized=True):
+    def calculate_phasematching(self, normalized=True, hide_progressbar=False):
         """
         Function that calculates the phase matching spectrum in case of inhomogeneous waveguide.
         Prior to the evaluation of the phase matching spectrum, it is necessary to set the :math:`\Delta\\beta` vector by
@@ -236,7 +236,7 @@ class PhasematchingDeltaBeta(SimplePhasematchingDeltaBeta):
         self._cumulative_exp = np.ones(shape=len(self.deltabeta), dtype=complex)
         self._cumulative_sinc = np.zeros(shape=len(self.deltabeta), dtype=complex)
         dz = np.gradient(self.waveguide.z)
-        for i in tqdm(range(len(self.waveguide.z))):
+        for i in tqdm(range(len(self.waveguide.z)), ncols=100, disable=hide_progressbar):
             this_deltabeta = self.deltabeta + self.waveguide.profile[i] - 2 * np.pi / self.waveguide.poling_period
             x = this_deltabeta * dz[i] / 2
             self._cumulative_sinc += dz[i] * np.sinc(x / np.pi) * np.exp(1j * x) * np.exp(
