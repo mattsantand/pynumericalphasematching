@@ -8,18 +8,21 @@ authors:
     orcid: 0000-0001-5718-358X
     affiliation: 1
   - name: Marcello Massaro
-    orcid: 0000-0001-5718-358X    
+    orcid:  
+    affiliation: 1
+  - name: Christine Silberhorn
+    orcid: 
     affiliation: 1
 affiliations:
- - name: Lyman Spitzer, Jr. Fellow, Princeton University
+ - name: Integrated Quantum Optics, Paderborn Universtity, Warburgerstr. 100, 33098 Paderborn, Germany 
    index: 1
 date: 19 December 2019
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
 # https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal <- The name of the AAS journal.
+# aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
+# aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
 
 # Summary
