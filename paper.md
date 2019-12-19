@@ -1,5 +1,6 @@
 ---
-title: 'PyNumericalPhasematching'
+title: 'PyNumericalPhasematching: a Python API for the simulation of optical nonlinear phase matched processes in 
+guiding structures.'
 tags:
   - Python
   - 
@@ -25,7 +26,10 @@ bibliography: paper.bib
 # aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
 
-# Summary
+# Introduction
+Nonlinear optical processes are fundamental in a wide variety of classical and quantum optics experiments.
+Classically, they are used for the generation of new light frequencies, 
+  
 
 [@Pearson:2017]
 
