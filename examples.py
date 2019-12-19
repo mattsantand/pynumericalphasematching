@@ -406,7 +406,6 @@ def example_jsa1():
     poling_period = utils.calculate_poling_period(1.55e-6, 0, 0.55e-6, nte(T0), ntm(T0),
                                                   nte(T0), 1)
     print("Poling period: ", poling_period)
-    z = np.array([0, length])
     thiswaveguide = waveguide.Waveguide(length=length,
                                         poling_period=poling_period)
     thisprocess = phasematching.SimplePhasematching2D(waveguide=thiswaveguide,
