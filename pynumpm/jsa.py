@@ -413,7 +413,7 @@ class JSA(object):
             print(text)
         logger.info(text)
         logger.debug("Check normalization: sum of s^2 = " + str((abs(self.__singular_values) ** 2).sum()))
-        return self.__K, U, self.__singular_values
+        return self.__K, self.__singular_values, U, V
 
     def plot_schmidt_coefficients(self, ncoeff: int = 20, ax: plt.Axes = None):
         """
