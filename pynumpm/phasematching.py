@@ -824,11 +824,11 @@ class Phasematching1D(SimplePhasematching1D):
         Method to set the nonlinearity profile g(z), with either a constant profile or a variety of different windowing functions.
 
         :param str profile_type: Type of nonlinearity profile to consider. Possible options are
-                                 [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
+                                 [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser/custom].
         :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase
                                        matching or not.
         :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective
-                       if `profile_type` is *"gaussian"* or *"kaiser"*.
+                       if `profile_type` is *"gaussian"*,  *"kaiser"* or *"custom"*.
         :return: The function returns the nonlinearity profile of the system.
 
         The different types of profile available are:
@@ -843,6 +843,7 @@ class Phasematching1D(SimplePhasematching1D):
             * blackman: :func:`numpy.blackman`.
             * kaiser:   :func:`numpy.kaiser`. Set the :math:`\\beta` parameter of the *Kaiser* profile with the `kwargs`
               argument `beta`,
+            * custom: The user can enter a custom nonlinearity profile g(z) using the keyword "profile".
         """
         logger = logging.getLogger(__name__)
         logger.info("Setting the nonlinear profile.")
@@ -877,6 +878,8 @@ class Phasematching1D(SimplePhasematching1D):
         elif profile_type == "kaiser":
             g = np.kaiser(len(self.waveguide.z), kwargs.get("beta", 1.))
             g = interp.interp1d(self.waveguide.z, g, kind="cubic")
+        elif profile_type == "custom":
+            g = kwargs.get("profile")
         else:
             raise ValueError("The nonlinear profile {0} has not been implemented yet.".format(profile_type))
         self._nonlinear_profile_set = True
@@ -1416,31 +1419,27 @@ class Phasematching2D(SimplePhasematching2D):
         """
         Method to set the nonlinearity profile g(z), with either a constant profile or a variety of different windowing functions.
 
-        :param profile_type: Type of nonlinearity profile to consider. Possible options are
-                             [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser].
-        :type profile_type: str
-        :param first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase
-                                  matching or not.
-        :type first_order_coeff: bool
+        :param str profile_type: Type of nonlinearity profile to consider. Possible options are
+                                 [constant/gaussian/hamming/bartlett/hanning/blackman/kaiser/custom].
+        :param bool first_order_coeff: Select whether to simulate the reduction of efficiency due to quasi-phase
+                                       matching or not.
         :param kwargs: Additional parameters to specify different variables of the `profile_type` used. Only effective
-                       if `profile_type` is *"gaussian"* or *"kaiser*.
+                       if `profile_type` is *"gaussian"*,  *"kaiser"* or *"custom"*.
+        :return: The function returns the nonlinearity profile of the system.
 
         The different types of profile available are:
 
-        * constant: Uniform nonlinear profile.
-        * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`; in this case, `**kwargs` accepts the
-          keyword `sigma_g_norm`, defining the standard deviation of the gaussian profile in units of the length
-          (Default: 0.5, representing a :math:`\sigma= L/2` )
-        * hamming: :func:`numpy.hamming`
-        * bartlett :func:`numpy.bartlett`
-        * hanning: :func:`numpy.hanning`
-        * blackman: :func:`numpy.blackman`
-        * kaiser: :func:`numpy.kaiser`; in this case, `**kwargs` accepts the keyword `beta`, describing the
-          :math:`\\beta` parameter of the Kaiser distribution.
-
-
-        :return: The function returns the nonlinearity profile of the system.
-
+            * constant: Uniform nonlinear profile.
+            * gaussian: :math:`g(z) = \\mathrm{e}^{-\\frac{(z-L/2)^2}{2\\sigma^2}}`. Set the :math:`\sigma` of the gaussian
+              profile with the `kwargs` argument `sigma_g_norm`, defining the standard deviation of the gaussian
+              profile in units of the length (defauls to 0.5, i.e. L/2).
+            * hamming:  :func:`numpy.hamming`.
+            * bartlett:  :func:`numpy.bartlett`.
+            * hanning:  :func:`numpy.hanning`.
+            * blackman: :func:`numpy.blackman`.
+            * kaiser:   :func:`numpy.kaiser`. Set the :math:`\\beta` parameter of the *Kaiser* profile with the `kwargs`
+              argument `beta`,
+            * custom: The user can enter a custom nonlinearity profile g(z) using the keyword "profile".
         """
         logger = logging.getLogger(__name__)
         logger.info("Setting the nonlinear profile.")
@@ -1475,6 +1474,8 @@ class Phasematching2D(SimplePhasematching2D):
         elif profile_type == "kaiser":
             g = np.kaiser(len(self.waveguide.z), kwargs.get("beta", 1.))
             g = interp.interp1d(self.waveguide.z, g, kind="cubic")
+        elif profile_type == "custom":
+            g = kwargs.get("profile")
         else:
             raise ValueError("The nonlinear profile {0} has not been implemented yet.".format(profile_type))
         self.__nonlinear_profile_set = True
